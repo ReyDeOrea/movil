@@ -1,151 +1,233 @@
-import RequestsReceived from "@/modules/requests/presentation/views/RequestReceived";
-import RequestsSent from "@/modules/requests/presentation/views/RequestSent";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter } from "expo-router";
-import { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
+import RequestsAssigned from "@/modules/requests/presentation/views/RequestAsigned";
+import RequestsCompleted from "@/modules/requests/presentation/views/RequestCompleted";
+import RequestsInProgress from "@/modules/requests/presentation/views/RequestProgress";
+import RequestsReceived from "@/modules/requests/presentation/views/RequestReceived";
+import RequestsRejected from "@/modules/requests/presentation/views/RequestRejected";
+import RequestsSent from "@/modules/requests/presentation/views/RequestSent";
+import { ModalMenu } from "@/modules/user/presentation/components/modalMenu";
 
 export default function Requests() {
 
-  const [activeTab, setActiveTab] = useState<"sent" | "received">("sent");
+  const [user, setUser] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("enviadas");
   const router = useRouter();
+  const [modalOpen, setModalOpen] = useState(false);
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  const loadUser = async () => {
+    const userData = await AsyncStorage.getItem("user");
+    if (!userData) return;
+
+    const parsedUser = JSON.parse(userData);
+    setUser(parsedUser);
+
+    if (parsedUser.rol === "administrador") {
+      setActiveTab("recibidas");
+    }
+  };
+
+  if (!user) return null;
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "recibidas":
+        return <RequestsReceived />;
+      case "enviadas":
+        return <RequestsSent />;
+      case "asignadas":
+        return <RequestsAssigned />;
+      case "proceso":
+        return <RequestsInProgress />;
+      case "completadas":
+        return <RequestsCompleted />;
+      case "rechazadas":
+        return <RequestsRejected />;
+      default:
+        return null;
+    }
+  };
+
+  const renderTab = (key: string, label: string) => (
+    <TouchableOpacity
+      style={[
+        styles.tabButton,
+        activeTab === key && styles.activeTab,
+      ]}
+      onPress={() => setActiveTab(key)}
+    >
+      <Text
+        style={[
+          styles.tabText,
+          activeTab === key && styles.activeTabText,
+        ]}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
 
   return (
-     <>
+    <>
       <Stack.Screen options={{ headerShown: false }} />
-    <View style={styles.container}>
 
-        <View style={styles.b}>
+      <View style={styles.container}>
 
-              <TouchableOpacity
-                style={styles.backBtn}
-                onPress={() => router.back()}
-              >
-                <MaterialCommunityIcons name="arrow-left" size={28} color="#fff" />
-              </TouchableOpacity>
+         <View style={styles.b}>
+          <View style={styles.row}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={styles.appName}>ServiceApp</Text>
+            <MaterialCommunityIcons
+              name="clipboard-text"
+              size={32}
+              color="#fff"
+            />
+                  </View>
+            <TouchableOpacity
+              style={styles.menuBtn}
+              onPress={() => setModalOpen(true)}
+            >
+              <Feather name="menu" size={28} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
 
-              <View style={styles.row}>
-                <Text style={styles.txtN}>Animaland</Text>
+        <View style={styles.body}>
 
-                <MaterialCommunityIcons
-                  name="dog"
-                  size={33}
-                  color="#fff"
-                />
-              </View>
+          <View style={styles.topSection}>
+            <Text style={styles.title}>Solicitudes</Text>
 
-            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.tabs}
+            >
+              {user.rol === "administrador" && (
+                <>
+                  {renderTab("recibidas", "Recibidas")}
+                  {renderTab("proceso", "En proceso")}
+                  {renderTab("completadas", "Completadas")}
+                  {renderTab("rechazadas", "Rechazadas")}
+                </>
+              )}
 
-      <Text style={styles.title}>Solicitudes de adopción</Text>
+              {user.rol === "tecnico" && (
+                <>
+                  {renderTab("enviadas", "Enviadas")}
+                  {renderTab("asignadas", "Asignadas")}
+                  {renderTab("completadas", "Completadas")}
+                </>
+              )}
 
-      <View style={styles.tabs}>
+              {user.rol === "solicitante" && (
+                <>
+                  {renderTab("enviadas", "Enviadas")}
+                  {renderTab("proceso", "En proceso")}
+                  {renderTab("completadas", "Completadas")}
+                  {renderTab("rechazadas", "Rechazadas")}
+                </>
+              )}
+            </ScrollView>
+          </View>
 
-        <TouchableOpacity
-          style={[
-            styles.tabButton,
-            activeTab === "sent" && styles.activeTab
-          ]}
-          onPress={() => setActiveTab("sent")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "sent" && styles.activeTabText
-            ]}
-          >
-            Enviadas
-          </Text>
-        </TouchableOpacity>
+          <View style={styles.content}>
+            {renderContent()}
+            <ModalMenu
+              visible={modalOpen}
+              onClose={() => setModalOpen(false)}
+              user={user}
+              setUser={setUser}
+              onUpdate={() => { }}
+            />
+          </View>
 
-        <TouchableOpacity
-          style={[
-            styles.tabButton,
-            activeTab === "received" && styles.activeTab
-          ]}
-          onPress={() => setActiveTab("received")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "received" && styles.activeTabText
-            ]}
-          >
-            Recibidas
-          </Text>
-        </TouchableOpacity>
-
+        </View>
       </View>
-
-      <View style={styles.content}>
-        {activeTab === "sent" ? < RequestsSent/> : <  RequestsReceived/>}
-      </View>
-
-    </View>
-     </>
+    </>
   );
 }
-
 const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-  },
-  b: {
-    width: "100%",
-    height: 100,
-    paddingTop: 10,
-    backgroundColor: "#B7C979",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 10
+    backgroundColor: "#F3F4F6",
   },
   row: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center"
+     flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "90%",
+    marginVertical: 10,
   },
-  txtN: {
+  appName: {
     color: "#fff",
     fontWeight: "bold",
     fontSize: 25,
-    marginRight: 5
+    marginRight: 6,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20
-  },
- backBtn: {
+  backBtn: {
     position: "absolute",
     left: 15,
-    top: 40
+    top: 40,
+  },
+  body: {
+    flex: 1,
+  },
+  topSection: {
+    paddingTop: 4,
+    paddingBottom: 2,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 4,
+    color: "#111827",
   },
   tabs: {
+    paddingHorizontal: 10,
     flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 20
+    alignItems: "center",
   },
   tabButton: {
     paddingVertical: 10,
-    paddingHorizontal: 30,
-    borderBottomWidth: 2,
-    borderBottomColor: "transparent"
+    paddingHorizontal: 20,
+    borderBottomWidth: 3,
+    borderBottomColor: "transparent",
+    marginRight: 10,
   },
   activeTab: {
-    borderBottomColor: "#D09100"
+    borderBottomColor: "#4F46E5",
   },
   tabText: {
-    fontSize: 16,
-    color: "#999"
+    fontSize: 15,
+    color: "#9CA3AF",
   },
   activeTabText: {
-    color: "#D09100",
-    fontWeight: "bold"
+    color: "#4F46E5",
+    fontWeight: "bold",
+  },
+  menuBtn: {
+  position: "absolute",
+  right: 15,
+  top: 10, 
   },
   content: {
-    flex: 1
-  }
-
+    flex: 1,
+  },
+   b: {
+    width: "100%",
+    height: 100,
+    backgroundColor: "#4F46E5",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+  },
 });

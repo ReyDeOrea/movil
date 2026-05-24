@@ -2,21 +2,25 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { useRouter } from "expo-router";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, } from "react";
 
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { GetRequestsBySolicitante } from "../../application/getRequestSent";
+import { GetRequestsByTecnico } from "../../application/getRequestAsigned";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
-;
 
 
 
 const repository = new SupabaseRequestsRepository();
-const getRequests = new GetRequestsBySolicitante(repository);
 
-export default function RequestsSent() {
+const getRequests = new GetRequestsByTecnico(
+    repository
+  );
 
-  const [requests, setRequests] = useState<any[]>([]);
+export default function RequestsAssigned() {
+
+  const [requests, setRequests] =
+    useState<any[]>([]);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -26,34 +30,50 @@ export default function RequestsSent() {
   const loadRequests = async () => {
 
     try {
-      const userData =await AsyncStorage.getItem("user");
+
+      const userData =
+        await AsyncStorage.getItem(
+          "user"
+        );
 
       if (!userData) return;
 
-      const user = JSON.parse(userData);
-      const data = await getRequests.execute(user.id);
+      const user =
+        JSON.parse(userData);
+
+      const data =
+        await getRequests.execute(
+          user.id
+        );
 
       setRequests(data || []);
-    }
-    catch (error) {
+
+    } catch (error) {
+
       console.log(
-          "ERROR loading requests:",
+        "ERROR loading assigned requests:",
         error
       );
     }
   };
 
-  const viewRequest = (request: any) => {
+  const viewRequest = (
+    request: any
+  ) => {
 
     router.push({
-      pathname: "/requests",
+      pathname:
+        "/requests",
       params: {
-        request: JSON.stringify(request),
+        request:
+          JSON.stringify(
+            request
+          ),
       },
     });
   };
 
-  const renderEstadoColor = (
+  const renderStatusColor = (
     estado: string
   ) => {
 
@@ -105,9 +125,9 @@ export default function RequestsSent() {
 
             <Text style={styles.text}>
               <Text style={styles.label}>
-                Área:
+                Prioridad:
               </Text>{" "}
-              {item.area_id}
+              {item.prioridad}
             </Text>
 
             <Text style={styles.text}>
@@ -122,7 +142,7 @@ export default function RequestsSent() {
                 styles.statusContainer,
                 {
                   backgroundColor:
-                    renderEstadoColor(
+                    renderStatusColor(
                       item.estado
                     ),
                 },
@@ -141,13 +161,12 @@ export default function RequestsSent() {
         ListEmptyComponent={
 
           <Text style={styles.emptyText}>
-            No has enviado solicitudes
+            No tienes solicitudes asignadas
           </Text>
         }
 
         contentContainerStyle={{
-           paddingBottom: 10,
-  flexGrow: 1,
+          paddingBottom: 100,
         }}
       />
 
@@ -166,7 +185,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 14,
     marginBottom: 12,
     elevation: 3,
   },
@@ -209,4 +228,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#6B7280",
   },
+
 });
