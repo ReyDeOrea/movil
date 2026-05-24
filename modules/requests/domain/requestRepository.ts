@@ -46,4 +46,5 @@ export interface RequestsRepository {
   getRequestsByTecnico(
     tecnico_id: string
   ): Promise<RequestsForm[]>;
+
 }

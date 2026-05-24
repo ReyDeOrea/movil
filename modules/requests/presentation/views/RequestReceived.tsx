@@ -1,20 +1,30 @@
-import { PushTokenRepositorySupabase } from "@/modules/notifications/infrastructure/tokenDataSource";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import { useRouter } from "expo-router";
+
 import { useEffect, useState } from "react";
-import { FlatList, Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { GetRequestsForMyPets } from "../../application/getRequestReceived";
-import { RespondAdoptionRequest } from "../../application/repondAdoption";
-import { AdoptionRepository } from "../../infraestructure/adoptionDataSource";
 
-const repository = new AdoptionRepository();
-const getUserRequests = new GetRequestsForMyPets(repository);
+import { Alert, FlatList, Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { GetAllRequests } from "../../application/getRequestRecived";
+import { UpdateRequestStatus } from "../../application/statusRequest";
+import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
 
-const pushRepo = new PushTokenRepositorySupabase();
-const respondRequest = new RespondAdoptionRequest(repository, pushRepo);
+
+
+const repository =
+  new SupabaseRequestsRepository();
+
+const getRequests = new GetAllRequests(repository);
+
+const updateRequest = new UpdateRequestStatus(
+    repository
+  );
 
 export default function RequestsReceived() {
-  const [requests, setRequests] = useState<any[]>([]);
+
+  const [requests, setRequests] =
+    useState<any[]>([]);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -22,178 +32,338 @@ export default function RequestsReceived() {
   }, []);
 
   const loadRequests = async () => {
+
     try {
-      const userData = await AsyncStorage.getItem("user");
+
+      const userData =
+        await AsyncStorage.getItem(
+          "user"
+        );
+
       if (!userData) return;
 
-      const user = JSON.parse(userData);
+      const data =
+        await getRequests.execute();
 
-      let data = await getUserRequests.execute(user.id);
+      setRequests(data || []);
 
-      if (!data) {
-        setRequests([]);
-        return;
-      }
+    } catch (error) {
 
-      data = await Promise.all(
-        data.map(async (request: any) => {
-          const pet = await repository.getPetById(request.pet_id);
+      console.log(
+        "ERROR loading requests:",
+        error
+      );
+    }
+  };
 
-          return {
-            ...request,
-            pet_name: pet?.name || "Desconocida"
-          };
-        })
+  const aceptar = async (
+    request: any
+  ) => {
+
+    try {
+
+      await updateRequest.execute(
+        request.id,
+        {
+          estado: "asignada",
+        }
       );
 
-      setRequests(data);
-    } catch (error) {
-      console.error("Error cargando solicitudes:", error);
-    }
-  };
-
-  const aceptar = async (request: any) => {
-    try {
-
-      await respondRequest.execute(request.id, "aceptado");
+      Alert.alert(
+        "Solicitud aceptada"
+      );
 
       loadRequests();
+
     } catch (error) {
-      console.error("Error al aceptar solicitud:", error);
+
+      console.log(
+        "ERROR accepting request:",
+        error
+      );
     }
   };
 
-  const rechazar = async (request: any) => {
-    try {
-      await respondRequest.execute(request.id, "rechazado");
+  const rechazar = async (
+    request: any
+  ) => {
 
+    try {
+
+      await updateRequest.execute(
+        request.id,
+        {
+          estado: "rechazada",
+          motivo_rechazo:
+            "Solicitud rechazada",
+        }
+      );
+
+      Alert.alert(
+        "Solicitud rechazada"
+      );
 
       loadRequests();
+
     } catch (error) {
-      console.error("Error al rechazar solicitud:", error);
+
+      console.log(
+        "ERROR rejecting request:",
+        error
+      );
     }
   };
 
-  const verSolicitud = (request: any) => {
+  const viewRequest = (
+    request: any
+  ) => {
+
     router.push({
-      pathname: "/viewRequestForm",
-      params: { request: JSON.stringify(request) }
+  pathname: "/requests",
+      params: {
+        request:
+          JSON.stringify(
+            request
+          ),
+      },
     });
   };
 
-  const llamarAdoptante = (telefono: string) => {
-    Linking.openURL(`tel:${telefono}`);
+  const llamarSolicitante = (
+    telefono: string
+  ) => {
+
+    Linking.openURL(
+      `tel:${telefono}`
+    );
   };
 
   return (
+
     <FlatList
       data={requests}
-      keyExtractor={(item) => item.id.toString()}
+
+      keyExtractor={(item) =>
+        item.id.toString()
+      }
+
       renderItem={({ item }) => (
+
         <TouchableOpacity
-          onPress={() => verSolicitud(item)}
+          onPress={() =>
+            viewRequest(item)
+          }
+
           style={styles.card}
         >
 
           <Text style={styles.text}>
-            <Text style={styles.label}>Mascota: </Text>
-            {item.pet_name}
+
+            <Text style={styles.label}>
+              Tipo:
+            </Text>{" "}
+
+            {item.tipo_solicitud}
+
           </Text>
 
           <Text style={styles.text}>
-            <Text style={styles.label}>Adoptante: </Text>
-            {item.adoptante_nombre} {item.adoptante_apellido}
-          </Text>
 
-          <Text style={styles.text}>
-            <Text style={styles.label}>Estado: </Text>
+            <Text style={styles.label}>
+              Estado:
+            </Text>{" "}
+
             {item.estado}
+
           </Text>
 
-          {item.estado === "en_proceso" && (
-            <View style={styles.buttonsContainer}>
-              <TouchableOpacity
-                onPress={() => aceptar(item)}
-                style={[styles.button, styles.accept]}
+          <Text style={styles.text}>
+
+            <Text style={styles.label}>
+              Prioridad:
+            </Text>{" "}
+
+            {
+              item.prioridad ||
+              "Sin prioridad"
+            }
+
+          </Text>
+
+          <Text style={styles.text}>
+
+            <Text style={styles.label}>
+              Descripción:
+            </Text>{" "}
+
+            {item.descripcion}
+
+          </Text>
+
+          {
+            item.estado ===
+              "generada" && (
+
+              <View
+                style={
+                  styles.buttonsContainer
+                }
               >
-                <Text style={styles.buttonText}>Aceptar</Text>
-              </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() =>
+                    aceptar(item)
+                  }
+
+                  style={[
+                    styles.button,
+                    styles.accept,
+                  ]}
+                >
+
+                  <Text
+                    style={
+                      styles.buttonText
+                    }
+                  >
+                    Aceptar
+                  </Text>
+
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() =>
+                    rechazar(item)
+                  }
+
+                  style={[
+                    styles.button,
+                    styles.reject,
+                  ]}
+                >
+
+                  <Text
+                    style={
+                      styles.buttonText
+                    }
+                  >
+                    Rechazar
+                  </Text>
+
+                </TouchableOpacity>
+
+              </View>
+            )
+          }
+
+          {
+            item.estado ===
+              "asignada" &&
+
+              item.telefono && (
 
               <TouchableOpacity
-                onPress={() => rechazar(item)}
-                style={[styles.button, styles.reject]}
-              >
-                <Text style={styles.buttonText}>Rechazar</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+                onPress={() =>
+                  llamarSolicitante(
+                    item.telefono
+                  )
+                }
 
-          {item.estado === "aceptado" && item.adoptante_telefono && (
-            <TouchableOpacity
-              onPress={() => llamarAdoptante(item.adoptante_telefono)}
-              style={[styles.button, styles.call]}
-            >
-              <Text style={styles.buttonText}>
-                Llamar al adoptante ({item.adoptante_telefono})
-              </Text>
-            </TouchableOpacity>
-          )}
+                style={[
+                  styles.button,
+                  styles.call,
+                ]}
+              >
+
+                <Text
+                  style={
+                    styles.buttonText
+                  }
+                >
+                  Llamar solicitante
+                </Text>
+
+              </TouchableOpacity>
+            )
+          }
 
         </TouchableOpacity>
       )}
 
       ListEmptyComponent={
+
         <Text style={styles.emptyText}>
           No hay solicitudes
         </Text>
       }
-      contentContainerStyle={{ paddingBottom: 100 }}
+
+      contentContainerStyle={{
+          paddingBottom: 10,
+  flexGrow: 1,
+      }}
     />
   );
 }
 
 const styles = StyleSheet.create({
+
   card: {
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-    backgroundColor: "#fff"
+    borderBottomColor: "#E5E7EB",
+    backgroundColor: "#fff",
+    marginBottom: 10,
+    borderRadius: 10,
+    marginHorizontal: 10,
   },
+
   text: {
     fontSize: 16,
-    marginBottom: 5
+    marginBottom: 5,
+    color: "#374151",
   },
+
   label: {
-    fontWeight: "bold"
+    fontWeight: "bold",
+    color: "#111827",
   },
+
   call: {
-    backgroundColor: "#c5e4fe",
-    marginTop: 10
+    backgroundColor: "#BFDBFE",
+    marginTop: 10,
   },
+
   buttonsContainer: {
     flexDirection: "row",
-    marginTop: 10
+    marginTop: 12,
   },
+
   button: {
-    padding: 10,
-    borderRadius: 5
+    padding: 12,
+    borderRadius: 8,
+    flex: 1,
   },
+
   accept: {
-    backgroundColor: "#A4D4AE",
-    marginRight: 10
+    backgroundColor: "#BBF7D0",
+    marginRight: 10,
   },
+
   reject: {
-    backgroundColor: "#F2A7A7"
+    backgroundColor: "#FECACA",
   },
+
   buttonText: {
-    color: "#000",
+    color: "#111827",
     fontWeight: "bold",
-    textAlign: "center"
+    textAlign: "center",
   },
+
   emptyText: {
     textAlign: "center",
     marginTop: 20,
     fontSize: 16,
-    color: "#555"
-  }
+    color: "#6B7280",
+  },
+
 });
