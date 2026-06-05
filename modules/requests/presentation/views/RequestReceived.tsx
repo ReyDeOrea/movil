@@ -1,30 +1,28 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 import { useRouter } from "expo-router";
-
 import { useEffect, useState } from "react";
+import {
+  Alert,
+  FlatList,
+  Linking,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from "react-native";
 
-import { Alert, FlatList, Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { GetAllRequests } from "../../application/getRequestRecived";
 import { UpdateRequestStatus } from "../../application/statusRequest";
+import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
 
-
-
-const repository =
-  new SupabaseRequestsRepository();
-
+const repository = new SupabaseRequestsRepository();
 const getRequests = new GetAllRequests(repository);
-
-const updateRequest = new UpdateRequestStatus(
-    repository
-  );
+const updateRequest = new UpdateRequestStatus(repository);
 
 export default function RequestsReceived() {
 
-  const [requests, setRequests] =
-    useState<any[]>([]);
-
+  const [requests, setRequests] = useState<RequestsForm[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -32,274 +30,134 @@ export default function RequestsReceived() {
   }, []);
 
   const loadRequests = async () => {
-
     try {
+      await AsyncStorage.getItem("user");
 
-      const userData =
-        await AsyncStorage.getItem(
-          "user"
-        );
-
-      if (!userData) return;
-
-      const data =
-        await getRequests.execute();
-
-      setRequests(data || []);
+      const data = await getRequests.execute();
+      setRequests(data ?? []);
 
     } catch (error) {
-
-      console.log(
-        "ERROR loading requests:",
-        error
-      );
+      console.log("ERROR loading requests:", error);
     }
   };
 
-  const aceptar = async (
-    request: any
-  ) => {
-
+  const aceptar = async (request: RequestsForm) => {
     try {
+      await updateRequest.execute(request.numSolicitud, {
+        numStatus: 2
+      });
 
-      await updateRequest.execute(
-        request.id,
-        {
-          estado: "asignada",
-        }
-      );
-
-      Alert.alert(
-        "Solicitud aceptada"
-      );
-
+      Alert.alert("Solicitud aceptada");
       loadRequests();
 
     } catch (error) {
-
-      console.log(
-        "ERROR accepting request:",
-        error
-      );
+      console.log("ERROR accepting request:", error);
     }
   };
 
-  const rechazar = async (
-    request: any
-  ) => {
-
+  const rechazar = async (request: RequestsForm) => {
     try {
+      await updateRequest.execute(request.numSolicitud, {
+        numStatus: 5,
+        motivoCancelacion: "Solicitud rechazada"
+      });
 
-      await updateRequest.execute(
-        request.id,
-        {
-          estado: "rechazada",
-          motivo_rechazo:
-            "Solicitud rechazada",
-        }
-      );
-
-      Alert.alert(
-        "Solicitud rechazada"
-      );
-
+      Alert.alert("Solicitud rechazada");
       loadRequests();
 
     } catch (error) {
-
-      console.log(
-        "ERROR rejecting request:",
-        error
-      );
+      console.log("ERROR rejecting request:", error);
     }
   };
 
-  const viewRequest = (
-    request: any
-  ) => {
-
+  const viewRequest = (request: RequestsForm) => {
     router.push({
-  pathname: "/requests",
+      pathname: "/requests",
       params: {
-        request:
-          JSON.stringify(
-            request
-          ),
+        request: JSON.stringify(request),
       },
     });
   };
 
-  const llamarSolicitante = (
-    telefono: string
-  ) => {
-
-    Linking.openURL(
-      `tel:${telefono}`
-    );
+  const llamarSolicitante = (telefono?: string) => {
+    if (!telefono) return;
+    Linking.openURL(`tel:${telefono}`);
   };
 
   return (
-
     <FlatList
       data={requests}
-
-      keyExtractor={(item) =>
-        item.id.toString()
-      }
+      keyExtractor={(item) => item.numSolicitud.toString()}
 
       renderItem={({ item }) => (
-
         <TouchableOpacity
-          onPress={() =>
-            viewRequest(item)
-          }
-
+          onPress={() => viewRequest(item)}
           style={styles.card}
         >
 
           <Text style={styles.text}>
-
-            <Text style={styles.label}>
-              Tipo:
-            </Text>{" "}
-
-            {item.tipo_solicitud}
-
+            <Text style={styles.label}>Tipo:</Text>{" "}
+            {item.numTipo}
           </Text>
 
           <Text style={styles.text}>
-
-            <Text style={styles.label}>
-              Estado:
-            </Text>{" "}
-
-            {item.estado}
-
+            <Text style={styles.label}>Estado:</Text>{" "}
+            {item.numStatus}
           </Text>
 
           <Text style={styles.text}>
-
-            <Text style={styles.label}>
-              Prioridad:
-            </Text>{" "}
-
-            {
-              item.prioridad ||
-              "Sin prioridad"
-            }
-
+            <Text style={styles.label}>Prioridad:</Text>{" "}
+            {item.prioridad ?? "Sin prioridad"}
           </Text>
 
           <Text style={styles.text}>
-
-            <Text style={styles.label}>
-              Descripción:
-            </Text>{" "}
-
+            <Text style={styles.label}>Descripción:</Text>{" "}
             {item.descripcion}
-
           </Text>
 
-          {
-            item.estado ===
-              "generada" && (
-
-              <View
-                style={
-                  styles.buttonsContainer
-                }
-              >
-
-                <TouchableOpacity
-                  onPress={() =>
-                    aceptar(item)
-                  }
-
-                  style={[
-                    styles.button,
-                    styles.accept,
-                  ]}
-                >
-
-                  <Text
-                    style={
-                      styles.buttonText
-                    }
-                  >
-                    Aceptar
-                  </Text>
-
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() =>
-                    rechazar(item)
-                  }
-
-                  style={[
-                    styles.button,
-                    styles.reject,
-                  ]}
-                >
-
-                  <Text
-                    style={
-                      styles.buttonText
-                    }
-                  >
-                    Rechazar
-                  </Text>
-
-                </TouchableOpacity>
-
-              </View>
-            )
-          }
-
-          {
-            item.estado ===
-              "asignada" &&
-
-              item.telefono && (
+          {item.numStatus === 1 && (
+            <View style={styles.buttonsContainer}>
 
               <TouchableOpacity
-                onPress={() =>
-                  llamarSolicitante(
-                    item.telefono
-                  )
-                }
-
-                style={[
-                  styles.button,
-                  styles.call,
-                ]}
+                onPress={() => aceptar(item)}
+                style={[styles.button, styles.accept]}
               >
-
-                <Text
-                  style={
-                    styles.buttonText
-                  }
-                >
-                  Llamar solicitante
-                </Text>
-
+                <Text style={styles.buttonText}>Aceptar</Text>
               </TouchableOpacity>
-            )
-          }
+
+              <TouchableOpacity
+                onPress={() => rechazar(item)}
+                style={[styles.button, styles.reject]}
+              >
+                <Text style={styles.buttonText}>Rechazar</Text>
+              </TouchableOpacity>
+
+            </View>
+          )}
+
+          {item.bitacora?.length && (
+            <TouchableOpacity
+              onPress={() => llamarSolicitante()}
+              style={[styles.button, styles.call]}
+            >
+              <Text style={styles.buttonText}>
+                Ver bitácora
+              </Text>
+            </TouchableOpacity>
+          )}
 
         </TouchableOpacity>
       )}
 
       ListEmptyComponent={
-
         <Text style={styles.emptyText}>
           No hay solicitudes
         </Text>
       }
 
       contentContainerStyle={{
-          paddingBottom: 10,
-  flexGrow: 1,
+        paddingBottom: 10,
+        flexGrow: 1,
       }}
     />
   );

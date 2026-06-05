@@ -14,9 +14,10 @@ import { ModalMenu } from "@/modules/user/presentation/components/modalMenu";
 
 export default function Requests() {
 
+  const router = useRouter();
+
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("enviadas");
-  const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
   useEffect(() => {
     loadUser();
@@ -29,8 +30,12 @@ export default function Requests() {
     const parsedUser = JSON.parse(userData);
     setUser(parsedUser);
 
-    if (parsedUser.rol === "administrador") {
+    if (parsedUser.numRol === 1) {
       setActiveTab("recibidas");
+    } else if (parsedUser.numRol === 2) {
+      setActiveTab("enviadas");
+    } else if (parsedUser.numRol === 3) {
+      setActiveTab("enviadas");
     }
   };
 
@@ -73,6 +78,9 @@ export default function Requests() {
       </Text>
     </TouchableOpacity>
   );
+ const isAdmin = user.numRol === 1;
+  const isTecnico = user.numRol === 2;
+  const isSolicitante = user.numRol === 3;
 
   return (
     <>
@@ -80,16 +88,16 @@ export default function Requests() {
 
       <View style={styles.container}>
 
-         <View style={styles.b}>
+        <View style={styles.b}>
           <View style={styles.row}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={styles.appName}>ServiceApp</Text>
-            <MaterialCommunityIcons
-              name="clipboard-text"
-              size={32}
-              color="#fff"
-            />
-                  </View>
+              <Text style={styles.appName}>ServiceApp</Text>
+              <MaterialCommunityIcons
+                name="clipboard-text"
+                size={32}
+                color="#fff"
+              />
+            </View>
             <TouchableOpacity
               style={styles.menuBtn}
               onPress={() => setModalOpen(true)}
@@ -109,7 +117,7 @@ export default function Requests() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.tabs}
             >
-              {user.rol === "administrador" && (
+               {isAdmin && (
                 <>
                   {renderTab("recibidas", "Recibidas")}
                   {renderTab("proceso", "En proceso")}
@@ -118,7 +126,7 @@ export default function Requests() {
                 </>
               )}
 
-              {user.rol === "tecnico" && (
+              {isTecnico && (
                 <>
                   {renderTab("enviadas", "Enviadas")}
                   {renderTab("asignadas", "Asignadas")}
@@ -126,7 +134,7 @@ export default function Requests() {
                 </>
               )}
 
-              {user.rol === "solicitante" && (
+             {isSolicitante && (
                 <>
                   {renderTab("enviadas", "Enviadas")}
                   {renderTab("proceso", "En proceso")}
@@ -160,7 +168,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3F4F6",
   },
   row: {
-     flexDirection: "row",
+    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     width: "90%",
@@ -215,14 +223,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   menuBtn: {
-  position: "absolute",
-  right: 15,
-  top: 10, 
+    position: "absolute",
+    right: 15,
+    top: 10,
   },
   content: {
     flex: 1,
   },
-   b: {
+  b: {
     width: "100%",
     height: 100,
     backgroundColor: "#4F46E5",

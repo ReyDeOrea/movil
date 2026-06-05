@@ -1,22 +1,24 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 import { useRouter } from "expo-router";
-
 import { useEffect, useState } from "react";
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from "react-native";
 
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { GetRequestsBySolicitante } from "../../application/getRequestSent";
+import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
-;
-
-
 
 const repository = new SupabaseRequestsRepository();
 const getRequests = new GetRequestsBySolicitante(repository);
 
 export default function RequestsSent() {
 
-  const [requests, setRequests] = useState<any[]>([]);
+  const [requests, setRequests] = useState<RequestsForm[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -24,27 +26,22 @@ export default function RequestsSent() {
   }, []);
 
   const loadRequests = async () => {
-
     try {
-      const userData =await AsyncStorage.getItem("user");
+      const userData = await AsyncStorage.getItem("user");
 
       if (!userData) return;
 
       const user = JSON.parse(userData);
-      const data = await getRequests.execute(user.id);
 
-      setRequests(data || []);
-    }
-    catch (error) {
-      console.log(
-          "ERROR loading requests:",
-        error
-      );
+      const data = await getRequests.execute(user.numUsuario);
+
+      setRequests(data);
+    } catch (error) {
+      console.log("ERROR loading requests:", error);
     }
   };
 
-  const viewRequest = (request: any) => {
-
+  const viewRequest = (request: RequestsForm) => {
     router.push({
       pathname: "/requests",
       params: {
@@ -53,67 +50,42 @@ export default function RequestsSent() {
     });
   };
 
-  const renderEstadoColor = (
-    estado: string
-  ) => {
-
-    switch (estado) {
-
-      case "generada":
-        return "#F59E0B";
-
-      case "asignada":
-        return "#3B82F6";
-
-      case "en_proceso":
-        return "#8B5CF6";
-
-      case "terminada":
-        return "#10B981";
-
-      case "rechazada":
-        return "#EF4444";
-
+  const renderEstadoColor = (status: number) => {
+    switch (status) {
+      case 1:
+        return "#F59E0B"; // generada
+      case 2:
+        return "#3B82F6"; // asignada
+      case 3:
+        return "#8B5CF6"; // en proceso
+      case 4:
+        return "#10B981"; // terminada
+      case 5:
+        return "#EF4444"; // rechazada
       default:
         return "#6B7280";
     }
   };
 
   return (
-
     <View style={styles.container}>
 
       <FlatList
         data={requests}
-
-        keyExtractor={(item) =>
-          item.id.toString()
-        }
+        keyExtractor={(item) => item.numSolicitud.toString()}
 
         renderItem={({ item }) => (
-
           <TouchableOpacity
             style={styles.card}
-            onPress={() =>
-              viewRequest(item)
-            }
+            onPress={() => viewRequest(item)}
           >
 
             <Text style={styles.title}>
-              {item.tipo_solicitud}
+              Tipo: {item.numTipo}
             </Text>
 
             <Text style={styles.text}>
-              <Text style={styles.label}>
-                Área:
-              </Text>{" "}
-              {item.area_id}
-            </Text>
-
-            <Text style={styles.text}>
-              <Text style={styles.label}>
-                Descripción:
-              </Text>{" "}
+              <Text style={styles.label}>Descripción:</Text>{" "}
               {item.descripcion}
             </Text>
 
@@ -121,33 +93,27 @@ export default function RequestsSent() {
               style={[
                 styles.statusContainer,
                 {
-                  backgroundColor:
-                    renderEstadoColor(
-                      item.estado
-                    ),
+                  backgroundColor: renderEstadoColor(item.numStatus),
                 },
               ]}
             >
-
               <Text style={styles.statusText}>
-                {item.estado}
+                {item.numStatus}
               </Text>
-
             </View>
 
           </TouchableOpacity>
         )}
 
         ListEmptyComponent={
-
           <Text style={styles.emptyText}>
             No has enviado solicitudes
           </Text>
         }
 
         contentContainerStyle={{
-           paddingBottom: 10,
-  flexGrow: 1,
+          paddingBottom: 10,
+          flexGrow: 1,
         }}
       />
 
@@ -176,7 +142,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
     color: "#111827",
-    textTransform: "capitalize",
   },
 
   text: {
@@ -200,7 +165,6 @@ const styles = StyleSheet.create({
   statusText: {
     color: "#fff",
     fontWeight: "bold",
-    textTransform: "capitalize",
   },
 
   emptyText: {

@@ -4,15 +4,11 @@ import { RequestsRepository } from "../domain/requestRepository";
 
 export class GetAllRequests {
 
-  constructor(
-    private repository: RequestsRepository
-  ) {}
+  constructor(private repository: RequestsRepository) {}
 
-  async execute():
-    Promise<RequestsForm[]> {
+  async execute(): Promise<RequestsForm[]> {
 
-    const data =
-      await this.repository
+    const data = await this.repository
         .getRequests();
 
     return data || [];

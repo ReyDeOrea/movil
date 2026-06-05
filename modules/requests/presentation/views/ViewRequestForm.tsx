@@ -8,317 +8,124 @@ const screenWidth = Dimensions.get("window").width;
 export default function ViewRequest() {
 
   const params = useLocalSearchParams();
-
   const router = useRouter();
-
-  const [request, setRequest] =
-    useState<any>(null);
+  const [request, setRequest] = useState<any>(null);
 
   useEffect(() => {
-
-    if (
-      params.request &&
-      typeof params.request === "string"
-    ) {
+    if (params.request && typeof params.request === "string") {
       try {
-        const parsedRequest = JSON.parse(params.request);
-        setRequest(parsedRequest);
-      }
-      catch (error) {
-        console.log(
-          "ERROR parsing request:",
-          error
-        );
+        setRequest(JSON.parse(params.request));
+      } catch (error) {
+        console.log("ERROR parsing request:", error);
       }
     }
-
   }, [params.request]);
 
-  const getStatusStyle = (
-     estado: string
-  ) => {
-
-    const key =
-      estado?.trim().toLowerCase() ||
-      "generada";
-
-    return (
-      statusColors[key] ??
-      statusColors["generada"]
-    );
+  const statusColors: Record<number, { background: string; text: string }> = {
+    1: { background: "#FEF3C7", text: "#92400E" },
+    2: { background: "#DBEAFE", text: "#1E40AF" },
+    3: { background: "#EDE9FE", text: "#5B21B6" },
+    4: { background: "#D1FAE5", text: "#065F46" },
+    5: { background: "#FECACA", text: "#991B1B" },
   };
 
-  const statusColors: Record<
-    string,
-    {
-      background: string;
-      text: string;
-    }
-  > = {
-    
-    generada: {
-      background: "#FEF3C7",
-      text: "#92400E",
-    },
+  const getStatusStyle = (status: number) =>
+    statusColors[status] ?? statusColors[1];
 
-    asignada: {
-      background: "#DBEAFE",
-      text: "#1E40AF",
-    },
-
-    en_proceso: {
-      background: "#EDE9FE",
-      text: "#5B21B6",
-    },
-    terminada: {
-      background: "#D1FAE5",
-      text: "#065F46",
-    },
-    cancelada: {
-      background: "#F3F4F6",
-      text: "#374151",
-    },
-    rechazada: {
-      background: "#FECACA",
-      text: "#991B1B",
-    },
-  };
   if (!request) {
-
     return (
       <View style={styles.center}>
-
-        <Text>
-          No se encontró la solicitud
-        </Text>
-
+        <Text>No se encontró la solicitud</Text>
       </View>
     );
   }
 
-  const statusStyle =
-    getStatusStyle(request.estado);
+  const statusStyle = getStatusStyle(request.numStatus);
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
 
       <ScrollView style={styles.container}>
 
         <View style={styles.header}>
-
-          <TouchableOpacity
-            onPress={() => router.back()}
-          >
-
-            <MaterialCommunityIcons
-              name="arrow-left"
-              size={28}
-              color="#fff"
-            />
-
+          <TouchableOpacity onPress={() => router.back()}>
+            <MaterialCommunityIcons name="arrow-left" size={28} color="#fff" />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
-
-            <Text style={styles.title}>
-              Solicitud
-            </Text>
-
-            <MaterialCommunityIcons
-              name="clipboard-text"
-              size={28}
-              color="#fff"
-            />
-
+            <Text style={styles.title}>Solicitud</Text>
+            <MaterialCommunityIcons name="clipboard-text" size={28} color="#fff" />
           </View>
         </View>
 
         <View style={styles.content}>
 
           <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Información general</Text>
 
-            <Text style={styles.sectionTitle}>
-              Información general
-            </Text>
+            <Text style={styles.label}>Tipo:</Text>
+            <Text style={styles.value}>{request.numTipo}</Text>
 
-            <Text style={styles.label}>
-              Tipo de solicitud:
-            </Text>
-
+            <Text style={styles.label}>Tipo mantenimiento:</Text>
             <Text style={styles.value}>
-              {request.tipo_solicitud}
+              {request.numTipoMantenimiento ?? "N/A"}
             </Text>
 
-            {
-              request.tipo_mantenimiento && (
-                <>
-                  <Text style={styles.label}>
-                    Tipo mantenimiento:
-                  </Text>
+            <Text style={styles.label}>Fecha:</Text>
+            <Text style={styles.value}>{request.fecha}</Text>
 
-                  <Text style={styles.value}>
-                    {
-                      request.tipo_mantenimiento
-                    }
-                  </Text>
-                </>
-              )
-            }
-
-            <Text style={styles.label}>
-              Fecha solicitud:
-            </Text>
-
-            <Text style={styles.value}>
-              {
-                request.fecha_solicitud
-              }
-            </Text>
-
-            <Text style={styles.label}>
-              Área:
-            </Text>
-
-            <Text style={styles.value}>
-              {request.area_id}
-            </Text>
-
+            <Text style={styles.label}>Área:</Text>
+            <Text style={styles.value}>{request.numArea}</Text>
           </View>
 
           <View style={styles.card}>
-
-            <Text style={styles.sectionTitle}>
-              Descripción
-            </Text>
-
-            <Text style={styles.value}>
-              {request.descripcion}
-            </Text>
-
+            <Text style={styles.sectionTitle}>Descripción</Text>
+            <Text style={styles.value}>{request.descripcion}</Text>
           </View>
 
           <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Evidencias</Text>
 
-            <Text style={styles.sectionTitle}>
-              Evidencias
-            </Text>
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={
-                false
-              }
-            >
-
-              {
-                request.evidencia_S && (
-                  <Image
-                    source={{
-                      uri:
-                        request.evidencia_S,
-                    }}
-                    style={styles.image}
-                  />
-                )
-              }
-
-              {
-                request.evidencia_T && (
-                  <Image
-                    source={{
-                      uri:
-                        request.evidencia_T,
-                    }}
-                    style={styles.image}
-                  />
-                )
-              }
-
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {request.evidencias?.map((e: any) => (
+                <Image
+                  key={e.idEvidencia}
+                  source={{ uri: e.ruta }}
+                  style={styles.image}
+                />
+              ))}
             </ScrollView>
-
           </View>
 
-          {
-            request.comentarios && (
-              <View style={styles.card}>
+          {request.comentarios && (
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Comentarios</Text>
+              <Text style={styles.value}>{request.comentarios}</Text>
+            </View>
+          )}
 
-                <Text
-                  style={
-                    styles.sectionTitle
-                  }
-                >
-                  Comentarios técnicos
-                </Text>
-
-                <Text style={styles.value}>
-                  {request.comentarios}
-                </Text>
-
-              </View>
-            )
-          }
-
-          {
-            request.motivo_rechazo && (
-              <View style={styles.card}>
-
-                <Text
-                  style={
-                    styles.sectionTitle
-                  }
-                >
-                  Motivo rechazo
-                </Text>
-
-                <Text style={styles.value}>
-                  {
-                    request.motivo_rechazo
-                  }
-                </Text>
-
-              </View>
-            )
-          }
+          {request.motivoCancelacion && (
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Motivo rechazo</Text>
+              <Text style={styles.value}>{request.motivoCancelacion}</Text>
+            </View>
+          )}
 
           <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Estado</Text>
 
-            <Text style={styles.sectionTitle}>
-              Estado solicitud
-            </Text>
-
-            <View
-              style={[
-                styles.statusBadge,
-                {
-                  backgroundColor:
-                    statusStyle.background,
-                },
-              ]}
-            >
-
-              <Text
-                style={{
-                  color:
-                    statusStyle.text,
-                  fontWeight: "bold",
-                }}
-              >
-                {
-                  request.estado?.toUpperCase()
-                }
+            <View style={[
+              styles.statusBadge,
+              { backgroundColor: statusStyle.background }
+            ]}>
+              <Text style={{ color: statusStyle.text, fontWeight: "bold" }}>
+                {request.numStatus}
               </Text>
-
             </View>
-
           </View>
 
         </View>
-
       </ScrollView>
     </>
   );

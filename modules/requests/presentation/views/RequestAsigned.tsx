@@ -1,26 +1,20 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 import { useRouter } from "expo-router";
-
-import { useEffect, useState, } from "react";
-
+import { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { GetRequestsByTecnico } from "../../application/getRequestAsigned";
+
+import { GetRequestsByTecnicoExterno } from "../../application/getRequestAsignedExterno";
+import { GetRequestsByTecnicoInterno } from "../../application/getRequestAsignedInterno";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
-
-
 
 const repository = new SupabaseRequestsRepository();
 
-const getRequests = new GetRequestsByTecnico(
-    repository
-  );
+const getRequestsInterno = new GetRequestsByTecnicoInterno(repository);
+const getRequestsExterno = new GetRequestsByTecnicoExterno(repository);
 
 export default function RequestsAssigned() {
 
-  const [requests, setRequests] =
-    useState<any[]>([]);
-
+  const [requests, setRequests] = useState<any[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -28,148 +22,99 @@ export default function RequestsAssigned() {
   }, []);
 
   const loadRequests = async () => {
-
     try {
-
-      const userData =
-        await AsyncStorage.getItem(
-          "user"
-        );
-
+      const userData = await AsyncStorage.getItem("user");
       if (!userData) return;
 
-      const user =
-        JSON.parse(userData);
+      const user = JSON.parse(userData);
 
-      const data =
-        await getRequests.execute(
-          user.id
-        );
+      // 🔥 Aquí decides si es interno o externo
+      let data: any[] = [];
+
+      if (user.tipoTecnico === "interno") {
+        data = await getRequestsInterno.execute(user.numUsuario);
+      }
+
+      if (user.tipoTecnico === "externo") {
+        data = await getRequestsExterno.execute(user.numUsuario);
+      }
 
       setRequests(data || []);
 
     } catch (error) {
-
-      console.log(
-        "ERROR loading assigned requests:",
-        error
-      );
+      console.log("ERROR loading assigned requests:", error);
     }
   };
 
-  const viewRequest = (
-    request: any
-  ) => {
-
+  const viewRequest = (request: any) => {
     router.push({
-      pathname:
-        "/requests",
+      pathname: "/requests",
       params: {
-        request:
-          JSON.stringify(
-            request
-          ),
+        request: JSON.stringify(request),
       },
     });
   };
 
-  const renderStatusColor = (
-    estado: string
-  ) => {
-
-    switch (estado) {
-
-      case "generada":
-        return "#F59E0B";
-
-      case "asignada":
-        return "#3B82F6";
-
-      case "en_proceso":
-        return "#8B5CF6";
-
-      case "terminada":
-        return "#10B981";
-
-      case "rechazada":
-        return "#EF4444";
-
-      default:
-        return "#6B7280";
+  const renderStatusColor = (status: number) => {
+    switch (status) {
+      case 1: return "#0b74f5";
+      case 2: return "#5a3bf6";
+      case 3: return "#f6c85c";
+      case 4: return "#10B981";
+      case 5: return "#EF4444";
+      default: return "#6B7280";
     }
   };
 
   return (
-
     <View style={styles.container}>
 
       <FlatList
         data={requests}
-
-        keyExtractor={(item) =>
-          item.id.toString()
-        }
+        keyExtractor={(item) => item.numSolicitud.toString()}
 
         renderItem={({ item }) => (
-
           <TouchableOpacity
             style={styles.card}
-            onPress={() =>
-              viewRequest(item)
-            }
+            onPress={() => viewRequest(item)}
           >
 
             <Text style={styles.title}>
-              {item.tipo_solicitud}
+              Solicitud # {item.numSolicitud}
             </Text>
 
             <Text style={styles.text}>
-              <Text style={styles.label}>
-                Prioridad:
-              </Text>{" "}
+              <Text style={styles.label}>Prioridad:</Text>{" "}
               {item.prioridad}
             </Text>
 
             <Text style={styles.text}>
-              <Text style={styles.label}>
-                Descripción:
-              </Text>{" "}
+              <Text style={styles.label}>Descripción:</Text>{" "}
               {item.descripcion}
             </Text>
 
             <View
               style={[
                 styles.statusContainer,
-                {
-                  backgroundColor:
-                    renderStatusColor(
-                      item.estado
-                    ),
-                },
+                { backgroundColor: renderStatusColor(item.numStatus) }
               ]}
             >
-
               <Text style={styles.statusText}>
-                {item.estado}
+                {item.numStatus}
               </Text>
-
             </View>
 
           </TouchableOpacity>
         )}
 
         ListEmptyComponent={
-
           <Text style={styles.emptyText}>
             No tienes solicitudes asignadas
           </Text>
         }
 
-        contentContainerStyle={{
-          paddingBottom: 100,
-        }}
+        contentContainerStyle={{ paddingBottom: 100 }}
       />
-
     </View>
   );
 }

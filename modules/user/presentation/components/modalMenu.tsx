@@ -15,7 +15,7 @@ interface ModalMenuProps {
 export function ModalMenu({ visible, onClose, user, setUser, onUpdate }: ModalMenuProps) {
 
     const insets = useSafeAreaInsets();
-    const role = user?.rol;
+const role = Number(user?.numRol);
 
     const logout = async () => {
         await AsyncStorage.removeItem("user");
@@ -38,26 +38,24 @@ export function ModalMenu({ visible, onClose, user, setUser, onUpdate }: ModalMe
 
                     <View style={styles.optionsContainer}>
 
-                        {role && (
+                        <TouchableOpacity
+                            style={styles.navItem}
+                            onPress={() => {
+                                onClose();
+                                router.push("/account");
+                            }}
+                        >
+                            <Feather name="user" size={24} color="#999" />
+                            <Text style={styles.navText}>Perfil</Text>
+                        </TouchableOpacity>
+
+
+                        {role === 1 && (
                             <TouchableOpacity
                                 style={styles.navItem}
                                 onPress={() => {
                                     onClose();
-                                    router.push("/");
-                                }}
-                            >
-                                <Feather name="user" size={24} color="#999" />
-                                <Text style={styles.navText}>Perfil</Text>
-                            </TouchableOpacity>
-                        )}
-
-
-                        {role === "administrador" && (
-                            <TouchableOpacity
-                                style={styles.navItem}
-                                onPress={() => {
-                                    onClose();
-                                    router.push("/");
+                                    router.push("/signUp");
                                 }}
                             >
                                 <Feather name="clipboard" size={24} color="#D09100" />
@@ -67,45 +65,15 @@ export function ModalMenu({ visible, onClose, user, setUser, onUpdate }: ModalMe
                             </TouchableOpacity>
                         )}
 
-
-                        {role && (
-                            <TouchableOpacity
-                                style={styles.navItem}
-                                onPress={logout}
-                            >
-                                <Ionicons name="log-out" size={26} color="red" />
-                                <Text style={[styles.navText, { color: "red" }]}>
-                                    Cerrar sesión
-                                </Text>
-                            </TouchableOpacity>
-                        )}
-
-
-                        {!role && ( //no login
-                            <>
-                                <TouchableOpacity
-                                    style={styles.navItem}
-                                    onPress={() => {
-                                        onClose();
-                                        router.push("/login");
-                                    }}
-                                >
-                                    <Ionicons name="log-in" size={26} color="#999" />
-                                    <Text style={styles.navText}>Login</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    style={styles.navItem}
-                                    onPress={() => {
-                                        onClose();
-                                        router.push("/login");
-                                    }}
-                                >
-                                    <Ionicons name="person-add" size={26} color="#999" />
-                                    <Text style={styles.navText}>Registro</Text>
-                                </TouchableOpacity>
-                            </>
-                        )}
+                        <TouchableOpacity
+                            style={styles.navItem}
+                            onPress={logout}
+                        >
+                            <Ionicons name="log-out" size={26} color="red" />
+                            <Text style={[styles.navText, { color: "red" }]}>
+                                Cerrar sesión
+                            </Text>
+                        </TouchableOpacity>
 
                     </View>
 

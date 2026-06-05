@@ -1,55 +1,36 @@
-// getRequestsCompleted.ts
-
 import { RequestsForm } from "../domain/request";
-
 import { RequestsRepository } from "../domain/requestRepository";
 
 export class GetRequestsCompleted {
 
   constructor(
-    private repository:
-      RequestsRepository
+    private repository: RequestsRepository
   ) {}
 
   async execute(
-    userId: string,
-    rol: string
+    numUsuario: number,
+    numRol: number
   ): Promise<RequestsForm[]> {
 
-    const requests =
-      await this.repository
-        .getRequests();
+    const requests = await this.repository.getRequests();
 
-    if (rol === "administrador") {
-
+    if (numRol === 1) {
       return requests.filter(
-        (request) =>
-          request.estado ===
-          "terminada"
+        (request) => request.numStatus === 4
       );
     }
 
-    if (rol === "tecnico") {
-
+    if (numRol === 2) {
       return requests.filter(
         (request) =>
-          request.estado ===
-            "terminada" &&
-
-          request.tecnico_id ===
-            userId
+          request.numStatus === 4 &&
+          request.numSolicitante === numUsuario
       );
     }
 
-    if (rol === "solicitante") {
-
+    if (numRol === 3) {
       return requests.filter(
-        (request) =>
-          request.estado ===
-            "terminada" &&
-
-          request.solicitante_id ===
-            userId
+        (request) => request.numStatus === 4
       );
     }
 

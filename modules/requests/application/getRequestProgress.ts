@@ -4,41 +4,38 @@ import { RequestsRepository } from "../domain/requestRepository";
 
 export class GetRequestsInProgress {
 
-  constructor(
-    private repository:
-      RequestsRepository
-  ) {}
+  constructor(private repository: RequestsRepository) { }
 
-  async execute(
-    userId: string,
-    rol: string
-  ): Promise<RequestsForm[]> {
+  async execute(numUsuario: number,  numRol: number): Promise<RequestsForm[]> {
 
-    const requests =
-      await this.repository
-        .getRequests();
+    const requests = await this.repository
+      .getRequests();
 
-    if (rol === "administrador") {
+    if (numRol === 1) {
 
       return requests.filter(
         (request) =>
-          request.estado ===
-          "en_proceso"
+          request.numStatus === 3
       );
     }
 
-    if (rol === "solicitante") {
+    if (numRol === 2) {
 
       return requests.filter(
         (request) =>
-          request.estado ===
-            "en_proceso" &&
+          request.numStatus === 3 &&
 
-          request.solicitante_id ===
-            userId
+          request.numSolicitante === numUsuario
       );
     }
 
+    if (numRol === 3) {
+
+      return requests.filter(
+        request =>
+          request.numStatus === 3
+      );
+    }
     return [];
   }
 }

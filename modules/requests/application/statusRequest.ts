@@ -4,17 +4,9 @@ import { RequestsRepository } from "../domain/requestRepository";
 
 export class UpdateRequestStatus {
 
-  constructor(
-    private repository: RequestsRepository
-  ) {}
+  constructor(  private repository: RequestsRepository) {}
 
-  async execute(
-    requestId: string,
-
-    request:
-    Partial<RequestsForm>
-
-  ): Promise<boolean> {
+  async execute(requestId: number,request: Partial<RequestsForm>): Promise<boolean> {
 
     if (!requestId) {
 

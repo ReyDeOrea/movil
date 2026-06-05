@@ -1,68 +1,109 @@
 export interface RequestsForm {
 
-    id: string;
-    solicitante_id: string;
-    tecnico_id?: string;
-    administrador_id?: string;
-    fecha_solicitud: string;
-    tipo_solicitud: TipoS;
-    tipo_mantenimiento?: TipoM;
-    area_id: string;
+    numSolicitud: number;
+    fecha: string;
+
+    numSolicitante: number;
+
+    numTipo: number;
+    numTipoMantenimiento?: number;
+
+    numArea: number;
+
     descripcion: string;
-    prioridad?: Prioridad;
-    estado: EstadoS;
-    motivo_rechazo?: string;
-    persona_asignada?: string;
-    fecha_asignada?: string;
-    fecha_programada_inicio?: string;
-    fecha_programada_fin?: string;
-    fecha_real_inicio?: string;
-    fecha_real_fin?: string;
+    prioridad?: Prioridad; //DB
+
+    numStatus: StatusSolicitud;
+
+    motivoCancelacion?: string;
+
+    fechaAsignacion?: string;
+    fechaProgInicio?: string;
+    fechaProgFin?: string;
+
+    fechaInicioReal?: string;
+    fechaFinReal?: string;
+
     comentarios?: string;
-    evidencia_S?: string;
-    evidencia_T?: string;
-    externo: boolean;
-    compra?: string;
-    created_at: string;
+    evidencias?: Evidence[];
+
+    bitacora?: Bitacora[];
+
+    materiales?: DetalleMaterial[];
+
+    tecnicoInterno?: SolicitudTecnicoInterno;
+
+    tecnicoExterno?: SolicitudTecnicoExterno;
+
 }
+
+export interface Evidence {
+    idEvidencia: string;
+    numSolicitud: number;
+    tipoEvidencia: string;
+    ruta: string;
+    fecha: string;
+}
+
+export interface Bitacora {
+    numBitacora: number;
+    numSolicitud: number;
+    numUsuario: number;
+    fecha: string;
+    accion: string;
+    descripcion: string;
+}
+
+export interface DetalleMaterial {
+    numSolicitud: number;
+    numMaterial: number;
+    cantidad: number;
+    unidad: string;
+}
+
+export interface SolicitudTecnicoInterno {
+    id: number;
+    numSolicitud: number;
+    numTecnicoInterno: number;
+}
+
+
+export interface SolicitudTecnicoExterno {
+    id: number;
+    numSolicitud: number;
+    numTecnicoExterno: number;
+}
+
 
 export type Prioridad =
     | "baja"
     | "media"
     | "alta";
 
-export type EstadoS =
-    | "generada"
-    | "asignada"
-    | "en_proceso"
-    | "terminada"
-    | "cancelada"
-    | "rechazada";
-
-export type TipoS =
-    | "servicio"
-    | "mantenimiento";
-
-export type TipoM =
-    | "preventivo"
-    | "correctivo"
-    | "reactivo";
-
-export type CreateRequests = Omit<
+export enum StatusSolicitud {
+    GENERADA = 1,
+    ASIGNADA = 2,
+    EN_PROCESO = 3,
+    TERMINADA = 4,
+    RECHAZADA = 5
+}
+export type CreateRequest = Omit<
     RequestsForm,
-    | "id"
-    | "created_at"
-    | "estado"
-    | "administrador_id"
-    | "tecnico_id"
-    | "motivo_rechazo"
-    | "fecha_asignada"
-    | "fecha_programada_inicio"
-    | "fecha_programada_fin"
-    | "fecha_real_inicio"
-    | "fecha_real_fin"
+    | "numSolicitud"
+    | "numStatus"
+    | "motivoCancelacion"
+    | "fechaAsignacion"
+    | "fechaProgInicio"
+    | "fechaProgFin"
+    | "fechaInicioReal"
+    | "fechaFinReal"
     | "comentarios"
-    | "compra"
+    | "evidencias"
+    | "bitacora"
+    | "materiales"
+    | "prioridad"
+    | "tecnicoInterno"
+    | "tecnicoExterno"
 >;
 
 export type UpdateRequests = Partial<RequestsForm>;

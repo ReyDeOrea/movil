@@ -13,15 +13,9 @@ import { validateLoginData } from "../../application/validateLogin";
 export default function LoginForm() {
 
   const router = useRouter();
-
-  const [email, setEmail] =
-    useState("");
-
-  const [password, setPassword] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     try {
@@ -179,7 +173,7 @@ export default function LoginForm() {
 
           <TouchableOpacity
             onPress={() =>
-              router.push("/")
+              router.push("/password")
             }
           >
 

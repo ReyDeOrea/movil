@@ -1,210 +1,196 @@
 import { supabase } from "@/lib/supabase";
-
-
-import { CreateRequests, RequestsForm } from "../domain/request";
+import { CreateRequest, Prioridad, RequestsForm } from "../domain/request";
 import { RequestsRepository } from "../domain/requestRepository";
 
-export class SupabaseRequestsRepository
-  implements RequestsRepository {
+export class SupabaseRequestsRepository implements RequestsRepository {
 
-  async addRequest(
-    request: CreateRequests): Promise<RequestsForm | null> {
+  async createRequest(request: CreateRequest): Promise<number> {
 
-    try {
-      const { data, error } = await supabase
-        .from("solicitudes")
-        .insert([request])
-        .select()
-        .single();
+    const { data, error } = await supabase
+      .from("solicitudes")
+      .insert([{
+        ...request,
+        numStatus: 1 
+      }])
+      .select("numsolicitud")
+      .single();
 
-      if (error) throw error;
-      return data as RequestsForm;
+    if (error || !data) {
+      console.log("ERROR createRequest:", error);
+      throw new Error("Error al crear solicitud");
     }
-    catch (e) {
-      console.log("ERROR addRequest:", e);
-      return null;
-    }
+
+    return data.numsolicitud;
   }
 
   async getRequests(): Promise<RequestsForm[]> {
+    const { data, error } = await supabase
+      .from("solicitudes")
+      .select("*");
 
-    try {
-      const { data, error } = await supabase
-        .from("solicitudes")
-        .select("*");
+    if (error) throw error;
+    return (data ?? []) as RequestsForm[];
+  }
 
-      if (error) throw error;
-      return data as RequestsForm[];
-    }
-    catch (e) {
-      console.log("ERROR getRequests:", e);
+  async getRequestById(id: number): Promise<RequestsForm | null> {
+    const { data, error } = await supabase
+      .from("solicitudes")
+      .select("*")
+      .eq("numsolicitud", id)
+      .single();
+
+    if (error || !data) return null;
+    return data as RequestsForm;
+  }
+
+  async getRequestsBySolicitante(numSolicitante: number): Promise<RequestsForm[]> {
+    const { data, error } = await supabase
+      .from("solicitudes")
+      .select("*")
+      .eq("numsolicitante", numSolicitante);
+
+    if (error) {
+      console.log("ERROR getRequestsBySolicitante:", error);
       return [];
     }
+
+    return (data ?? []) as RequestsForm[];
   }
 
-  async getRequestById(
-    id: string): Promise<RequestsForm | null> {
+  async getRequestsByStatus(numStatus: number): Promise<RequestsForm[]> {
+    const { data, error } = await supabase
+      .from("solicitudes")
+      .select("*")
+      .eq("numstatus", numStatus);
 
-    try {
-      const { data, error } = await supabase
-        .from("solicitudes")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error) throw error;
-      return data as RequestsForm;
-    }
-    catch (e) {
-      console.log("ERROR getRequestById:", e);
-      return null;
-    }
-  }
-
-  async updateRequest(
-    id: string,
-    request: Partial<RequestsForm>): Promise<boolean> {
-
-    try {
-      const { error } = await supabase
-        .from("solicitudes")
-        .update(request)
-        .eq("id", id);
-
-      if (error) throw error;
-      return true;
-    }
-    catch (e) {
-      console.log("ERROR updateRequest:", e);
-      return false;
-    }
-  }
-
-  async deleteRequest(id: string): Promise<boolean> {
-
-    try {
-      const { error } = await supabase
-        .from("solicitudes")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
-      return true;
-    }
-    catch (e) {
-      console.log("ERROR deleteRequest:", e);
-      return false;
-    }
-  }
-
-  async assignRequest(
-    id: string,
-    tecnico_id: string,
-    prioridad: "baja" | "media" | "alta"): Promise<boolean> {
-
-    try {
-      const { error } = await supabase
-        .from("solicitudes")
-        .update({
-          tecnico_id,
-          prioridad,
-          estado: "asignada",
-          fecha_asignada: new Date().toISOString()
-        })
-        .eq("id", id);
-
-      if (error) throw error;
-      return true;
-    }
-    catch (e) {
-      console.log("ERROR assignRequest:", e);
-      return false;
-    }
-  }
-
-  async rejectRequest(
-    id: string,
-    motivo_rechazo: string
-  ): Promise<boolean> {
-
-    try {
-      const { error } = await supabase
-        .from("solicitudes")
-        .update({
-          estado: "rechazada",
-          motivo_rechazo
-        })
-        .eq("id", id);
-
-      if (error) throw error;
-      return true;
-    } 
-    catch (e) {
-      console.log("ERROR rejectRequest:", e);
-      return false;
-    }
-  }
-
-  async completeRequest(
-    id: string,
-    data: Partial<RequestsForm> ): Promise<boolean> {
-
-    try {
-      const { error } = await supabase
-        .from("solicitudes")
-        .update({
-          ...data,
-          estado: "terminada"
-        })
-        .eq("id", id);
-
-      if (error) throw error;
-      return true;
-    } 
-    catch (e) {
-      console.log("ERROR completeRequest:", e);
-      return false;
-    }
-  }
-
-  async getRequestsBySolicitante(
-    solicitante_id: string): Promise<RequestsForm[]> {
-
-    try {
-      const { data, error } = await supabase
-        .from("solicitudes")
-        .select("*")
-        .eq("solicitante_id", solicitante_id);
-
-      if (error) throw error;
-      return data as RequestsForm[];
-    } 
-    catch (e) {
-      console.log(
-        "ERROR getRequestsBySolicitante:",
-        e
-      );
+    if (error) {
+      console.log("ERROR getRequestsByStatus:", error);
       return [];
     }
+
+    return (data ?? []) as RequestsForm[];
   }
 
-  async getRequestsByTecnico(
-    tecnico_id: string ): Promise<RequestsForm[]> {
+  async updateRequest(id: number, request: Partial<RequestsForm>): Promise<boolean> {
 
-    try {
-      const { data, error } = await supabase
-        .from("solicitudes")
-        .select("*")
-        .eq("tecnico_id", tecnico_id);
-      if (error) throw error;
-      return data as RequestsForm[];
+    const { error } = await supabase
+      .from("solicitudes")
+      .update(request)
+      .eq("numsolicitud", id);
+
+    if (error) {
+      console.log("ERROR updateRequest:", error);
+      return false;
     }
-    catch (e) {
-      console.log(
-        "ERROR getRequestsByTecnico:",
-        e
-      );
-      return [];
+
+    return true;
+  }
+
+  async deleteRequest(id: number): Promise<boolean> {
+
+    const { error } = await supabase
+      .from("solicitudes")
+      .delete()
+      .eq("numsolicitud", id);
+
+    if (error) {
+      console.log("ERROR deleteRequest:", error);
+      return false;
     }
+
+    return true;
+  }
+
+  async assignRequest(id: number, prioridad: Prioridad): Promise<boolean> {
+
+    const { error } = await supabase
+      .from("solicitudes")
+      .update({
+        prioridad,
+        numStatus: 2,
+        fechaAsignacion: new Date().toISOString().split("T")[0],
+      })
+      .eq("numsolicitud", id);
+
+    if (error) {
+      console.log("ERROR assignRequest:", error);
+      return false;
+    }
+
+    return true;
+  }
+
+  async rejectRequest(id: number, motivoCancelacion: string): Promise<boolean> {
+
+    const { error } = await supabase
+      .from("solicitudes")
+      .update({
+        numStatus: 5,
+        motivoCancelacion,
+      })
+      .eq("numsolicitud", id);
+
+    if (error) {
+      console.log("ERROR rejectRequest:", error);
+      return false;
+    }
+
+    return true;
+  }
+
+  async completeRequest(id: number, data: Partial<RequestsForm>): Promise<boolean> {
+
+    const { error } = await supabase
+      .from("solicitudes")
+      .update({
+        ...data,
+        numStatus: 4,
+        fechaFinReal: new Date().toISOString().split("T")[0],
+      })
+      .eq("numsolicitud", id);
+
+    if (error) {
+      console.log("ERROR completeRequest:", error);
+      return false;
+    }
+
+    return true;
+  }
+
+
+  async getRequestsByTecnicoInterno(numTecnico: number): Promise<RequestsForm[]> {
+    const { data, error } = await supabase
+      .from("solicitud_tecnico_interno")
+      .select("numsolicitud")
+      .eq("numtecnicointerno", numTecnico);
+
+    if (error || !data) return [];
+
+    const ids = data.map(r => r.numsolicitud);
+
+    const { data: solicitudes } = await supabase
+      .from("solicitudes")
+      .select("*")
+      .in("numsolicitud", ids);
+
+    return (solicitudes ?? []) as RequestsForm[];
+  }
+
+  async getRequestsByTecnicoExterno(numTecnico: number): Promise<RequestsForm[]> {
+    const { data, error } = await supabase
+      .from("solicitud_tecnico_externo")
+      .select("numsolicitud")
+      .eq("numtecnicoexterno", numTecnico);
+
+    if (error || !data) return [];
+
+    const ids = data.map(r => r.numsolicitud);
+
+    const { data: solicitudes } = await supabase
+      .from("solicitudes")
+      .select("*")
+      .in("numsolicitud", ids);
+
+    return (solicitudes ?? []) as RequestsForm[];
   }
 }

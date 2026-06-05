@@ -1,26 +1,23 @@
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-import { useEffect, useState, } from "react";
-
 import { useRouter } from "expo-router";
-import { FlatList, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity
+} from "react-native";
+
 import { GetRequestsInProgress } from "../../application/getRequestProgress";
+import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
 
-const repository =
-  new SupabaseRequestsRepository();
-
-const getRequests =
-  new GetRequestsInProgress(
-    repository
-  );
+const repository = new SupabaseRequestsRepository();
+const getRequests = new GetRequestsInProgress(repository);
 
 export default function RequestsInProgress() {
 
-  const [requests, setRequests] =
-    useState<any[]>([]);
-
+  const [requests, setRequests] = useState<RequestsForm[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -28,82 +25,54 @@ export default function RequestsInProgress() {
   }, []);
 
   const loadRequests = async () => {
-
     try {
-
-      const userData =
-        await AsyncStorage.getItem(
-          "user"
-        );
-
+      const userData = await AsyncStorage.getItem("user");
       if (!userData) return;
 
-      const user =
-        JSON.parse(userData);
+      const user = JSON.parse(userData);
 
-      const data =
-        await getRequests.execute(
-          user.id,
-          user.rol
-        );
+      const data = await getRequests.execute(
+        user.numUsuario,
+        user.numRol
+      );
 
-      setRequests(data);
+      setRequests(data ?? []);
 
     } catch (error) {
-
-      console.log(
-        "ERROR loading requests:",
-        error
-      );
+      console.log("ERROR loading requests:", error);
     }
   };
 
-  const viewRequest = (
-    request: any
-  ) => {
-
+  const viewRequest = (request: RequestsForm) => {
     router.push({
       pathname: "/requests",
       params: {
-        request:
-          JSON.stringify(
-            request
-          ),
+        request: JSON.stringify(request),
       },
     });
   };
 
   return (
-
     <FlatList
       data={requests}
-
-      keyExtractor={(item) =>
-        item.id.toString()
-      }
+      keyExtractor={(item) => item.numSolicitud.toString()}
 
       renderItem={({ item }) => (
-
         <TouchableOpacity
           style={styles.card}
-
-          onPress={() =>
-            viewRequest(item)
-          }
+          onPress={() => viewRequest(item)}
         >
 
           <Text style={styles.title}>
-            {item.tipo_solicitud}
+            Solicitud #{item.numSolicitud}
           </Text>
 
           <Text>
-            Estado:
-            {item.estado}
+            Estado: {item.numStatus}
           </Text>
 
           <Text>
-            Prioridad:
-            {item.prioridad}
+            Prioridad: {item.prioridad ?? "Sin prioridad"}
           </Text>
 
           <Text numberOfLines={2}>
@@ -115,8 +84,7 @@ export default function RequestsInProgress() {
 
       ListEmptyComponent={
         <Text style={styles.empty}>
-          No hay solicitudes
-          en proceso
+          No hay solicitudes en proceso
         </Text>
       }
     />

@@ -3,18 +3,13 @@ import { RequestsRepository } from "../domain/requestRepository";
 
 
 export class GetRequestsBySolicitante {
+constructor( private repository: RequestsRepository ) {}
 
-  constructor(
-    private repository: RequestsRepository
-  ) {}
-
-  async execute(
-    solicitante_id: string
-  ): Promise<RequestsForm[]> {
+  async execute(numSolcitante: number): Promise<RequestsForm[]> {
 
     return await this.repository
       .getRequestsBySolicitante(
-        solicitante_id
+        numSolcitante
       );
   }
 }

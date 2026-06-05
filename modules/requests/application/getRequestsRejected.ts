@@ -4,38 +4,26 @@ import { RequestsRepository } from "../domain/requestRepository";
 
 export class GetRequestsRejected {
 
-  constructor(
-    private repository:
-      RequestsRepository
-  ) {}
+  constructor( private repository: RequestsRepository) {}
 
-  async execute(
-    userId: string,
-    rol: string
-  ): Promise<RequestsForm[]> {
+  async execute( numUsuario: number, numRol: number): Promise<RequestsForm[]> {
 
-    const requests =
-      await this.repository
+    const requests = await this.repository
         .getRequests();
 
-    if (rol === "administrador") {
+    if (numRol === 1) {
 
       return requests.filter(
         (request) =>
-          request.estado ===
-          "rechazada"
-      );
+          request.numStatus === 5 );
     }
 
-    if (rol === "solicitante") {
+    if (numRol === 2) {
 
       return requests.filter(
         (request) =>
-          request.estado ===
-            "rechazada" &&
-
-          request.solicitante_id ===
-            userId
+          request.numStatus === 5 &&
+          request.numSolicitante === numUsuario
       );
     }
 

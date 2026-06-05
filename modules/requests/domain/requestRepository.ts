@@ -1,50 +1,41 @@
-import { CreateRequests, RequestsForm } from "./request";
+import { CreateRequest, Prioridad, RequestsForm } from "./request";
 
 
 export interface RequestsRepository {
 
   getRequests(): Promise<RequestsForm[]>;
+  getRequestById(id: number): Promise<RequestsForm | null>;
+  getRequestsBySolicitante(numSolicitante: number): Promise<RequestsForm[]>;
+  getRequestsByStatus(numStatus: number): Promise<RequestsForm[]>;
 
-  getRequestById(id: string): Promise<RequestsForm | null>;
 
-  addRequest(
-    request: CreateRequests
-  ): Promise<RequestsForm | null>;
+  createRequest(request: CreateRequest): Promise<number>;
+  updateRequest(id: number, request: Partial<RequestsForm>): Promise<boolean>;
+  deleteRequest(id: number): Promise<boolean>;
 
-  updateRequest(
-    id: string,
-    request: Partial<RequestsForm>
-  ): Promise<boolean>;
-
-  deleteRequest(id: string): Promise<boolean>;
-
+getRequestsByTecnicoInterno(numTecnico: number): Promise<RequestsForm[]>;
+getRequestsByTecnicoExterno(numTecnico: number): Promise<RequestsForm[]>;
 
   //Admin
   assignRequest(
-    id: string,
-    tecnico_id: string,
-    prioridad: "baja" | "media" | "alta"
+    id: number,
+    prioridad: Prioridad
   ): Promise<boolean>;
 
   rejectRequest(
-    id: string,
-    motivo_rechazo: string
+    id: number,
+    motivoCancelacion: string
   ): Promise<boolean>;
 
-  
+
   //Tec
   completeRequest(
-    id: string,
+    id: number,
     data: Partial<RequestsForm>
   ): Promise<boolean>;
 
-
-  getRequestsBySolicitante(
-    solicitante_id: string
-  ): Promise<RequestsForm[]>;
-
-  getRequestsByTecnico(
-    tecnico_id: string
-  ): Promise<RequestsForm[]>;
+  // startRequest(
+  // id: number
+  //): Promise<boolean>;
 
 }

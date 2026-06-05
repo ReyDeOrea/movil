@@ -1,17 +1,25 @@
 import { User } from "./user";
 
 export interface UserRepository {
-  getProfile(id: string): Promise<User | null>;
-  updateProfile(profile: User): Promise<void>;
+
+  getUsers(): Promise<User[]>;
+  getProfile(numUsuario: number): Promise<User | null>;
 
   createProfile(profile: User): Promise<void>;
+  checkIfProfileExists(numUsuario: number): Promise<boolean>;
+
+  updateProfile(profile: User): Promise<void>;
+
   login(email: string, password: string): Promise<User | null>;
-  verifyUserEmail(username: string, email: string): Promise<User | null>;
-  getUserById(id: string): Promise<User | null>;
+  verifyUserEmail(nombre: string, email: string): Promise<User | null>;
 
-   checkIfProfileExists(id: string): Promise<boolean>;
+ createUserProfile(
+    numUsuario: number,
+    nombre?: string,
+    telefono?: string
+  ): Promise<void>;
+  resetPassword(email: string): Promise<void>;
 
-  createUserProfile(id: string, username?: string, phone?: string): Promise<void>;
+  deleteUser(numUsuario: number): Promise<boolean>;
 
-   resetPassword(email: string): Promise<void>;
 }
