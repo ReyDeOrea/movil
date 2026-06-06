@@ -15,7 +15,7 @@ interface ModalMenuProps {
 export function ModalMenu({ visible, onClose, user, setUser, onUpdate }: ModalMenuProps) {
 
     const insets = useSafeAreaInsets();
-const role = Number(user?.numRol);
+    const role = Number(user?.numRol);
 
     const logout = async () => {
         await AsyncStorage.removeItem("user");
@@ -55,7 +55,7 @@ const role = Number(user?.numRol);
                                 style={styles.navItem}
                                 onPress={() => {
                                     onClose();
-                                    router.push("/signUp");
+                                    router.push("/catalog");
                                 }}
                             >
                                 <Feather name="clipboard" size={24} color="#D09100" />

@@ -1,8 +1,18 @@
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from "react-native";
 import { ResetPasswordUseCase } from '../../application/resetPassword';
 import { VerifyUserUseCase } from '../../application/verifyUserCase';
 import { User } from '../../domain/user';
@@ -30,7 +40,9 @@ export default function Password() {
       setLoading(true);
 
       const user = await verifyUserUseCase.execute(username, email);
-console.log("USER VERIFY:", user);
+
+      console.log("USER VERIFY:", user);
+
       setProfile(user);
       setModalOpen(true);
 
@@ -46,7 +58,10 @@ console.log("USER VERIFY:", user);
 
   };
 
-  const handlePasswordChange = async (newPass: string, confirmPass: string) => {
+  const handlePasswordChange = async (
+    newPass: string,
+    confirmPass: string
+  ) => {
 
     if (!profile) return;
 
@@ -58,7 +73,10 @@ console.log("USER VERIFY:", user);
         confirmPassword: confirmPass,
       });
 
-      Alert.alert("Listo", "Contraseña actualizada correctamente");
+      Alert.alert(
+        "Listo",
+        "Contraseña actualizada correctamente"
+      );
 
       setModalOpen(false);
 
@@ -73,37 +91,80 @@ console.log("USER VERIFY:", user);
   };
 
   return (
-
     <>
-      <Stack.Screen options={{ headerShown: false }} />
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
 
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        contentContainerStyle={
+          styles.container
+        }
+      >
 
         <View style={styles.header}>
 
           <TouchableOpacity
             style={styles.backBtn}
-            onPress={() => router.back()}
+            onPress={() =>
+              router.back()
+            }
           >
-            <MaterialCommunityIcons name="arrow-left" size={28} color="#fff" />
+
+            <MaterialCommunityIcons
+              name="arrow-left"
+              size={28}
+              color="#fff"
+            />
+
           </TouchableOpacity>
 
           <View style={styles.rowHeader}>
-            <Text style={styles.title}>Animaland</Text>
-            <MaterialCommunityIcons name="dog" size={30} color="#fff" />
+
+            <Text style={styles.title}>
+             ServiceApp
+            </Text>
+
+            <MaterialCommunityIcons
+              name="tools"
+              size={30}
+              color="#fff"
+            />
+
           </View>
 
         </View>
-    
+
+        <View style={styles.avatarBox}>
+
+          <FontAwesome6
+            name="shield-halved"
+            size={150}
+            color="#D1D5DB"
+          />
+
+        </View>
 
         <Text style={styles.subtitle}>
-          Ingresa tu usuario y correo
+          Recupera tu contraseña
+        </Text>
+
+        <Text style={styles.txt}>
+          Ingresa tu usuario y correo electrónico
         </Text>
 
         <View style={styles.BE}>
 
           <View style={styles.BI}>
-            <MaterialCommunityIcons name="account" size={22} color="#DAC193" />
+
+            <MaterialCommunityIcons
+              name="account"
+              size={22}
+              color="#4F46E5"
+            />
+
             <TextInput
               style={styles.txtI}
               placeholder="Usuario"
@@ -112,10 +173,17 @@ console.log("USER VERIFY:", user);
               onChangeText={setUsername}
               autoCapitalize="none"
             />
+
           </View>
 
           <View style={styles.BI}>
-            <MaterialIcons name="email" size={22} color="#DAC193" />
+
+            <MaterialIcons
+              name="email"
+              size={22}
+              color="#4F46E5"
+            />
+
             <TextInput
               style={styles.txtI}
               placeholder="Correo electrónico"
@@ -125,6 +193,7 @@ console.log("USER VERIFY:", user);
               keyboardType="email-address"
               autoCapitalize="none"
             />
+
           </View>
 
         </View>
@@ -135,22 +204,51 @@ console.log("USER VERIFY:", user);
           disabled={loading}
         >
 
-          {loading
-            ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.txtBtn}>Verificar</Text>
+          {
+            loading ? (
+              <ActivityIndicator
+                color="#fff"
+              />
+            ) : (
+              <Text style={styles.txtBtn}>
+                Verificar
+              </Text>
+            )
           }
 
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.txtSI}>Volver</Text>
-        </TouchableOpacity>
+        <View style={styles.rp}>
+
+          <MaterialCommunityIcons
+            name="arrow-left"
+            size={22}
+            color="#4F46E5"
+          />
+
+          <TouchableOpacity
+            onPress={() =>
+              router.back()
+            }
+          >
+
+            <Text style={styles.txtSI}>
+              Volver
+            </Text>
+
+          </TouchableOpacity>
+
+        </View>
 
         <NewPasswordModal
           visible={modalOpen}
           loading={loading}
-          onClose={() => setModalOpen(false)}
-          onSubmit={handlePasswordChange}
+          onClose={() =>
+            setModalOpen(false)
+          }
+          onSubmit={
+            handlePasswordChange
+          }
         />
 
       </ScrollView>
@@ -163,18 +261,18 @@ const styles = StyleSheet.create({
 
   container: {
     flexGrow: 1,
-    backgroundColor: "#FDF8F0",
+    backgroundColor: "#F9FAFB",
     paddingBottom: 40,
   },
 
   header: {
     width: "100%",
-    height: 90,
+    height: 100,
     paddingTop: 35,
-    backgroundColor: "#B7C979",
+    backgroundColor: "#4F46E5",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: 20,
   },
 
   rowHeader: {
@@ -195,30 +293,37 @@ const styles = StyleSheet.create({
     top: 45,
   },
 
-  img: {
-    width: 180,
-    height: 180,
-    borderRadius: 100,
-    alignSelf: "center",
+  avatarBox: {
+    alignItems: "center",
     marginVertical: 10,
   },
 
   subtitle: {
-    fontSize: 15,
-    color: "#555",
-    marginBottom: 20,
     textAlign: "center",
+    marginTop: 10,
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#374151",
+  },
+
+  txt: {
+    textAlign: "center",
+    marginTop: 8,
+    marginBottom: 20,
+    fontSize: 16,
+    color: "#6B7280",
   },
 
   BE: {
     marginHorizontal: 20,
+    marginTop: 10,
   },
 
   BI: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#DAC193",
+    borderColor: "#C7D2FE",
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -227,30 +332,38 @@ const styles = StyleSheet.create({
   },
 
   txtI: {
+    fontSize: 16,
     flex: 1,
     marginLeft: 8,
-    fontSize: 16,
+    color: "#000",
   },
 
   button: {
-    backgroundColor: "#dee8b4",
+    backgroundColor: "#4F46E5",
     borderRadius: 20,
     paddingVertical: 14,
-    marginHorizontal: 80,
-    marginTop: 10,
+    paddingHorizontal: 60,
+    alignSelf: "center",
+    marginVertical: 20,
   },
 
   txtBtn: {
-    color: "black",
-    textAlign: "center",
-    fontSize: 16,
+    fontSize: 18,
+    color: "#fff",
+    fontWeight: "bold",
   },
 
   txtSI: {
+    color: "#2563EB",
     fontWeight: "bold",
-    textDecorationLine: "underline",
-    textAlign: "center",
-    marginTop: 12,
+    marginLeft: 6,
+  },
+
+  rp: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 5,
   },
 
 });

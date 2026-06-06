@@ -1,6 +1,6 @@
 export interface Material {
   numMaterial: number;
   nombreMaterial: string;
-  unidad: string;
-  cantidad: number;
+  unidad?: string;
+  cantidad?: number;
 }
