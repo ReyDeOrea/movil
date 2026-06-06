@@ -12,7 +12,16 @@ export class SupabaseUserRepository implements UserRepository {
 
   if (error) throw error;
 
-  return (data ?? []) as User[];
+    return (data ?? []).map((item) => ({
+    numUsuario: item.numusuario,
+    nombre: item.nombre,
+    email: item.email,
+    telefono: item.telefono ?? "",
+    password: item.password,
+    imagen: item.imagen ?? "",
+    numRol: item.numrol,
+    numTipo: item.numtipo,
+  }));
 }
   async getProfile(numUsuario: number): Promise<User | null> {
     const { data, error } = await supabase
@@ -171,4 +180,46 @@ console.log("Hash BD:", data.password);
   async resetPassword(email: string): Promise<void> {
     throw new Error("No implementado en este sistema sin Auth");
   }
+
+  async updateUser(
+  user: User
+): Promise<void> {
+
+  const { error } = await supabase
+    .from("usuarios")
+    .update({
+      nombre: user.nombre,
+      email: user.email,
+      telefono: user.telefono,
+      imagen: user.imagen,
+      numrol: user.numRol,
+      numtipo: user.numTipo,
+    })
+    .eq("numusuario", user.numUsuario);
+
+  if (error) throw error;
+}
+
+async getUserById(numUsuario: number): Promise<User | null> {
+
+  const { data, error } = await supabase
+    .from("usuarios")
+    .select("*")
+    .eq("numusuario", numUsuario)
+    .single();
+
+  if (error || !data) return null;
+
+  return {
+    numUsuario: data.numusuario,
+    nombre: data.nombre,
+    email: data.email,
+    telefono: data.telefono ?? "",
+    password: data.password,
+    imagen: data.imagen ?? "",
+    numRol: data.numrol,
+    numTipo: data.numtipo,
+  };
+}
+
 }

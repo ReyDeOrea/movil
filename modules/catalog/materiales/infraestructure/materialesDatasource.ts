@@ -20,9 +20,7 @@ export class MaterialDataSource implements MaterialRepository {
     }));
   }
 
-  async getMaterialById(
-    numMaterial: number
-  ): Promise<Material | null> {
+  async getMaterialById( numMaterial: number): Promise<Material | null> {
 
     const { data, error } = await supabase
       .from("materiales")
@@ -40,9 +38,7 @@ export class MaterialDataSource implements MaterialRepository {
     };
   }
 
-  async createMaterial(
-    material: Material
-  ): Promise<void> {
+  async createMaterial( material: Material): Promise<void> {
 
     const { error } = await supabase
       .from("materiales")
@@ -50,17 +46,15 @@ export class MaterialDataSource implements MaterialRepository {
         {
           nummaterial: material.numMaterial,
           nombrematerial: material.nombreMaterial,
-          unidad: material.unidad,
-          cantidad: material.cantidad,
+          unidad: material.unidad ?? null,
+          cantidad: material.cantidad ?? null,
         },
       ]);
 
     if (error) throw error;
   }
 
-  async updateMaterial(
-    material: Material
-  ): Promise<void> {
+  async updateMaterial( material: Material ): Promise<void> {
 
     const { error } = await supabase
       .from("materiales")
@@ -74,9 +68,7 @@ export class MaterialDataSource implements MaterialRepository {
     if (error) throw error;
   }
 
-  async deleteMaterial(
-    numMaterial: number
-  ): Promise<void> {
+  async deleteMaterial( numMaterial: number): Promise<void> {
 
     const { error } = await supabase
       .from("materiales")

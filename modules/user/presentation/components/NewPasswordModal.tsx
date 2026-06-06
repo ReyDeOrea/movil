@@ -1,3 +1,4 @@
+import { FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import { ActivityIndicator, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
@@ -18,15 +19,41 @@ export default function NewPasswordModal({ visible, loading, onClose, onSubmit }
     setConfirmPassword("");
   };
 
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent>
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
+ return (
+  <Modal
+    visible={visible}
+    animationType="slide"
+    transparent
+  >
+    <View style={styles.modalContainer}>
 
-          <Text style={styles.subtitle}>Ingresa tu nueva contraseña</Text>
+      <View style={styles.modalContent}>
+
+        <View style={styles.iconBox}>
+
+          <FontAwesome6
+            name="shield-halved"
+            size={70}
+            color="#4F46E5"
+          />
+
+        </View>
+
+        <Text style={styles.title}>
+          Nueva contraseña
+        </Text>
+
+        <Text style={styles.subtitle}>
+          Ingresa y confirma tu nueva contraseña
+        </Text>
+
+        <View style={styles.inputContainer}>
+
+          <MaterialIcons
+            name="password"
+            size={22}
+            color="#4F46E5"
+          />
 
           <TextInput
             placeholder="Nueva contraseña"
@@ -37,8 +64,18 @@ export default function NewPasswordModal({ visible, loading, onClose, onSubmit }
             style={styles.input}
           />
 
+        </View>
+
+        <View style={styles.inputContainer}>
+
+          <MaterialIcons
+            name="password"
+            size={22}
+            color="#4F46E5"
+          />
+
           <TextInput
-            placeholder="Confirmar nueva contraseña"
+            placeholder="Confirmar contraseña"
             placeholderTextColor="#999"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
@@ -46,74 +83,123 @@ export default function NewPasswordModal({ visible, loading, onClose, onSubmit }
             style={styles.input}
           />
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.txtBtn}>Actualizar contraseña</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={onClose}>
-            <Text style={styles.txtSI}>Cancelar</Text>
-          </TouchableOpacity>
-
         </View>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+
+          {
+            loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.txtBtn}>
+                Actualizar contraseña
+              </Text>
+            )
+          }
+
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.cancelBtn}
+          onPress={onClose}
+        >
+
+          <Text style={styles.txtSI}>
+            Cancelar
+          </Text>
+
+        </TouchableOpacity>
+
       </View>
-    </Modal>
-  );
+
+    </View>
+  </Modal>
+);
 }
 
 const styles = StyleSheet.create({
-  subtitle: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  input: {
-    width: "100%",
-    borderWidth: 1,
-    borderColor: "#E8B4B4",
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 15,
-    color: "#000"
-  },
-  button: {
-    backgroundColor: "#E5DCCC",
-    borderRadius: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 50,
-    marginVertical: 10,
-  },
-  txtBtn: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center",
-    fontSize: 16,
-  },
-  txtSI: {
-    fontWeight: "bold",
-    textDecorationLine: "underline",
-    textAlign: "center",
-  },
+
   modalContainer: {
     flex: 1,
     justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  modalContent: {
-    margin: 20,
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 20,
     alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.55)",
+    padding: 20,
+  },
+
+  modalContent: {
+    width: "100%",
+    backgroundColor: "#FFF",
+    borderRadius: 24,
+    padding: 25,
+    elevation: 8,
+  },
+
+  iconBox: {
+    alignItems: "center",
+    marginBottom: 15,
+  },
+
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#111827",
+    textAlign: "center",
+    marginBottom: 5,
+  },
+
+  subtitle: {
+    fontSize: 15,
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 25,
+  },
+
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#C7D2FE",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    backgroundColor: "#fff",
+    marginBottom: 15,
+  },
+
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: "#000",
+    paddingVertical: 12,
+    marginLeft: 8,
+  },
+
+  button: {
+    backgroundColor: "#4F46E5",
+    borderRadius: 20,
+    paddingVertical: 14,
+    marginTop: 10,
+  },
+
+  txtBtn: {
+    color: "#fff",
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+
+  cancelBtn: {
+    marginTop: 15,
+  },
+
+  txtSI: {
+    color: "#2563EB",
+    fontWeight: "bold",
+    textAlign: "center",
   },
 
 });

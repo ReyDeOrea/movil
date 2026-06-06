@@ -3,6 +3,9 @@ import { User } from "./user";
 export interface UserRepository {
 
   getUsers(): Promise<User[]>;
+  getUserById(numUsuario: number): Promise<User | null>;
+updateUser(user: User): Promise<void>;
+
   getProfile(numUsuario: number): Promise<User | null>;
 
   createProfile(profile: User): Promise<void>;
@@ -13,7 +16,7 @@ export interface UserRepository {
   login(email: string, password: string): Promise<User | null>;
   verifyUserEmail(nombre: string, email: string): Promise<User | null>;
 
- createUserProfile(
+  createUserProfile(
     numUsuario: number,
     nombre?: string,
     telefono?: string
