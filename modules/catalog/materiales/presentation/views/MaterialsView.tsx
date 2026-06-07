@@ -1,5 +1,5 @@
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { DeleteMaterialUseCase } from "../../application/deleteMaterial";
 import { GetMaterialsUseCase } from "../../application/getMaterials";
@@ -16,9 +16,11 @@ export default function MaterialsView() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadMaterials();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadMaterials();
+    }, [])
+  );
 
   const loadMaterials = async () => {
     try {
