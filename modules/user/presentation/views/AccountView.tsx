@@ -1,16 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  Dimensions,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-
+import { Alert, Dimensions, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
 import { checkUserExistsUpdate } from "../../application/checkUserExistsUpdate";
 import { getUserProfile } from "../../application/getUserProfile";
 import { updateUserProfile } from "../../application/updateUserProfile";
