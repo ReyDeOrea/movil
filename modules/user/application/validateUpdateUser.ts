@@ -16,8 +16,9 @@ export const validateUser = (
     throw new Error("El nombre debe tener al menos 3 caracteres");
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+  const emailRegex =
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    
   if (!emailRegex.test(email)) {
     throw new Error("El formato del correo no es válido");
   }

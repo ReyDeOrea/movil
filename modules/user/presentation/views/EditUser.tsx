@@ -59,7 +59,7 @@ const handleUpdate = async () => {
       telefono: telefono.trim(),
     };
 
-    await validateUser(updatedUser.email, updatedUser.telefono, updatedUser.nombre);
+    await validateUser( updatedUser.nombre, updatedUser.email, updatedUser.telefono);
 
     await checkUserExistsUpdate(
       updatedUser.email,
@@ -141,6 +141,7 @@ const styles = StyleSheet.create({
 
   container: {
     padding: 20,
+    backgroundColor: "#fff"
   },
   imageContainer: {
     alignItems: "center",
