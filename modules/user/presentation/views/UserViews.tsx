@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
     ActivityIndicator,
     Alert,
@@ -14,20 +14,25 @@ import { User } from "../../domain/user";
 import { SupabaseUserRepository } from "../../infraestructure/userDataSource";
 import UserList from "../components/UserList";
 
+import { useFocusEffect } from "expo-router";
+import { useCallback } from "react";
+
 export default function UsersView() {
 
     const router = useRouter();
 
-    const repository = new SupabaseUserRepository ();
+    const repository = new SupabaseUserRepository();
 
     const getUsers = new GetUsersUseCase(repository);
 
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        loadUsers();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            loadUsers();
+        }, [])
+    );
 
     const loadUsers = async () => {
         try {
