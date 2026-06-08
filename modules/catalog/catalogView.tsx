@@ -26,7 +26,7 @@ export default function CatalogosView() {
     {
       titulo: "Proveedores",
       icono: "truck",
-      ruta: "/providers",
+      ruta: "/proveedor",
     },
     {
       titulo: "Cuentas",

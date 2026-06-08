@@ -1,13 +1,6 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-    ActivityIndicator,
-    Alert,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
 
 import { GetUsersUseCase } from "../../application/getUsersCase";
 import { User } from "../../domain/user";
