@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import { EditTecnicoExternoUseCase } from "../../application/editProveedor";
 import { GetTecnicoExternoByIdUseCase } from "../../application/getProvedor";
 import { TecnicoExterno } from "../../domain/proveedor";
@@ -98,7 +98,7 @@ export default function EditTecnicoExternoView() {
   if (!tecnico) return null;
 
   return (
-    <View>
+    <View style={styles.container}>
 
       <TecnicoExternoForm
        initialNumTecnicoExterno={
@@ -114,3 +114,10 @@ export default function EditTecnicoExternoView() {
     </View>
   );
 }
+
+ const styles = StyleSheet.create({
+  container:{
+    padding: 20,
+    backgroundColor: "#fff"
+  },
+ })

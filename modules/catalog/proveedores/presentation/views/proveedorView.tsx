@@ -1,5 +1,5 @@
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
 import { DeleteTecnicoExternoUseCase } from "../../application/deleteProveedor";
 import { GetTecnicosExternosUseCase } from "../../application/getProveedores";
@@ -19,9 +19,11 @@ export default function TecnicosExternosView() {
   const [tecnicos, setTecnicos] = useState<TecnicoExterno[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     loadTecnicos();
-  }, []);
+    }, [])
+  );
 
   const loadTecnicos = async () => {
     try {
