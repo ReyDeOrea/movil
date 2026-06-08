@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
 import { checkUserExistsUpdate } from "../../application/checkUserExistsUpdate";
+import checkUserNameExistsUpdate from "../../application/CheckUserNameExist";
 import { EditUserUseCase } from "../../application/editUser";
 import { GetUserByIdUseCase } from "../../application/getUserByid";
 import { validateUser } from "../../application/validateUpdateUser";
@@ -60,6 +61,11 @@ const handleUpdate = async () => {
     };
 
     await validateUser( updatedUser.nombre, updatedUser.email, updatedUser.telefono);
+
+    await checkUserNameExistsUpdate(
+      updatedUser.nombre,
+      updatedUser.numUsuario
+    );
 
     await checkUserExistsUpdate(
       updatedUser.email,
