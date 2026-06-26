@@ -24,7 +24,20 @@ export default function RegisterUser() {
     const [avatar, setAvatar] = useState<string | null>(null);
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-    const pickImage = async () => {
+    const uploadSelectedAvatar = async (uri: string) => {
+        setAvatar(uri);
+
+        const uploadedUrl = await saveAvatar({ uri });
+
+        if (!uploadedUrl) {
+            Alert.alert("Error", "No se pudo subir la imagen");
+            return;
+        }
+
+        setAvatarUrl(uploadedUrl);
+    };
+
+    const pickFromGallery = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
@@ -34,15 +47,54 @@ export default function RegisterUser() {
         if (result.canceled) return;
         const asset = result.assets?.[0];
         if (!asset?.uri) return;
-setAvatar(asset.uri);
-       const uploadedUrl = await saveAvatar({ uri: asset.uri });
 
-    if (!uploadedUrl) {
-        Alert.alert("Error", "No se pudo subir la imagen");
-        return;
-    }
-    setAvatarUrl(uploadedUrl);
-};
+        await uploadSelectedAvatar(asset.uri);
+    };
+
+    const takePhoto = async () => {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+        if (!permission.granted) {
+            Alert.alert(
+                "Permiso requerido",
+                "Necesitas permitir el uso de la cámara para tomar una foto."
+            );
+            return;
+        }
+
+        const result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 0.7,
+        });
+
+        if (result.canceled) return;
+        const asset = result.assets?.[0];
+        if (!asset?.uri) return;
+
+        await uploadSelectedAvatar(asset.uri);
+    };
+
+    const pickImage = async () => {
+        Alert.alert(
+            "Foto de perfil",
+            "Elige una opción",
+            [
+                {
+                    text: "Galería",
+                    onPress: () => pickFromGallery(),
+                },
+                {
+                    text: "Cámara",
+                    onPress: () => takePhoto(),
+                },
+                {
+                    text: "Cancelar",
+                    style: "cancel",
+                },
+            ]
+        );
+    };
 
     const handleRegister = async () => {
         try {

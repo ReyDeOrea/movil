@@ -1,196 +1,201 @@
-import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
 import { CreateRequest, Prioridad, RequestsForm } from "../domain/request";
 import { RequestsRepository } from "../domain/requestRepository";
 
-export class SupabaseRequestsRepository implements RequestsRepository {
+type SolicitudApi = {
+  numsolicitud: number;
+  fecha?: string | null;
+  descripcion?: string | null;
+  numtipo?: number | null;
+  numstatus?: number | null;
+  numarea?: number | null;
+  numsolicitante?: number | null;
+  numtipomantenimiento?: number | null;
+  motivocancelacion?: string | null;
+  comentarios?: string | null;
+  fechaasignacion?: string | null;
+  fechaproginicio?: string | null;
+  fechaprogfin?: string | null;
+  prioridad?: Prioridad | null;
+  fechainicioreal?: string | null;
+  fechafinreal?: string | null;
+};
 
+type TecnicoInternoApi = {
+  id: number;
+  numsolicitud: number;
+  numtecnicointerno: number;
+};
+
+type TecnicoExternoApi = {
+  id: number;
+  numsolicitud: number;
+  numtecnicoexterno: number;
+};
+
+const toDateOnly = (value?: string | null) => {
+  if (!value) return null;
+  return value.split("T")[0];
+};
+
+const toDomain = (item: SolicitudApi): RequestsForm => ({
+  numSolicitud: item.numsolicitud,
+  fecha: item.fecha ?? "",
+  numSolicitante: item.numsolicitante ?? 0,
+  numTipo: item.numtipo ?? 0,
+  numTipoMantenimiento: item.numtipomantenimiento ?? undefined,
+  numArea: item.numarea ?? 0,
+  descripcion: item.descripcion ?? "",
+  prioridad: item.prioridad ?? undefined,
+  numStatus: item.numstatus ?? 1,
+  motivoCancelacion: item.motivocancelacion ?? undefined,
+  fechaAsignacion: item.fechaasignacion ?? undefined,
+  fechaProgInicio: item.fechaproginicio ?? undefined,
+  fechaProgFin: item.fechaprogfin ?? undefined,
+  fechaInicioReal: item.fechainicioreal ?? undefined,
+  fechaFinReal: item.fechafinreal ?? undefined,
+  comentarios: item.comentarios ?? undefined,
+});
+
+const toApiCreate = (request: CreateRequest) => ({
+  fecha: toDateOnly(request.fecha),
+  descripcion: request.descripcion,
+  numtipo: request.numTipo,
+  numarea: request.numArea,
+  numsolicitante: request.numSolicitante,
+  numtipomantenimiento: request.numTipoMantenimiento ?? null,
+  numstatus: 1,
+});
+
+const toApiUpdate = (request: RequestsForm) => ({
+  fecha: toDateOnly(request.fecha),
+  descripcion: request.descripcion,
+  numtipo: request.numTipo,
+  numstatus: request.numStatus,
+  numarea: request.numArea,
+  numsolicitante: request.numSolicitante,
+  numtipomantenimiento: request.numTipoMantenimiento ?? null,
+  motivocancelacion: request.motivoCancelacion ?? null,
+  comentarios: request.comentarios ?? null,
+  fechaasignacion: toDateOnly(request.fechaAsignacion),
+  fechaproginicio: toDateOnly(request.fechaProgInicio),
+  fechaprogfin: toDateOnly(request.fechaProgFin),
+  prioridad: request.prioridad ?? null,
+  fechainicioreal: toDateOnly(request.fechaInicioReal),
+  fechafinreal: toDateOnly(request.fechaFinReal),
+});
+
+export class ApiFastRequestsRepository implements RequestsRepository {
   async createRequest(request: CreateRequest): Promise<number> {
-
-    const { data, error } = await supabase
-      .from("solicitudes")
-      .insert([{
-        ...request,
-        numStatus: 1 
-      }])
-      .select("numsolicitud")
-      .single();
-
-    if (error || !data) {
-      console.log("ERROR createRequest:", error);
-      throw new Error("Error al crear solicitud");
-    }
-
-    return data.numsolicitud;
+    const response = await api.post<SolicitudApi>("/solicitudes/", toApiCreate(request));
+    return response.data.numsolicitud;
   }
 
   async getRequests(): Promise<RequestsForm[]> {
-    const { data, error } = await supabase
-      .from("solicitudes")
-      .select("*");
-
-    if (error) throw error;
-    return (data ?? []) as RequestsForm[];
+    const response = await api.get<SolicitudApi[]>("/solicitudes/");
+    return (response.data ?? []).map(toDomain);
   }
 
   async getRequestById(id: number): Promise<RequestsForm | null> {
-    const { data, error } = await supabase
-      .from("solicitudes")
-      .select("*")
-      .eq("numsolicitud", id)
-      .single();
-
-    if (error || !data) return null;
-    return data as RequestsForm;
+    try {
+      const response = await api.get<SolicitudApi>(`/solicitudes/${id}`);
+      return toDomain(response.data);
+    } catch {
+      return null;
+    }
   }
 
   async getRequestsBySolicitante(numSolicitante: number): Promise<RequestsForm[]> {
-    const { data, error } = await supabase
-      .from("solicitudes")
-      .select("*")
-      .eq("numsolicitante", numSolicitante);
-
-    if (error) {
-      console.log("ERROR getRequestsBySolicitante:", error);
-      return [];
-    }
-
-    return (data ?? []) as RequestsForm[];
+    const requests = await this.getRequests();
+    return requests.filter((request) => request.numSolicitante === numSolicitante);
   }
 
   async getRequestsByStatus(numStatus: number): Promise<RequestsForm[]> {
-    const { data, error } = await supabase
-      .from("solicitudes")
-      .select("*")
-      .eq("numstatus", numStatus);
-
-    if (error) {
-      console.log("ERROR getRequestsByStatus:", error);
-      return [];
-    }
-
-    return (data ?? []) as RequestsForm[];
+    const requests = await this.getRequests();
+    return requests.filter((request) => request.numStatus === numStatus);
   }
 
   async updateRequest(id: number, request: Partial<RequestsForm>): Promise<boolean> {
+    try {
+      const current = await this.getRequestById(id);
+      if (!current) return false;
 
-    const { error } = await supabase
-      .from("solicitudes")
-      .update(request)
-      .eq("numsolicitud", id);
+      const merged: RequestsForm = {
+        ...current,
+        ...request,
+        numSolicitud: id,
+      };
 
-    if (error) {
+      await api.put(`/solicitudes/${id}`, toApiUpdate(merged));
+      return true;
+    } catch (error) {
       console.log("ERROR updateRequest:", error);
       return false;
     }
-
-    return true;
   }
 
   async deleteRequest(id: number): Promise<boolean> {
-
-    const { error } = await supabase
-      .from("solicitudes")
-      .delete()
-      .eq("numsolicitud", id);
-
-    if (error) {
+    try {
+      await api.delete(`/solicitudes/${id}`);
+      return true;
+    } catch (error) {
       console.log("ERROR deleteRequest:", error);
       return false;
     }
-
-    return true;
   }
 
   async assignRequest(id: number, prioridad: Prioridad): Promise<boolean> {
-
-    const { error } = await supabase
-      .from("solicitudes")
-      .update({
-        prioridad,
-        numStatus: 2,
-        fechaAsignacion: new Date().toISOString().split("T")[0],
-      })
-      .eq("numsolicitud", id);
-
-    if (error) {
-      console.log("ERROR assignRequest:", error);
-      return false;
-    }
-
-    return true;
+    return await this.updateRequest(id, {
+      prioridad,
+      numStatus: 2,
+      fechaAsignacion: new Date().toISOString().split("T")[0],
+    });
   }
 
   async rejectRequest(id: number, motivoCancelacion: string): Promise<boolean> {
-
-    const { error } = await supabase
-      .from("solicitudes")
-      .update({
-        numStatus: 5,
-        motivoCancelacion,
-      })
-      .eq("numsolicitud", id);
-
-    if (error) {
-      console.log("ERROR rejectRequest:", error);
-      return false;
-    }
-
-    return true;
+    return await this.updateRequest(id, {
+      numStatus: 5,
+      motivoCancelacion,
+    });
   }
 
   async completeRequest(id: number, data: Partial<RequestsForm>): Promise<boolean> {
-
-    const { error } = await supabase
-      .from("solicitudes")
-      .update({
-        ...data,
-        numStatus: 4,
-        fechaFinReal: new Date().toISOString().split("T")[0],
-      })
-      .eq("numsolicitud", id);
-
-    if (error) {
-      console.log("ERROR completeRequest:", error);
-      return false;
-    }
-
-    return true;
+    return await this.updateRequest(id, {
+      ...data,
+      numStatus: 4,
+      fechaFinReal: new Date().toISOString().split("T")[0],
+    });
   }
 
-
   async getRequestsByTecnicoInterno(numTecnico: number): Promise<RequestsForm[]> {
-    const { data, error } = await supabase
-      .from("solicitud_tecnico_interno")
-      .select("numsolicitud")
-      .eq("numtecnicointerno", numTecnico);
+    try {
+      const response = await api.get<TecnicoInternoApi[]>("/tecnicos-internos/");
+      const ids = (response.data ?? [])
+        .filter((item) => item.numtecnicointerno === numTecnico)
+        .map((item) => item.numsolicitud);
 
-    if (error || !data) return [];
-
-    const ids = data.map(r => r.numsolicitud);
-
-    const { data: solicitudes } = await supabase
-      .from("solicitudes")
-      .select("*")
-      .in("numsolicitud", ids);
-
-    return (solicitudes ?? []) as RequestsForm[];
+      const requests = await this.getRequests();
+      return requests.filter((request) => ids.includes(request.numSolicitud));
+    } catch (error) {
+      console.log("ERROR getRequestsByTecnicoInterno:", error);
+      return [];
+    }
   }
 
   async getRequestsByTecnicoExterno(numTecnico: number): Promise<RequestsForm[]> {
-    const { data, error } = await supabase
-      .from("solicitud_tecnico_externo")
-      .select("numsolicitud")
-      .eq("numtecnicoexterno", numTecnico);
+    try {
+      const response = await api.get<TecnicoExternoApi[]>("/tecnicos-externos-solicitud/");
+      const ids = (response.data ?? [])
+        .filter((item) => item.numtecnicoexterno === numTecnico)
+        .map((item) => item.numsolicitud);
 
-    if (error || !data) return [];
-
-    const ids = data.map(r => r.numsolicitud);
-
-    const { data: solicitudes } = await supabase
-      .from("solicitudes")
-      .select("*")
-      .in("numsolicitud", ids);
-
-    return (solicitudes ?? []) as RequestsForm[];
+      const requests = await this.getRequests();
+      return requests.filter((request) => ids.includes(request.numSolicitud));
+    } catch (error) {
+      console.log("ERROR getRequestsByTecnicoExterno:", error);
+      return [];
+    }
   }
 }
+
+export class SupabaseRequestsRepository extends ApiFastRequestsRepository {}

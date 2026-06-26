@@ -1,9 +1,15 @@
-import { supabase } from "@/lib/supabase";
+import { API_URL } from "@/lib/api";
 
 export async function downloadAvatar(path: string): Promise<string> {
-  const { data } = supabase.storage
-    .from("avatars")
-    .getPublicUrl(path);
+  if (!path) return "";
 
-  return data.publicUrl;
+  if (path.startsWith("http")) {
+    return path;
+  }
+
+  if (path.startsWith("/")) {
+    return `${API_URL}${path}`;
+  }
+
+  return `${API_URL}/${path}`;
 }

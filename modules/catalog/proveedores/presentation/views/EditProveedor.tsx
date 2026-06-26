@@ -1,24 +1,19 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text } from "react-native";
 import { EditTecnicoExternoUseCase } from "../../application/editProveedor";
 import { GetTecnicoExternoByIdUseCase } from "../../application/getProvedor";
 import { TecnicoExterno } from "../../domain/proveedor";
 import { TecnicoExternoDataSource } from "../../infraestructure/proveedorDataSource";
 import TecnicoExternoForm from "../components/proveedorForm";
 
-
 export default function EditTecnicoExternoView() {
-
   const router = useRouter();
-
   const { id } = useLocalSearchParams();
 
   const repository = new TecnicoExternoDataSource();
-
-  const getTecnico = new GetTecnicoExternoByIdUseCase(repository);
-
-  const editTecnico = new EditTecnicoExternoUseCase(repository);
+  const getTecnicoUseCase = new GetTecnicoExternoByIdUseCase(repository);
+  const editTecnicoUseCase = new EditTecnicoExternoUseCase(repository);
 
   const [tecnico, setTecnico] = useState<TecnicoExterno | null>(null);
 
@@ -27,33 +22,18 @@ export default function EditTecnicoExternoView() {
   }, []);
 
   const loadTecnico = async () => {
-
     try {
-
-      const data =
-        await getTecnico.execute(Number(id));
+      const data = await getTecnicoUseCase.execute(Number(id));
 
       if (!data) {
-
-        Alert.alert(
-          "Error",
-          "Técnico no encontrado"
-        );
-
+        Alert.alert("Error", "Técnico externo no encontrado");
         router.back();
-
         return;
       }
 
       setTecnico(data);
-
     } catch (error: any) {
-
-      Alert.alert(
-        "Error",
-        error.message
-      );
-
+      Alert.alert("Error", error.message);
     }
   };
 
@@ -64,13 +44,8 @@ export default function EditTecnicoExternoView() {
     telefono: string,
     especialidad: string
   ) => {
-
     try {
-
-      if (!tecnico) return;
-
-      await editTecnico.execute({
-        ...tecnico,
+      await editTecnicoUseCase.execute({
         numTecnicoExterno,
         nombre,
         empresa,
@@ -78,46 +53,47 @@ export default function EditTecnicoExternoView() {
         especialidad,
       });
 
-      Alert.alert(
-        "Éxito",
-        "Técnico actualizado"
-      );
-
+      Alert.alert("Éxito", "Técnico actualizado correctamente");
       router.back();
-
     } catch (error: any) {
-
-      Alert.alert(
-        "Error",
-        error.message
-      );
-
+      Alert.alert("Error", error.message);
     }
   };
 
-  if (!tecnico) return null;
+  if (!tecnico) {
+    return <Text style={styles.loading}>Cargando...</Text>;
+  }
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Editar Técnico Externo</Text>
 
       <TecnicoExternoForm
-       initialNumTecnicoExterno={
-    tecnico.numTecnicoExterno.toString()
-  }
+        initialNumTecnicoExterno={tecnico.numTecnicoExterno.toString()}
+        showNumero
         initialNombre={tecnico.nombre}
-        initialEmpresa={tecnico.empresa}
-        initialTelefono={tecnico.telefono}
-        initialEspecialidad={tecnico.especialidad}
+        initialEmpresa={tecnico.empresa ?? ""}
+        initialTelefono={tecnico.telefono ?? ""}
+        initialEspecialidad={tecnico.especialidad ?? ""}
         onSubmit={handleUpdate}
       />
-
-    </View>
+    </ScrollView>
   );
 }
 
- const styles = StyleSheet.create({
-  container:{
+const styles = StyleSheet.create({
+  container: {
     padding: 20,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
- })
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  loading: {
+    marginTop: 40,
+    textAlign: "center",
+  },
+});

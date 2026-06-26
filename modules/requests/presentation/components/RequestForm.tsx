@@ -37,12 +37,11 @@ export default function RequestForm() {
 
       await createRequest.execute({
         numSolicitante: user.numUsuario,
-        fecha: new Date().toISOString(),
+        fecha: new Date().toISOString().split("T")[0],
         numTipo: Number(numTipo),
-        numTipoMantenimiento:
-          numTipo === "mantenimiento"
-            ? Number(numTipoMantenimiento)
-            : undefined,
+        numTipoMantenimiento: numTipoMantenimiento
+          ? Number(numTipoMantenimiento)
+          : undefined,
         numArea: Number(numArea),
         descripcion: descripcion.trim(),
       });

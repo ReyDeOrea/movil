@@ -28,6 +28,7 @@ export default function Account() {
     try {
       const u = await getUserProfile();
       if (!u) return;
+
       setAvatarUrl(u.imagen ?? "");
       setUser(u);
       setEmail(u.email ?? "");
@@ -43,17 +44,25 @@ export default function Account() {
 
       if (!user) return;
 
-      validateUserProfile(email, telefono);
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanTelefono = telefono.trim();
+      const currentEmail = (user.email ?? "").trim().toLowerCase();
+      const currentTelefono = (user.telefono ?? "").trim();
 
-      await checkUserExistsUpdate(
-        email.trim().toLowerCase(),
-        telefono.trim(),
-        user.numUsuario
-      );
+      validateUserProfile(cleanEmail, cleanTelefono);
+
+      if (cleanEmail !== currentEmail || cleanTelefono !== currentTelefono) {
+        await checkUserExistsUpdate(
+          cleanEmail,
+          cleanTelefono,
+          user.numUsuario
+        );
+      }
 
       const updated = await updateUserProfile(user, {
-        email: email.trim().toLowerCase(),
-        telefono: telefono.trim(),
+        email: cleanEmail,
+        telefono: cleanTelefono,
+        imagen: avatarUrl || user.imagen,
       });
 
       setUser(updated);
@@ -90,9 +99,11 @@ export default function Account() {
         <View style={styles.card}>
           <View style={styles.avatarContainer}>
             <AvatarView
-             size={AVATAR_SIZE}
-             url={avatarUrl}  
-            onUpload={(url) => setAvatarUrl(url)}/>
+              size={AVATAR_SIZE}
+              url={avatarUrl}
+              editable
+              onUpload={(url) => setAvatarUrl(url)}
+            />
             <Text style={styles.avatarHint}>Foto de perfil</Text>
           </View>
 
@@ -105,6 +116,7 @@ export default function Account() {
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
+            autoCapitalize="none"
           />
 
           <Text style={styles.label}>Teléfono</Text>

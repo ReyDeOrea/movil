@@ -1,6 +1,6 @@
-import { supabase } from "@/lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { User } from "../domain/user";
+import { ApiFastUserRepository } from "../infraestructure/userDataSource";
 
 export const updateUser = async (
   user: User,
@@ -10,20 +10,7 @@ export const updateUser = async (
     telefono: string;
   }
 ): Promise<User> => {
-
-  const { error } = await supabase
-    .from("usuarios")
-    .update({
-      nombre: updates.nombre,
-      email: updates.email,
-      telefono: updates.telefono,
-    })
-    .eq("numusuario", user.numUsuario);
-
-  if (error) {
-    console.log("ERROR updateUserProfile:", error);
-    throw error;
-  }
+  const repository = new ApiFastUserRepository();
 
   const updatedUser: User = {
     ...user,
@@ -32,10 +19,9 @@ export const updateUser = async (
     telefono: updates.telefono,
   };
 
-  await AsyncStorage.setItem(
-    "user",
-    JSON.stringify(updatedUser)
-  );
+  await repository.updateUser(updatedUser);
+
+  await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
 
   return updatedUser;
 };

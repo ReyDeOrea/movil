@@ -1,36 +1,36 @@
-import { supabase } from "@/lib/supabase";
+import { ApiFastUserRepository } from "../infraestructure/userDataSource";
 
 export const checkUserExistsUpdate = async (
   email: string,
   telefono: string,
   currentUserId: number
 ): Promise<void> => {
+  const repository = new ApiFastUserRepository();
+  const users = await repository.getUsers();
 
   const cleanEmail = email.trim().toLowerCase();
   const cleanTelefono = telefono.trim();
+  const currentId = Number(currentUserId);
 
-  const { data: emailData, error: emailError } = await supabase
-    .from("usuarios")
-    .select("numusuario")
-    .eq("email", cleanEmail)
-    .neq("numusuario", currentUserId);
-
-  if (emailError) throw new Error(emailError.message);
-
-  if (emailData && emailData.length > 0) {
+  if (
+    cleanEmail &&
+    users.some(
+      (user) =>
+        (user.email ?? "").trim().toLowerCase() === cleanEmail &&
+        Number(user.numUsuario) !== currentId
+    )
+  ) {
     throw new Error("Este correo ya está registrado");
   }
 
-
-  const { data: phoneData, error: phoneError } = await supabase
-    .from("usuarios")
-    .select("numusuario")
-    .eq("telefono", cleanTelefono)
-    .neq("numusuario", currentUserId);
-
-  if (phoneError) throw new Error(phoneError.message);
-
-  if (phoneData && phoneData.length > 0) {
+  if (
+    cleanTelefono &&
+    users.some(
+      (user) =>
+        (user.telefono ?? "").trim() === cleanTelefono &&
+        Number(user.numUsuario) !== currentId
+    )
+  ) {
     throw new Error("Este número ya está registrado");
   }
 };
