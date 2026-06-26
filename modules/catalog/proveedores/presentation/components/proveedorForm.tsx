@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 interface Props {
   initialNumTecnicoExterno?: string;
@@ -7,6 +7,7 @@ interface Props {
   initialEmpresa?: string;
   initialTelefono?: string;
   initialEspecialidad?: string;
+  showNumero?: boolean;
 
   onSubmit: (
     numTecnicoExterno: number,
@@ -23,10 +24,10 @@ export default function TecnicoExternoForm({
   initialEmpresa = "",
   initialTelefono = "",
   initialEspecialidad = "",
+  showNumero = false,
   onSubmit,
 }: Props) {
-
-  const [numTecnicoExterno, setNumTecnicoExterno] = useState(initialNumTecnicoExterno);
+  const [numTecnicoExterno] = useState(initialNumTecnicoExterno);
   const [nombre, setNombre] = useState(initialNombre);
   const [empresa, setEmpresa] = useState(initialEmpresa);
   const [telefono, setTelefono] = useState(initialTelefono);
@@ -34,13 +35,19 @@ export default function TecnicoExternoForm({
 
   return (
     <View>
+      {showNumero && (
+        <>
+          <Text style={styles.label}>Número de técnico</Text>
+          <TextInput
+            placeholder="Número de Técnico"
+            keyboardType="numeric"
+            value={numTecnicoExterno}
+            editable={false}
+            style={styles.inputDisabled}
+          />
+        </>
+      )}
 
-      <TextInput
-        placeholder="Número de Técnico"
-        keyboardType="numeric"
-        value={numTecnicoExterno}
-        onChangeText={setNumTecnicoExterno}
-      />
       <TextInput
         placeholder="Nombre"
         value={nombre}
@@ -74,7 +81,7 @@ export default function TecnicoExternoForm({
         style={styles.button}
         onPress={() =>
           onSubmit(
-             Number(numTecnicoExterno),
+            Number(numTecnicoExterno || 0),
             nombre,
             empresa,
             telefono,
@@ -82,19 +89,31 @@ export default function TecnicoExternoForm({
           )
         }
       >
-        <Text style={styles.buttonText}>
-          Guardar
-        </Text>
+        <Text style={styles.buttonText}>Guardar</Text>
       </TouchableOpacity>
-
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  label: {
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+  },
+
+  inputDisabled: {
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    backgroundColor: "#E5E7EB",
+    color: "#6B7280",
     borderRadius: 10,
     padding: 12,
     marginBottom: 10,

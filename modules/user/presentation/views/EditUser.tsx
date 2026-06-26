@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native";
 import { checkUserExistsUpdate } from "../../application/checkUserExistsUpdate";
 import checkUserNameExistsUpdate from "../../application/CheckUserNameExist";
 import { EditUserUseCase } from "../../application/editUser";
@@ -8,9 +8,9 @@ import { GetUserByIdUseCase } from "../../application/getUserByid";
 import { validateUser } from "../../application/validateUpdateUser";
 import { User } from "../../domain/user";
 import { SupabaseUserRepository } from "../../infraestructure/userDataSource";
+import AvatarView from "../components/AvatarView";
 
 export default function EditUserView() {
-
   const router = useRouter();
   const { id } = useLocalSearchParams();
 
@@ -22,6 +22,7 @@ export default function EditUserView() {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [telefono, setTelefono] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
 
   useEffect(() => {
     loadUser();
@@ -29,84 +30,84 @@ export default function EditUserView() {
 
   const loadUser = async () => {
     try {
-
-      const user =
-        await getUserUseCase.execute(Number(id));
+      const user = await getUserUseCase.execute(Number(id));
 
       if (!user) {
         Alert.alert("Error", "Usuario no encontrado");
         router.back();
         return;
       }
+
       setUserData(user);
       setNombre(user.nombre);
       setEmail(user.email);
       setTelefono(user.telefono);
-
+      setAvatarUrl(user.imagen ?? "");
     } catch (error: any) {
       Alert.alert("Error", error.message);
     }
   };
 
-const handleUpdate = async () => {
-  try {
+  const handleUpdate = async () => {
+    try {
+      if (!userData) return;
 
-    if (!userData) return;
+      const cleanNombre = nombre.trim();
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanTelefono = telefono.trim();
 
-    const updatedUser: User = {
-      ...userData,
-      nombre: nombre.trim(),
-      email: email.trim().toLowerCase(),
-      telefono: telefono.trim(),
-    };
+      const currentNombre = (userData.nombre ?? "").trim().toLowerCase();
+      const currentEmail = (userData.email ?? "").trim().toLowerCase();
+      const currentTelefono = (userData.telefono ?? "").trim();
 
-    await validateUser( updatedUser.nombre, updatedUser.email, updatedUser.telefono);
+      const updatedUser: User = {
+        ...userData,
+        nombre: cleanNombre,
+        email: cleanEmail,
+        telefono: cleanTelefono,
+        imagen: avatarUrl || userData.imagen,
+      };
 
-    await checkUserNameExistsUpdate(
-      updatedUser.nombre,
-      updatedUser.numUsuario
-    );
+      await validateUser(
+        updatedUser.nombre,
+        updatedUser.email,
+        updatedUser.telefono
+      );
 
-    await checkUserExistsUpdate(
-      updatedUser.email,
-      updatedUser.telefono,
-      updatedUser.numUsuario
-    );
+      if (cleanNombre.toLowerCase() !== currentNombre) {
+        await checkUserNameExistsUpdate(
+          updatedUser.nombre,
+          updatedUser.numUsuario
+        );
+      }
 
-    await editUserUseCase.execute(updatedUser);
+      if (cleanEmail !== currentEmail || cleanTelefono !== currentTelefono) {
+        await checkUserExistsUpdate(
+          updatedUser.email,
+          updatedUser.telefono,
+          updatedUser.numUsuario
+        );
+      }
 
-    Alert.alert("Éxito", "Usuario actualizado correctamente");
+      await editUserUseCase.execute(updatedUser);
 
-    router.back();
-
-  } catch (error: any) {
-    Alert.alert("Error", error.message);
-  }
-};
+      Alert.alert("Éxito", "Usuario actualizado correctamente");
+      router.back();
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Editar Usuario</Text>
 
-      <Text style={styles.title}>
-        Editar Usuario
-      </Text>
-
-      <View style={styles.imageContainer}>
-
-        {userData?.imagen ? (
-          <Image
-            source={{ uri: userData.imagen }}
-            style={styles.image}
-          />
-        ) : (
-          <View style={styles.placeholder}>
-            <Text style={{ color: "#6B7280" }}>
-              Sin imagen
-            </Text>
-          </View>
-        )}
-
-      </View>
+      <AvatarView
+        size={110}
+        url={avatarUrl}
+        editable
+        onUpload={(url) => setAvatarUrl(url)}
+      />
 
       <TextInput
         style={styles.input}
@@ -120,6 +121,8 @@ const handleUpdate = async () => {
         placeholder="Correo"
         value={email}
         onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
       />
 
       <TextInput
@@ -134,37 +137,16 @@ const handleUpdate = async () => {
         style={styles.button}
         onPress={handleUpdate}
       >
-        <Text style={styles.buttonText}>
-          Guardar cambios
-        </Text>
+        <Text style={styles.buttonText}>Guardar cambios</Text>
       </TouchableOpacity>
-
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-
   container: {
     padding: 20,
-    backgroundColor: "#fff"
-  },
-  imageContainer: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  image: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  placeholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#E5E7EB",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "#fff",
   },
   title: {
     fontSize: 24,
@@ -189,5 +171,4 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontWeight: "bold",
   },
-
 });

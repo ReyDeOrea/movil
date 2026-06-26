@@ -5,121 +5,183 @@ import { downloadAvatar } from "../../application/downloadAvatar";
 import { uploadAvatarFile } from "../../application/uploadAvatar";
 
 interface Props {
-    size: number;
-    url: string | null;
-    editable?: boolean;
-    onUpload?: (filePath: string) => void;
+  size: number;
+  url: string | null;
+  editable?: boolean;
+  onUpload?: (filePath: string) => void;
 }
 
 export default function AvatarView({
-    url,
-    size = 150,
-    editable = false,
-    onUpload,
+  url,
+  size = 150,
+  editable = false,
+  onUpload,
 }: Props) {
-    const [uploading, setUploading] = useState(false);
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-    const avatarSize = {
-        width: size,
-        height: size,
-    };
+  const avatarSize = {
+    width: size,
+    height: size,
+  };
 
-    useEffect(() => {
-        if (!url) {
-            setAvatarUrl(null);
-            return;
-        }
-        if (url.startsWith("http")) {
-            setAvatarUrl(url);
-            return;
-        }
+  useEffect(() => {
+    if (!url) {
+      setAvatarUrl(null);
+      return;
+    }
 
-        loadImage(url);
-    }, [url]);
+    if (url.startsWith("file://")) {
+      setAvatarUrl(url);
+      return;
+    }
 
-    const loadImage = async (path: string) => {
-        try {
-            const image = await downloadAvatar(path);
-            setAvatarUrl(image);
-        } catch (error) {
-            console.log("Error downloading avatar:", error);
-        }
-    };
+    if (url.startsWith("http")) {
+      setAvatarUrl(url);
+      return;
+    }
 
-    const uploadImage = async (uri: string, mimeType?: string) => {
-        try {
-            const path = await uploadAvatarFile(uri, mimeType);
+    loadImage(url);
+  }, [url]);
 
-            if (onUpload) {
-                onUpload(path);
+  const loadImage = async (path: string) => {
+    try {
+      const image = await downloadAvatar(path);
+      setAvatarUrl(image);
+    } catch (error) {
+      console.log("Error downloading avatar:", error);
+    }
+  };
+
+  const uploadImage = async (uri: string, mimeType?: string) => {
+    try {
+      setAvatarUrl(uri);
+
+      const path = await uploadAvatarFile(uri, mimeType);
+      const publicUrl = await downloadAvatar(path);
+
+      setAvatarUrl(publicUrl || uri);
+
+      if (onUpload) {
+        onUpload(path);
+      }
+    } catch (error) {
+      Alert.alert("Error", (error as Error).message);
+    }
+  };
+
+  const pickFromGallery = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      await uploadImage(
+        result.assets[0].uri,
+        result.assets[0].mimeType
+      );
+    }
+  };
+
+  const takePhoto = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        "Permiso requerido",
+        "Necesitas permitir el uso de la cámara para tomar una foto."
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      await uploadImage(
+        result.assets[0].uri,
+        result.assets[0].mimeType
+      );
+    }
+  };
+
+  const openImageOptions = () => {
+    Alert.alert(
+      "Foto de perfil",
+      "Elige una opción",
+      [
+        {
+          text: "Galería",
+          onPress: async () => {
+            try {
+              setUploading(true);
+              await pickFromGallery();
+            } finally {
+              setUploading(false);
             }
-        } catch (error) {
-            Alert.alert("Error", (error as Error).message);
-        }
-    };
-
-    return (
-        <View style={{ alignItems: "center" }}>
-            {avatarUrl ? (
-                <Image
-                    source={{ uri: avatarUrl }}
-                    style={[avatarSize, styles.avatar, styles.image]}
-                />
-            ) : (
-                <View style={[avatarSize, styles.avatar, styles.placeholder]} />
-            )}
-
-            {editable && (
-                <Button
-                    title={uploading ? "Subiendo..." : "Subir foto"}
-                    onPress={async () => {
-                        try {
-                            setUploading(true);
-
-                            const result = await ImagePicker.launchImageLibraryAsync({
-                                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                                allowsEditing: true,
-                                quality: 1,
-                            });
-
-                            if (!result.canceled && result.assets.length > 0) {
-                                await uploadImage(
-                                    result.assets[0].uri,
-                                    result.assets[0].mimeType
-                                );
-                            }
-                        } finally {
-                            setUploading(false);
-                        }
-                    }}
-                    disabled={uploading}
-                />
-            )}
-        </View>
+          },
+        },
+        {
+          text: "Cámara",
+          onPress: async () => {
+            try {
+              setUploading(true);
+              await takePhoto();
+            } finally {
+              setUploading(false);
+            }
+          },
+        },
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+      ]
     );
+  };
+
+  return (
+    <View style={{ alignItems: "center" }}>
+      {avatarUrl ? (
+        <Image
+          source={{ uri: avatarUrl }}
+          style={[avatarSize, styles.avatar, styles.image]}
+        />
+      ) : (
+        <View style={[avatarSize, styles.avatar, styles.placeholder]} />
+      )}
+
+      {editable && (
+        <Button
+          title={uploading ? "Subiendo..." : "Subir foto"}
+          onPress={openImageOptions}
+          disabled={uploading}
+        />
+      )}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    avatar: {
-        borderRadius: 100,
-        overflow: 'hidden',
-        maxWidth: '100%',
-    },
-    image: {
-        objectFit: 'cover',
-        paddingTop: 0,
-    },
-    noImage: {
-        backgroundColor: '#333',
-        borderWidth: 1,
-        borderStyle: 'solid',
-        borderColor: 'rgb(200, 200, 200)',
-        borderRadius: 5,
-    },
-    placeholder: {
-        backgroundColor: "#E5E7EB",
-        borderWidth: 1,
-        borderColor: "#D1D5DB",
-    },
-})
+  avatar: {
+    borderRadius: 100,
+    overflow: "hidden",
+    maxWidth: "100%",
+  },
+  image: {
+    objectFit: "cover",
+    paddingTop: 0,
+  },
+  placeholder: {
+    backgroundColor: "#E5E7EB",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+  },
+});

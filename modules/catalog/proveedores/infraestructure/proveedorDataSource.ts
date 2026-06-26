@@ -1,90 +1,61 @@
-import { supabase } from "@/lib/supabase";
+import { api } from "@/lib/api";
 import { TecnicoExterno } from "../domain/proveedor";
 import { TecnicoExternoRepository } from "../domain/proveedorRepository";
 
+type TecnicoExternoApi = {
+  numtecnicoexterno: number;
+  nombre: string;
+  empresa?: string | null;
+  telefono?: string | null;
+  especialidad?: string | null;
+};
+
+const toDomain = (item: TecnicoExternoApi): TecnicoExterno => ({
+  numTecnicoExterno: item.numtecnicoexterno,
+  nombre: item.nombre,
+  empresa: item.empresa ?? "",
+  telefono: item.telefono ?? "",
+  especialidad: item.especialidad ?? "",
+});
+
+const toCreateApi = (tecnico: TecnicoExterno) => ({
+  nombre: tecnico.nombre,
+  empresa: tecnico.empresa ?? null,
+  telefono: tecnico.telefono ?? null,
+  especialidad: tecnico.especialidad ?? null,
+});
+
 export class TecnicoExternoDataSource implements TecnicoExternoRepository {
-
   async getTecnicosExternos(): Promise<TecnicoExterno[]> {
-
-    const { data, error } = await supabase
-      .from("tecnicosexternos")
-      .select("*")
-      .order("numtecnicoexterno");
-
-    if (error) throw error;
-
-    return (data ?? []).map((item) => ({
-      numTecnicoExterno: item.numtecnicoexterno,
-      nombre: item.nombre,
-      empresa: item.empresa ?? "",
-      telefono: item.telefono ?? "",
-      especialidad: item.especialidad ?? "",
-    }));
+    const response = await api.get<TecnicoExternoApi[]>("/tecnicos-externos/");
+    return (response.data ?? []).map(toDomain);
   }
 
-  async getTecnicoExternoById( id: number): Promise<TecnicoExterno | null> {
-
-    const { data, error } = await supabase
-      .from("tecnicosexternos")
-      .select("*")
-      .eq("numtecnicoexterno", id)
-      .single();
-    console.log("DATA:", data);
-    console.log("ERROR:", error);
-    if (error || !data) return null;
-
-    return {
-      numTecnicoExterno: data.numtecnicoexterno,
-      nombre: data.nombre,
-      empresa: data.empresa ?? "",
-      telefono: data.telefono ?? "",
-      especialidad: data.especialidad ?? "",
-    };
+  async getTecnicoExternoById(id: number): Promise<TecnicoExterno | null> {
+    try {
+      const response = await api.get<TecnicoExternoApi>(`/tecnicos-externos/${id}`);
+      return toDomain(response.data);
+    } catch {
+      return null;
+    }
   }
 
-  async createTecnicoExterno( tecnico: TecnicoExterno): Promise<void> {
-
-    const { error } = await supabase
-      .from("tecnicosexternos")
-      .insert([
-        {
-          numtecnicoexterno: tecnico.numTecnicoExterno,
-          nombre: tecnico.nombre,
-          empresa: tecnico.empresa,
-          telefono: tecnico.telefono,
-          especialidad: tecnico.especialidad,
-        },
-      ]);
-
-    if (error) throw error;
+  async createTecnicoExterno(tecnico: TecnicoExterno): Promise<void> {
+    await api.post("/tecnicos-externos/", toCreateApi(tecnico));
   }
 
-  async updateTecnicoExterno(tecnico: TecnicoExterno ): Promise<void> {
+  async updateTecnicoExterno(tecnico: TecnicoExterno): Promise<void> {
+    if (!tecnico.numTecnicoExterno) {
+      throw new Error("No se encontró el ID del técnico externo");
+    }
 
-    console.log("Actualizando:", tecnico);
-    const { error } = await supabase
-      .from("tecnicosexternos")
-      .update({
-        nombre: tecnico.nombre,
-        empresa: tecnico.empresa,
-        telefono: tecnico.telefono,
-        especialidad: tecnico.especialidad,
-      })
-      .eq(
-        "numtecnicoexterno",
-        tecnico.numTecnicoExterno
-      );
-
-    if (error) throw error;
+    await api.put(
+      `/tecnicos-externos/${tecnico.numTecnicoExterno}`,
+      toCreateApi(tecnico)
+    );
   }
 
   async deleteTecnicoExterno(id: number): Promise<void> {
-
-    const { error } = await supabase
-      .from("tecnicosexternos")
-      .delete()
-      .eq("numtecnicoexterno", id);
-
-    if (error) throw error;
+    await api.delete(`/tecnicos-externos/${id}`);
   }
 }
