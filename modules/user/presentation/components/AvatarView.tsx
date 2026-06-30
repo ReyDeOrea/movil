@@ -184,4 +184,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#D1D5DB",
   },
+  boton:{
+    backgroundColor: '#67B346'
+  },
 });

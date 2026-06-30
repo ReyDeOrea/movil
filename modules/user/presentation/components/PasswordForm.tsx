@@ -3,16 +3,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
-} from "react-native";
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { ResetPasswordUseCase } from '../../application/resetPassword';
 import { VerifyUserUseCase } from '../../application/verifyUserCase';
 import { User } from '../../domain/user';
@@ -123,7 +114,13 @@ export default function Password() {
 
           <View style={styles.rowHeader}>
 
-            <Text style={styles.title}>
+            <Image
+              source={require('../../../../assets/images/ZUCARMEX.png')}
+              style={styles.imageZucarmex}
+              resizeMode="contain"
+            />
+
+            {/* <Text style={styles.title}>
              ServiceApp
             </Text>
 
@@ -131,13 +128,19 @@ export default function Password() {
               name="tools"
               size={30}
               color="#fff"
-            />
+            /> */}
 
           </View>
 
         </View>
 
         <View style={styles.avatarBox}>
+
+          {/* <Image
+          source={require('../../../../assets/images/cortecana.png')}
+          style={styles.imagecanero}
+          resizeMode='contain'
+          /> */}
 
           <FontAwesome6
             name="shield-halved"
@@ -162,7 +165,7 @@ export default function Password() {
             <MaterialCommunityIcons
               name="account"
               size={22}
-              color="#4F46E5"
+              color="#67B346"
             />
 
             <TextInput
@@ -181,7 +184,7 @@ export default function Password() {
             <MaterialIcons
               name="email"
               size={22}
-              color="#4F46E5"
+              color="#67B346"
             />
 
             <TextInput
@@ -223,7 +226,7 @@ export default function Password() {
           <MaterialCommunityIcons
             name="arrow-left"
             size={22}
-            color="#4F46E5"
+            color="#67B346"
           />
 
           <TouchableOpacity
@@ -261,7 +264,7 @@ const styles = StyleSheet.create({
 
   container: {
     flexGrow: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#FFFFFF",
     paddingBottom: 40,
   },
 
@@ -269,7 +272,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 100,
     paddingTop: 35,
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#67B346",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
@@ -283,7 +286,7 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: "bold",
     fontSize: 30,
-    color: "#fff",
+    color: "#FFFFFF",
     marginRight: 6,
   },
 
@@ -328,7 +331,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginVertical: 8,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
   },
 
   txtI: {
@@ -339,7 +342,7 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#67B346",
     borderRadius: 20,
     paddingVertical: 14,
     paddingHorizontal: 60,
@@ -349,12 +352,12 @@ const styles = StyleSheet.create({
 
   txtBtn: {
     fontSize: 18,
-    color: "#fff",
+    color: "#FFFFFF",
     fontWeight: "bold",
   },
 
   txtSI: {
-    color: "#2563EB",
+    color: "#91c77a",
     fontWeight: "bold",
     marginLeft: 6,
   },
@@ -364,6 +367,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: 5,
+  },
+
+  imageZucarmex: {
+    width: '45%',
+    height: 60,
+  },
+  imagecanero: {
+    width: '45%',
+    height: 190,
   },
 
 });

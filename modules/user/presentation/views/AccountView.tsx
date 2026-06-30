@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Dimensions, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
+import { Alert, Dimensions, Image, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
 import { checkUserExistsUpdate } from "../../application/checkUserExistsUpdate";
 import { getUserProfile } from "../../application/getUserProfile";
 import { updateUserProfile } from "../../application/updateUserProfile";
@@ -11,6 +11,7 @@ import AvatarView from "../components/AvatarView";
 
 const { width } = Dimensions.get("window");
 const AVATAR_SIZE = width * 0.32;
+const LOGO_WIDTH = Math.min(width * 0.28, 115);
 
 export default function Account() {
   const router = useRouter();
@@ -90,10 +91,17 @@ export default function Account() {
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
-            <MaterialCommunityIcons name="arrow-left" size={28} color="#fff" />
+            <MaterialCommunityIcons name="arrow-left" size={28} color="#FFFFFF" />
           </TouchableOpacity>
 
           <Text style={styles.title}>Mi perfil</Text>
+
+          <Image
+          source={require('../../../../assets/images/ZUCARMEX.png')}
+          style={styles.imageZucarmex}
+          resizeMode="contain"
+          />
+
         </View>
 
         <View style={styles.card}>
@@ -149,7 +157,7 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#67B346",
     paddingTop: 50,
     paddingBottom: 20,
     paddingHorizontal: 15,
@@ -158,7 +166,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontSize: 20,
     fontWeight: "bold",
     marginLeft: 15,
@@ -167,7 +175,7 @@ const styles = StyleSheet.create({
   card: {
     margin: 15,
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     elevation: 3,
   },
@@ -187,7 +195,7 @@ const styles = StyleSheet.create({
   },
 
   inputDisabled: {
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#D1D5DB",
     borderRadius: 10,
@@ -198,14 +206,14 @@ const styles = StyleSheet.create({
 
   button: {
     marginTop: 15,
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#67B346",
     padding: 14,
     borderRadius: 10,
     alignItems: "center",
   },
 
   buttonText: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontWeight: "bold",
   },
 
@@ -225,4 +233,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
+  imageZucarmex: {
+  width: LOGO_WIDTH,
+  height: 50,
+  marginLeft: "auto",
+},
 });

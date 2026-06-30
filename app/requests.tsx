@@ -1,4 +1,4 @@
-import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -11,6 +11,7 @@ import RequestsReceived from "@/modules/requests/presentation/views/RequestRecei
 import RequestsRejected from "@/modules/requests/presentation/views/RequestRejected";
 import RequestsSent from "@/modules/requests/presentation/views/RequestSent";
 import { ModalMenu } from "@/modules/user/presentation/components/modalMenu";
+import { Image } from "react-native";
 
 export default function Requests() {
 
@@ -78,7 +79,7 @@ export default function Requests() {
       </Text>
     </TouchableOpacity>
   );
- const isAdmin = user.numRol === 1;
+  const isAdmin = user.numRol === 1;
   const isTecnico = user.numRol === 2;
   const isSolicitante = user.numRol === 3;
 
@@ -91,18 +92,25 @@ export default function Requests() {
         <View style={styles.b}>
           <View style={styles.row}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={styles.appName}>ServiceApp</Text>
+              <Image
+                source={require('../assets/images/ZUCARMEX.png')}
+                style={styles.imageZucarmex}
+                resizeMode="contain"
+              />
+
+
+              {/* <Text style={styles.appName}>ServiceApp</Text>
               <MaterialCommunityIcons
                 name="clipboard-text"
                 size={32}
-                color="#fff"
-              />
+                color="#FFFFFF"
+              /> */}
             </View>
             <TouchableOpacity
               style={styles.menuBtn}
               onPress={() => setModalOpen(true)}
             >
-              <Feather name="menu" size={28} color="#fff" />
+              <Feather name="menu" size={28} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </View>
@@ -117,7 +125,7 @@ export default function Requests() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.tabs}
             >
-               {isAdmin && (
+              {isAdmin && (
                 <>
                   {renderTab("recibidas", "Recibidas")}
                   {renderTab("proceso", "En proceso")}
@@ -134,7 +142,7 @@ export default function Requests() {
                 </>
               )}
 
-             {isSolicitante && (
+              {isSolicitante && (
                 <>
                   {renderTab("enviadas", "Enviadas")}
                   {renderTab("proceso", "En proceso")}
@@ -165,17 +173,18 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#FFFFFF",
   },
   row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "90%",
-    marginVertical: 10,
-  },
+  flexDirection: "row",
+  justifyContent: "center",
+  alignItems: "center",
+  width: "100%",
+  height: "100%",
+  position: "relative",
+},
   appName: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontWeight: "bold",
     fontSize: 25,
     marginRight: 6,
@@ -212,30 +221,33 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   activeTab: {
-    borderBottomColor: "#4F46E5",
+    borderBottomColor: "#67B346",
   },
   tabText: {
     fontSize: 15,
     color: "#9CA3AF",
   },
   activeTabText: {
-    color: "#4F46E5",
+    color: "#67B346",
     fontWeight: "bold",
   },
   menuBtn: {
-    position: "absolute",
-    right: 15,
-    top: 10,
-  },
+  position: "absolute",
+  right: 20,
+},
   content: {
     flex: 1,
   },
   b: {
     width: "100%",
     height: 100,
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#67B346",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 10,
   },
+  imageZucarmex: {
+  width: "80%",
+  height: 60,
+},
 });

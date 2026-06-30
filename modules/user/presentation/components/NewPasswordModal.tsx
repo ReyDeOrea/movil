@@ -34,7 +34,7 @@ export default function NewPasswordModal({ visible, loading, onClose, onSubmit }
           <FontAwesome6
             name="shield-halved"
             size={70}
-            color="#4F46E5"
+            color="#67B346"
           />
 
         </View>
@@ -52,7 +52,7 @@ export default function NewPasswordModal({ visible, loading, onClose, onSubmit }
           <MaterialIcons
             name="password"
             size={22}
-            color="#4F46E5"
+            color="#67B346"
           />
 
           <TextInput
@@ -71,7 +71,7 @@ export default function NewPasswordModal({ visible, loading, onClose, onSubmit }
           <MaterialIcons
             name="password"
             size={22}
-            color="#4F46E5"
+            color="#67B346"
           />
 
           <TextInput
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
 
   modalContent: {
     width: "100%",
-    backgroundColor: "#FFF",
+    backgroundColor: "#FFFFFF",
     borderRadius: 24,
     padding: 25,
     elevation: 8,
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     borderColor: "#C7D2FE",
     borderRadius: 12,
     paddingHorizontal: 12,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     marginBottom: 15,
   },
 
@@ -179,14 +179,14 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#67B346",
     borderRadius: 20,
     paddingVertical: 14,
     marginTop: 10,
   },
 
   txtBtn: {
-    color: "#fff",
+    color: "#FFFFFF",
     textAlign: "center",
     fontSize: 16,
     fontWeight: "bold",
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   },
 
   txtSI: {
-    color: "#2563EB",
+    color: "#8aca6f",
     fontWeight: "bold",
     textAlign: "center",
   },

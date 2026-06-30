@@ -4,7 +4,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Stack, useRouter, } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
 import { loginUser } from "../../application/loginUser";
 import { validateLoginData } from "../../application/validateLogin";
 
@@ -66,22 +66,27 @@ export default function LoginForm() {
             <MaterialCommunityIcons
               name="arrow-left"
               size={28}
-              color="#fff"
+              color="#FFFFFF"
             />
 
           </TouchableOpacity>
 
           <View style={styles.rowHeader}>
 
-            <Text style={styles.title}>
+            <Image
+              source={require('../../../../assets/images/ZUCARMEX.png')}
+              style={styles.imageZucarmex}
+              resizeMode="contain"
+            />
+            {/* <Text style={styles.title}>
               ServiceApp
             </Text>
 
             <MaterialCommunityIcons
               name="tools"
               size={30}
-              color="#fff"
-            />
+              color="#FFFFFF"
+            /> */}
 
           </View>
 
@@ -89,16 +94,26 @@ export default function LoginForm() {
 
         <View style={styles.avatarBox}>
 
+          {/* <Image
+          source={require('../../../../assets/images/Cañero.png')}
+          style ={styles.imagecanero}
+          resizeMode="contain"
+          /> */}
+
           <FontAwesome
             name="user-circle-o"
             size={170}
             color="#D1D5DB"
-          />
+          /> 
 
         </View>
 
         <Text style={styles.txt}>
-          Accede a tu cuenta
+          ¡Bienvenido a Serviceapp!
+        </Text>
+
+        <Text style={styles.txt}>
+          accede a tu cuenta
         </Text>
 
         <View style={styles.BE}>
@@ -108,7 +123,7 @@ export default function LoginForm() {
             <FontAwesome
               name="envelope"
               size={22}
-              color="#4F46E5"
+              color="#67B346"
             />
 
             <TextInput
@@ -127,7 +142,7 @@ export default function LoginForm() {
             <MaterialIcons
               name="password"
               size={22}
-              color="#4F46E5"
+              color="#67B346"
             />
 
             <TextInput
@@ -168,7 +183,7 @@ export default function LoginForm() {
           <FontAwesome6
             name="shield-halved"
             size={22}
-            color="#4F46E5"
+            color="#67B346"
           />
 
           <TouchableOpacity
@@ -194,7 +209,7 @@ const styles = StyleSheet.create({
 
   container: {
     flexGrow: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#FFFFFF",
     paddingBottom: 40,
   },
 
@@ -202,16 +217,18 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 100,
     paddingTop: 35,
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#67B346",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
   },
 
   rowHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  flex: 1,
+  width: "100%",
+  justifyContent: "center",
+  alignItems: "center",
+},
 
   title: {
     fontWeight: "bold",
@@ -263,7 +280,7 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#67B346",
     borderRadius: 20,
     paddingVertical: 14,
     paddingHorizontal: 60,
@@ -278,7 +295,7 @@ const styles = StyleSheet.create({
   },
 
   txtRP: {
-    color: "#2563EB",
+    color: "#67B346",
     fontWeight: "bold",
     marginLeft: 6,
   },
@@ -289,5 +306,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 5,
   },
+  
+  imageZucarmex: {
+  width: '45%',
+  height: 60,
+},
+
+imagecanero:{
+ width: '80%',
+ height: 190,
+},
 
 });
