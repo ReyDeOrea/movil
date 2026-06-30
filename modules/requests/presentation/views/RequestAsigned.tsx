@@ -28,7 +28,7 @@ export default function RequestsAssigned() {
 
       const user = JSON.parse(userData);
 
-      // 🔥 Aquí decides si es interno o externo
+
       let data: any[] = [];
 
       if (user.tipoTecnico === "interno") {
