@@ -47,7 +47,7 @@ export default function RequestForm() {
       });
 
       Alert.alert("Solicitud enviada correctamente");
-      router.back();
+      router.replace("/requests");
 
     } catch (error: any) {
       Alert.alert(error.message);

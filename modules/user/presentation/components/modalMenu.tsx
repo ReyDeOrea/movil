@@ -45,7 +45,7 @@ export function ModalMenu({ visible, onClose, user, setUser, onUpdate }: ModalMe
                                 router.push("/account");
                             }}
                         >
-                            <Feather name="user" size={24} color="#999" />
+                            <Feather name="user" size={24} color="#b4f379" />
                             <Text style={styles.navText}>Perfil</Text>
                         </TouchableOpacity>
 
@@ -58,7 +58,7 @@ export function ModalMenu({ visible, onClose, user, setUser, onUpdate }: ModalMe
                                     router.push("/catalog");
                                 }}
                             >
-                                <Feather name="clipboard" size={24} color="#D09100" />
+                                <Feather name="clipboard" size={24} color="#b4f379" />
                                 <Text style={[styles.navText, styles.navTextActive]}>
                                     Catálogos
                                 </Text>
@@ -124,12 +124,12 @@ const styles = StyleSheet.create({
     navText: {
         fontSize: 11,
         marginTop: 2,
-        color: "#999",
+        color: "#050505",
         textTransform: "lowercase",
     },
 
     navTextActive: {
-        color: "#D09100",
+        color: "#0c0c0c",
     },
     modalTitle: {
         fontSize: 18,

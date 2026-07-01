@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#C7D2FE",
+    borderColor: "#d1dbd4",
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -357,9 +357,10 @@ const styles = StyleSheet.create({
   },
 
   txtSI: {
-    color: "#91c77a",
+    color: "#030a00",
     fontWeight: "bold",
     marginLeft: 6,
+    textDecorationLine: "underline",
   },
 
   rp: {

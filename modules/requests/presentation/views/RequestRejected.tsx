@@ -45,13 +45,13 @@ export default function RequestsRejected() {
   };
 
   const viewRequest = (request: RequestsForm) => {
-    router.push({
-      pathname: "/requests",
-      params: {
-        request: JSON.stringify(request),
-      },
-    });
-  };
+  router.push({
+    pathname: "/viewRequestForm",
+    params: {
+      request: JSON.stringify(request),
+    },
+  });
+};
 
   const renderStatusColor = (status: number) => {
     switch (status) {

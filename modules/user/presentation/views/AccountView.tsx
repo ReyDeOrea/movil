@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Dimensions, Image, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
+import { Alert, Dimensions, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { checkUserExistsUpdate } from "../../application/checkUserExistsUpdate";
 import { getUserProfile } from "../../application/getUserProfile";
 import { updateUserProfile } from "../../application/updateUserProfile";
@@ -88,20 +88,18 @@ export default function Account() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
+
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
             <MaterialCommunityIcons name="arrow-left" size={28} color="#FFFFFF" />
           </TouchableOpacity>
 
-          <Text style={styles.title}>Mi perfil</Text>
-
           <Image
-          source={require('../../../../assets/images/ZUCARMEX.png')}
-          style={styles.imageZucarmex}
-          resizeMode="contain"
+            source={require("../../../../assets/images/ZUCARMEX.png")}
+            style={styles.imageZucarmex}
+            resizeMode="contain"
           />
-
         </View>
 
         <View style={styles.card}>
@@ -112,11 +110,16 @@ export default function Account() {
               editable
               onUpload={(url) => setAvatarUrl(url)}
             />
+
             <Text style={styles.avatarHint}>Foto de perfil</Text>
           </View>
 
           <Text style={styles.label}>Nombre</Text>
-          <TextInput style={styles.inputDisabled} value={user.nombre} editable={false} />
+          <TextInput
+            style={styles.inputDisabled}
+            value={user.nombre}
+            editable={false}
+          />
 
           <Text style={styles.label}>Correo</Text>
           <TextInput
@@ -163,10 +166,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     flexDirection: "row",
     alignItems: "center",
+    position: "relative",
   },
 
   title: {
-    color: "#FFFFFF",
+    color: "#020202",
     fontSize: 20,
     fontWeight: "bold",
     marginLeft: 15,
@@ -195,7 +199,7 @@ const styles = StyleSheet.create({
   },
 
   inputDisabled: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#adadad",
     borderWidth: 1,
     borderColor: "#D1D5DB",
     borderRadius: 10,
@@ -235,8 +239,10 @@ const styles = StyleSheet.create({
   },
 
   imageZucarmex: {
-  width: LOGO_WIDTH,
-  height: 50,
-  marginLeft: "auto",
-},
+    width: LOGO_WIDTH,
+    height: 50,
+    position: "absolute",
+    left: (width - LOGO_WIDTH) / 2,
+    top: 45,
+  },
 });

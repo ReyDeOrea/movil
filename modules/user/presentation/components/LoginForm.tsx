@@ -113,7 +113,7 @@ export default function LoginForm() {
         </Text>
 
         <Text style={styles.txt}>
-          accede a tu cuenta
+          Accede a tu cuenta
         </Text>
 
         <View style={styles.BE}>
@@ -187,9 +187,7 @@ export default function LoginForm() {
           />
 
           <TouchableOpacity
-            onPress={() =>
-              router.push("/password")
-            }
+            onPress={() => router.push("/password") }
           >
 
             <Text style={styles.txtRP}>
@@ -264,7 +262,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#C7D2FE",
+    borderColor: "#d1dbd4",
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -293,10 +291,10 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
-
   txtRP: {
-    color: "#67B346",
+    color: "#00aeff",
     fontWeight: "bold",
+    textDecorationLine: "underline",
     marginLeft: 6,
   },
 

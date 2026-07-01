@@ -2,7 +2,14 @@ import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import RequestsAssigned from "@/modules/requests/presentation/views/RequestAsigned";
 import RequestsCompleted from "@/modules/requests/presentation/views/RequestCompleted";
@@ -11,15 +18,14 @@ import RequestsReceived from "@/modules/requests/presentation/views/RequestRecei
 import RequestsRejected from "@/modules/requests/presentation/views/RequestRejected";
 import RequestsSent from "@/modules/requests/presentation/views/RequestSent";
 import { ModalMenu } from "@/modules/user/presentation/components/modalMenu";
-import { Image } from "react-native";
 
 export default function Requests() {
-
   const router = useRouter();
 
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("enviadas");
   const [modalOpen, setModalOpen] = useState(false);
+
   useEffect(() => {
     loadUser();
   }, []);
@@ -36,11 +42,15 @@ export default function Requests() {
     } else if (parsedUser.numRol === 2) {
       setActiveTab("enviadas");
     } else if (parsedUser.numRol === 3) {
-      setActiveTab("enviadas");
+      setActiveTab("asignadas");
     }
   };
 
   if (!user) return null;
+
+  const isAdmin = user.numRol === 1;
+  const isSolicitante = user.numRol === 2;
+  const isTecnico = user.numRol === 3;
 
   const renderContent = () => {
     switch (activeTab) {
@@ -63,10 +73,7 @@ export default function Requests() {
 
   const renderTab = (key: string, label: string) => (
     <TouchableOpacity
-      style={[
-        styles.tabButton,
-        activeTab === key && styles.activeTab,
-      ]}
+      style={[styles.tabButton, activeTab === key && styles.activeTab]}
       onPress={() => setActiveTab(key)}
     >
       <Text
@@ -79,33 +86,22 @@ export default function Requests() {
       </Text>
     </TouchableOpacity>
   );
-  const isAdmin = user.numRol === 1;
-  const isTecnico = user.numRol === 2;
-  const isSolicitante = user.numRol === 3;
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
 
       <View style={styles.container}>
-
         <View style={styles.b}>
           <View style={styles.row}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <Image
-                source={require('../assets/images/ZUCARMEX.png')}
+                source={require("../assets/images/ZUCARMEX.png")}
                 style={styles.imageZucarmex}
                 resizeMode="contain"
               />
-
-
-              {/* <Text style={styles.appName}>ServiceApp</Text>
-              <MaterialCommunityIcons
-                name="clipboard-text"
-                size={32}
-                color="#FFFFFF"
-              /> */}
             </View>
+
             <TouchableOpacity
               style={styles.menuBtn}
               onPress={() => setModalOpen(true)}
@@ -116,9 +112,9 @@ export default function Requests() {
         </View>
 
         <View style={styles.body}>
-
           <View style={styles.topSection}>
             <Text style={styles.title}>Solicitudes</Text>
+
 
             <ScrollView
               horizontal
@@ -134,14 +130,6 @@ export default function Requests() {
                 </>
               )}
 
-              {isTecnico && (
-                <>
-                  {renderTab("enviadas", "Enviadas")}
-                  {renderTab("asignadas", "Asignadas")}
-                  {renderTab("completadas", "Completadas")}
-                </>
-              )}
-
               {isSolicitante && (
                 <>
                   {renderTab("enviadas", "Enviadas")}
@@ -150,11 +138,20 @@ export default function Requests() {
                   {renderTab("rechazadas", "Rechazadas")}
                 </>
               )}
+
+              {isTecnico && (
+                <>
+                  {renderTab("asignadas", "Asignadas")}
+                  {renderTab("proceso", "En proceso")}
+                  {renderTab("completadas", "Completadas")}
+                </>
+              )}
             </ScrollView>
           </View>
 
           <View style={styles.content}>
             {renderContent()}
+
             <ModalMenu
               visible={modalOpen}
               onClose={() => setModalOpen(false)}
@@ -163,36 +160,31 @@ export default function Requests() {
               onUpdate={() => { }}
             />
           </View>
-
         </View>
       </View>
+
+        <TouchableOpacity
+              style={styles.createButton}
+              onPress={() => router.push("/createRequest")}
+            >
+               <Text style={styles.fabText}>+</Text>
+            </TouchableOpacity>
     </>
   );
 }
-const styles = StyleSheet.create({
 
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
   row: {
-  flexDirection: "row",
-  justifyContent: "center",
-  alignItems: "center",
-  width: "100%",
-  height: "100%",
-  position: "relative",
-},
-  appName: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 25,
-    marginRight: 6,
-  },
-  backBtn: {
-    position: "absolute",
-    left: 15,
-    top: 40,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+    height: "100%",
+    position: "relative",
   },
   body: {
     flex: 1,
@@ -205,8 +197,23 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 4,
+    marginBottom: 8,
     color: "#111827",
+  },
+  createButton: {
+    position: "absolute",
+    bottom: 60,
+    right: 20,
+    backgroundColor: "#67B346",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  fabText: {
+       color: "white",
+    fontSize: 30
   },
   tabs: {
     paddingHorizontal: 10,
@@ -232,9 +239,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   menuBtn: {
-  position: "absolute",
-  right: 20,
-},
+    position: "absolute",
+    right: 20,
+  },
   content: {
     flex: 1,
   },
@@ -247,7 +254,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   imageZucarmex: {
-  width: "80%",
-  height: 60,
-},
+    width: "80%",
+    height: 60,
+  },
 });
