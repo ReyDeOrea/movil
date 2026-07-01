@@ -4,12 +4,12 @@ import UserCard from "./UserCard";
 
 interface Props {
   users: User[];
-  onEdit: (id: number) => void;
+  onPress: (id: number) => void;
 }
 
 export default function UserList({
   users,
-  onEdit,
+  onPress,
 }: Props) {
   return (
     <FlatList
@@ -20,7 +20,7 @@ export default function UserList({
       renderItem={({ item }) => (
         <UserCard
           user={item}
-          onEdit={onEdit}
+          onPress={onPress}
         />
       )}
     />

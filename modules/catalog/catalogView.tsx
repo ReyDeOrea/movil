@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -41,70 +42,120 @@ export default function CatalogosView() {
   ];
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
+      <ScrollView contentContainerStyle={styles.container}>
 
-      <Text style={styles.title}>
-        Catálogos
-      </Text>
-
-      <View style={styles.grid}>
-
-        {catalogos.map((item) => (
-          <TouchableOpacity
-            key={item.titulo}
-            style={styles.card}
-            onPress={() => router.push(item.ruta as any)}
+        <View style={styles.header}>
+            <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() =>
+              router.back()
+            }
           >
+
             <MaterialCommunityIcons
-              name={item.icono as any}
-              size={55}
-              color="#4F46E5"
+              name="arrow-left"
+              size={28}
+              color="#FFFFFF"
             />
 
-            <Text style={styles.cardText}>
-              {item.titulo}
-            </Text>
-
           </TouchableOpacity>
-        ))}
 
-      </View>
+          <View style={styles.rowHeader}>
+            <Image
+              source={require('../../assets/images/ZUCARMEX.png')}
+              style={styles.imageZucarmex}
+              resizeMode="contain"
+            />
+          </View>
+        </View>
+  <Text style={styles.title}>Catálogos</Text>
+        <View style={styles.grid}>
 
-    </ScrollView>
+          {catalogos.map((item) => (
+            <TouchableOpacity
+              key={item.titulo}
+              style={styles.card}
+              onPress={() => router.push(item.ruta as any)}
+            >
+              <MaterialCommunityIcons
+                name={item.icono as any}
+                size={55}
+                color="#b4d2a5"
+              />
+
+              <Text style={styles.cardText}>
+                {item.titulo}
+              </Text>
+
+            </TouchableOpacity>
+          ))}
+
+        </View>
+
+      </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
 
   container: {
-    padding: 20,
     backgroundColor: "#F3F4F6",
     flexGrow: 1,
+    paddingBottom: 40,
   },
-
-  title: {
-    fontSize: 28,
+   title: {
+    fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 25,
     textAlign: "center",
+    marginBottom: 8,
+    color: "#111827",
   },
-
+ backBtn: {
+    position: "absolute",
+    left: 15,
+    top: 45,
+  },
+  rowHeader: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
+      marginHorizontal: 20,
     justifyContent: "space-between",
   },
-
+  header: {
+    width: "100%",
+    height: 100,
+    paddingTop: 35,
+    backgroundColor: "#148248",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
   card: {
     width: "47%",
-    backgroundColor: "#FFF",
+    backgroundColor: "#ffffff",
     borderRadius: 15,
     paddingVertical: 25,
     marginBottom: 15,
     alignItems: "center",
     elevation: 3,
   },
-
+  imageZucarmex: {
+    width: '45%',
+    height: 60,
+  },
   cardText: {
     marginTop: 10,
     fontWeight: "bold",

@@ -99,14 +99,15 @@ const styles = StyleSheet.create({
   label: {
     fontWeight: "bold",
     marginBottom: 5,
+     marginHorizontal: 20,
   },
-
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 10,
     padding: 12,
     marginBottom: 10,
+    marginHorizontal: 20,
   },
 
   inputDisabled: {
@@ -117,13 +118,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
     marginBottom: 10,
+    marginHorizontal: 20,
   },
 
   button: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#000000",
     padding: 14,
     borderRadius: 10,
     alignItems: "center",
+    marginHorizontal: 20,
   },
 
   buttonText: {

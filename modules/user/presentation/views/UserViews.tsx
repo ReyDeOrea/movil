@@ -1,12 +1,13 @@
-import { useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
+import { ActivityIndicator, Alert, Image, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
 
 import { GetUsersUseCase } from "../../application/getUsersCase";
 import { User } from "../../domain/user";
 import { SupabaseUserRepository } from "../../infraestructure/userDataSource";
 import UserList from "../components/UserList";
 
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 
@@ -49,12 +50,12 @@ export default function UsersView() {
         }
     };
 
-    const handleEdit = (
+    const handleUserPress = (
         id: number
     ) => {
 
         router.push({
-            pathname: "/editUser",
+            pathname: "/userDetail",
             params: {
                 id: id.toString(),
             },
@@ -72,29 +73,52 @@ export default function UsersView() {
     }
 
     return (
-        <View style={styles.container}>
-
-            <Text style={styles.title}>
-                Cuentas
-            </Text>
-
-            <TouchableOpacity
-                style={styles.button}
-                onPress={() =>
-                    router.push("/signUp")
-                }
-            >
-                <Text style={styles.buttonText}>
-                    Agregar Cuenta
-                </Text>
-            </TouchableOpacity>
-
-            <UserList
-                users={users}
-                onEdit={handleEdit}
+        <>
+            <Stack.Screen
+                options={{
+                    headerShown: false,
+                }}
             />
+            <View style={styles.container}>
 
-        </View>
+                <View style={styles.header}>
+                    <TouchableOpacity
+                        style={styles.backBtn}
+                        onPress={() =>
+                            router.back()
+                        }
+                    >
+
+                        <MaterialCommunityIcons
+                            name="arrow-left"
+                            size={28}
+                            color="#FFFFFF"
+                        />
+
+                    </TouchableOpacity>
+
+                    <View style={styles.rowHeader}>
+                        <Image
+                            source={require('../../../../assets/images/ZUCARMEX.png')}
+                            style={styles.imageZucarmex}
+                            resizeMode="contain"
+                        />
+                    </View>
+                </View>
+
+                <UserList
+                    users={users}
+                    onPress={handleUserPress}
+                />
+                <TouchableOpacity
+                    style={styles.createButton}
+                    onPress={() => router.push("/signUp")}
+                >
+                    <Text style={styles.fabText}>+</Text>
+                </TouchableOpacity>
+
+            </View>
+        </>
     );
 }
 
@@ -102,30 +126,47 @@ const styles = StyleSheet.create({
 
     container: {
         flex: 1,
-        padding: 15,
         backgroundColor: "#F3F4F6",
     },
-
-    title: {
-        fontSize: 22,
-        fontWeight: "bold",
-        marginBottom: 15,
-    },
-
-    button: {
-        backgroundColor: "#4F46E5",
-        padding: 12,
-        borderRadius: 10,
+    rowHeader: {
+        flex: 1,
+        width: "100%",
+        justifyContent: "center",
         alignItems: "center",
-        marginBottom: 15,
     },
-
-    buttonText: {
-        color: "#fff",
-        fontWeight: "bold",
-        fontSize: 16,
+    backBtn: {
+        position: "absolute",
+        left: 15,
+        top: 45,
     },
-
+    imageZucarmex: {
+        width: '45%',
+        height: 60,
+    },
+    header: {
+        width: "100%",
+        height: 100,
+        paddingTop: 35,
+        backgroundColor: "#148248",
+        justifyContent: "center",
+        alignItems: "center",
+        marginBottom: 20,
+    },
+    createButton: {
+        position: "absolute",
+        bottom: 60,
+        right: 20,
+        backgroundColor: "#67B346",
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: "center",
+        alignItems: "center"
+    },
+    fabText: {
+        color: "white",
+        fontSize: 30
+    },
     center: {
         flex: 1,
         justifyContent: "center",

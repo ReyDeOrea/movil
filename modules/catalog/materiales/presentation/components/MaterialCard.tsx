@@ -60,6 +60,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 12,
     elevation: 2,
+    marginHorizontal: 20,
   },
 
   title: {
@@ -75,7 +76,7 @@ const styles = StyleSheet.create({
   },
 
   editButton: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#76a56f",
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 8,

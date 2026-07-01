@@ -1,7 +1,8 @@
 
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, } from "react-native";
+import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
 import { EditMaterialUseCase } from "../../application/editMaterial";
 import { GetMaterialByIdUseCase } from "../../application/getMaterialByIS";
 import { Material } from "../../domain/material";
@@ -77,77 +78,129 @@ export default function EditMaterial() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-
-      <Text style={styles.title}>
-        Editar Material
-      </Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Nombre del material"
-        value={nombreMaterial}
-        onChangeText={setNombreMaterial}
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
       />
+      <ScrollView contentContainerStyle={styles.container}>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Unidad"
-        value={unidad}
-        onChangeText={setUnidad}
-      />
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() =>
+              router.back()
+            }
+          >
 
-      <TextInput
-        style={styles.input}
-        placeholder="Cantidad"
-        keyboardType="numeric"
-        value={cantidad}
-        onChangeText={setCantidad}
-      />
+            <MaterialCommunityIcons
+              name="arrow-left"
+              size={28}
+              color="#FFFFFF"
+            />
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleUpdate}
-      >
-        <Text style={styles.buttonText}>
-          Guardar cambios
-        </Text>
-      </TouchableOpacity>
+          </TouchableOpacity>
 
-    </ScrollView>
+          <View style={styles.rowHeader}>
+            <Image
+              source={require('../../../../../assets/images/ZUCARMEX.png')}
+              style={styles.imageZucarmex}
+              resizeMode="contain"
+            />
+          </View>
+        </View>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Nombre del material"
+          value={nombreMaterial}
+          onChangeText={setNombreMaterial}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Unidad"
+          value={unidad}
+          onChangeText={setUnidad}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Cantidad"
+          keyboardType="numeric"
+          value={cantidad}
+          onChangeText={setCantidad}
+        />
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleUpdate}
+        >
+          <Text style={styles.buttonText}>
+            Guardar cambios
+          </Text>
+        </TouchableOpacity>
+
+      </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    marginBottom: 40,
+    flex: 1,
     backgroundColor: "#fff"
   },
-
+  rowHeader: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  backBtn: {
+    position: "absolute",
+    left: 15,
+    top: 45,
+  },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
   },
-
+  header: {
+    width: "100%",
+    height: 100,
+    paddingTop: 35,
+    backgroundColor: "#148248",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
   input: {
     borderWidth: 1,
     borderColor: "#D1D5DB",
     borderRadius: 10,
     padding: 12,
+    marginHorizontal: 20,
     marginBottom: 15,
   },
-
+  imageZucarmex: {
+    width: '45%',
+    height: 60,
+  },
   button: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#000000",
     padding: 15,
     borderRadius: 10,
+    marginHorizontal: 20,
     alignItems: "center",
   },
 
   buttonText: {
-    color: "#FFF",
+    color: "#ffffff",
     fontWeight: "bold",
   },
 });

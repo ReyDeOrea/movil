@@ -149,7 +149,11 @@ export default function RegisterUser() {
                         <MaterialCommunityIcons name="arrow-left" size={28} color="#fff" />
                     </TouchableOpacity>
 
-                    <Text style={styles.title}>Registrar Usuario</Text>
+                       <Image
+                                  source={require('../../../../assets/images/ZUCARMEX.png')}
+                                  style={styles.imageZucarmex}
+                                  resizeMode="contain"
+                                />
                 </View>
 
 
@@ -315,9 +319,10 @@ const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
         backgroundColor: "#F5F5F5",
+         paddingBottom: 80,
     },
     header: {
-        backgroundColor: "#1976D2",
+        backgroundColor: "#148248",
         paddingTop: 50,
         paddingBottom: 20,
         alignItems: "center",
@@ -389,17 +394,18 @@ const styles = StyleSheet.create({
         gap: 20,
     },
     optionSelected: {
-        backgroundColor: "#90CAF9",
+        backgroundColor: "#b8e6b4",
     },
     rightColumn: {
         width: "100%",
         alignItems: "center",
     },
     button: {
-        backgroundColor: "#1976D2",
+        backgroundColor: "#000000",
         padding: 15,
         borderRadius: 10,
         alignItems: "center",
+        marginBottom:20,
     },
     avatarContainer: {
         alignItems: "center",
@@ -423,4 +429,8 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         fontSize: 16,
     },
+     imageZucarmex: {
+    width: '45%',
+    height: 60,
+  },
 });
