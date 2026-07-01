@@ -1,6 +1,7 @@
-import { useFocusEffect, useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Stack, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { DeleteMaterialUseCase } from "../../application/deleteMaterial";
 import { GetMaterialsUseCase } from "../../application/getMaterials";
 import { Material } from "../../domain/material";
@@ -93,47 +94,99 @@ export default function MaterialsView() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        Catálogo de Materiales
-      </Text>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/creatematerial")}
-      >
-        <Text style={styles.buttonText}>
-          Agregar Material
-        </Text>
-      </TouchableOpacity>
-      <MaterialList materials={materials}
-        onEdit={handleEdit}
-        onDelete={handleDelete} />
-    </View>
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
+      <View style={styles.container}>
+        
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() =>
+              router.back()
+            }
+          >
+
+            <MaterialCommunityIcons
+              name="arrow-left"
+              size={28}
+              color="#FFFFFF"
+            />
+
+          </TouchableOpacity>
+
+          <View style={styles.rowHeader}>
+            <Image
+              source={require('../../../../../assets/images/ZUCARMEX.png')}
+              style={styles.imageZucarmex}
+              resizeMode="contain"
+            />
+          </View>
+        </View>
+
+        <MaterialList materials={materials}
+          onEdit={handleEdit}
+          onDelete={handleDelete} />
+
+        <TouchableOpacity
+          style={styles.createButton}
+          onPress={() => router.push("/creatematerial")}
+        >
+          <Text style={styles.fabText}>+</Text>
+        </TouchableOpacity>
+      </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 15,
     backgroundColor: "#F3F4F6",
+    marginBottom: 40
   },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 15,
-  },
-  button: {
-    backgroundColor: "#4F46E5",
-    padding: 12,
-    borderRadius: 10,
+
+  rowHeader: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 15,
   },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
+  backBtn: {
+    position: "absolute",
+    left: 15,
+    top: 45,
+  },
+  imageZucarmex: {
+    width: '45%',
+    height: 60,
+  },
+  header: {
+    width: "100%",
+    height: 100,
+    paddingTop: 35,
+    backgroundColor: "#148248",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  createButton: {
+    position: "absolute",
+    bottom: 60,
+    right: 20,
+    backgroundColor: "#67B346",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  fabText: {
+    color: "white",
+    fontSize: 30
   },
   center: {
     flex: 1,

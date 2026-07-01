@@ -2,16 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
-
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
-} from "react-native";
+import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import { CreateRequestUseCase } from "../../application/create";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
@@ -66,8 +57,11 @@ export default function RequestForm() {
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
-            <Text style={styles.title}>Solicitud</Text>
-            <MaterialCommunityIcons name="clipboard-text" size={28} color="#fff" />
+              <Image
+                          source={require('../../../../assets/images/ZUCARMEX.png')}
+                          style={styles.imageZucarmex}
+                          resizeMode="contain"
+                        />
           </View>
         </View>
 
@@ -124,10 +118,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
+     paddingBottom: 40,
   },
 
   header: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#67B346",
     flexDirection: "row",
     alignItems: "center",
     paddingTop: 50,
@@ -188,14 +183,17 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#67B346",
     padding: 16,
     borderRadius: 12,
     alignItems: "center",
     marginTop: 10,
     marginBottom: 40,
   },
-
+  imageZucarmex: {
+  width: '45%',
+  height: 60,
+},
   buttonText: {
     color: "#fff",
     fontWeight: "bold",

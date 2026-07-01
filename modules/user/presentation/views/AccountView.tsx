@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    backgroundColor: "#67B346",
+    backgroundColor: "#148248",
     paddingTop: 50,
     paddingBottom: 20,
     paddingHorizontal: 15,
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
 
   button: {
     marginTop: 15,
-    backgroundColor: "#67B346",
+    backgroundColor: "#000000",
     padding: 14,
     borderRadius: 10,
     alignItems: "center",

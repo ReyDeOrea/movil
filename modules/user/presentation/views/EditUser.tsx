@@ -1,6 +1,7 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native";
+import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { checkUserExistsUpdate } from "../../application/checkUserExistsUpdate";
 import checkUserNameExistsUpdate from "../../application/CheckUserNameExist";
 import { EditUserUseCase } from "../../application/editUser";
@@ -99,8 +100,38 @@ export default function EditUserView() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Editar Usuario</Text>
+   <>
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
+      <View style={styles.container}>
+        
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() =>
+              router.back()
+            }
+          >
+
+            <MaterialCommunityIcons
+              name="arrow-left"
+              size={28}
+              color="#FFFFFF"
+            />
+
+          </TouchableOpacity>
+
+          <View style={styles.rowHeader}>
+            <Image
+              source={require('../../../../assets/images/ZUCARMEX.png')}
+              style={styles.imageZucarmex}
+              resizeMode="contain"
+            />
+          </View>
+        </View>
 
       <AvatarView
         size={110}
@@ -139,20 +170,15 @@ export default function EditUserView() {
       >
         <Text style={styles.buttonText}>Guardar cambios</Text>
       </TouchableOpacity>
-    </ScrollView>
+      </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    flex: 1,
     backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
   },
   input: {
     borderWidth: 1,
@@ -160,12 +186,38 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
     marginBottom: 15,
+    marginHorizontal: 20,
   },
   button: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#000000",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
+    marginHorizontal: 20,
+  },
+  rowHeader: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  backBtn: {
+    position: "absolute",
+    left: 15,
+    top: 45,
+  },
+  imageZucarmex: {
+    width: '45%',
+    height: 60,
+  },
+  header: {
+    width: "100%",
+    height: 100,
+    paddingTop: 35,
+    backgroundColor: "#148248",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
   },
   buttonText: {
     color: "#FFF",

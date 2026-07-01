@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   b: {
     width: "100%",
     height: 100,
-    backgroundColor: "#67B346",
+    backgroundColor: "#148248",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 10,
