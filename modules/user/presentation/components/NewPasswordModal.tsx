@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#C7D2FE",
+    borderColor: "#d1dbd4",
     borderRadius: 12,
     paddingHorizontal: 12,
     backgroundColor: "#FFFFFF",
@@ -197,8 +197,9 @@ const styles = StyleSheet.create({
   },
 
   txtSI: {
-    color: "#8aca6f",
+    color: "#040c00",
     fontWeight: "bold",
+    textDecorationLine: "underline",
     textAlign: "center",
   },
 

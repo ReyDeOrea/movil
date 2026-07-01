@@ -71,13 +71,13 @@ export default function RequestsReceived() {
   };
 
   const viewRequest = (request: RequestsForm) => {
-    router.push({
-      pathname: "/requests",
-      params: {
-        request: JSON.stringify(request),
-      },
-    });
-  };
+  router.push({
+    pathname: "/viewRequestForm",
+    params: {
+      request: JSON.stringify(request),
+    },
+  });
+};
 
   const llamarSolicitante = (telefono?: string) => {
     if (!telefono) return;
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   },
 
   accept: {
-    backgroundColor: "#BBF7D0",
+    backgroundColor: "#c7f8bc",
     marginRight: 10,
   },
 

@@ -1,6 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -9,6 +8,8 @@ import {
   View
 } from "react-native";
 
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { GetRequestsBySolicitante } from "../../application/getRequestSent";
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
@@ -21,9 +22,11 @@ export default function RequestsSent() {
   const [requests, setRequests] = useState<RequestsForm[]>([]);
   const router = useRouter();
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     loadRequests();
-  }, []);
+  }, [])
+);
 
   const loadRequests = async () => {
     try {
@@ -42,13 +45,13 @@ export default function RequestsSent() {
   };
 
   const viewRequest = (request: RequestsForm) => {
-    router.push({
-      pathname: "/requests",
-      params: {
-        request: JSON.stringify(request),
-      },
-    });
-  };
+  router.push({
+    pathname: "/viewRequestForm",
+    params: {
+      request: JSON.stringify(request),
+    },
+  });
+};
 
   const renderEstadoColor = (status: number) => {
     switch (status) {

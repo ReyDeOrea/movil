@@ -44,13 +44,13 @@ export default function RequestsInProgress() {
   };
 
   const viewRequest = (request: RequestsForm) => {
-    router.push({
-      pathname: "/requests",
-      params: {
-        request: JSON.stringify(request),
-      },
-    });
-  };
+  router.push({
+    pathname: "/viewRequestForm",
+    params: {
+      request: JSON.stringify(request),
+    },
+  });
+};
 
   return (
     <FlatList
