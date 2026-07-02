@@ -13,6 +13,7 @@ import {
 import { GetUserByIdUseCase } from "../../application/getUserByid";
 import { User } from "../../domain/user";
 import { SupabaseUserRepository } from "../../infraestructure/userDataSource";
+import AvatarView from "../components/AvatarView";
 
 
 export default function UserDetail() {
@@ -118,32 +119,21 @@ export default function UserDetail() {
 
 
 
-                        {
-                            user?.imagen ?
+                        <View style={styles.avatarContainer}>
+                            <AvatarView
+                                size={100}
+                                url={user?.imagen ?? null}
+                                editable={false}
+                            />
 
-                                (
-
-                                    <Image source={{ uri: user.imagen }}
-                                        style={styles.userImage}
-                                    />
-
-                                ) :
-                                (
-                                    <View style={styles.placeholder}>
-
-                                        <Text>
-                                            Sin imagen
-                                        </Text>
-
-                                    </View>
-
-                                )
-
-                        }
+                            <Text style={styles.avatarHint}>
+                                Foto de perfil
+                            </Text>
+                        </View>
 
                         <View style={styles.disabledInput}>
                             <Text style={styles.label}>
-                               Número de trabajdor
+                                Número de trabajdor
                             </Text>
 
                             <Text style={styles.disabledText}>
@@ -185,35 +175,35 @@ export default function UserDetail() {
                             </Text>
                         </View>
 
-                    <TouchableOpacity style={styles.button} onPress={() =>
-                        router.push({
-                            pathname: "/editUser",
-                            params: {
-                                id: user?.numUsuario.toString()
-                            }
-                        })
-                    }
+                        <TouchableOpacity style={styles.button} onPress={() =>
+                            router.push({
+                                pathname: "/editUser",
+                                params: {
+                                    id: user?.numUsuario.toString()
+                                }
+                            })
+                        }
 
-                    >
-                        <Text style={styles.textButton}>
-                            Editar cuenta
+                        >
+                            <Text style={styles.textButton}>
+                                Editar cuenta
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.requests}>
+
+                        <Text style={styles.title}>
+                            Solicitudes enviadas
                         </Text>
-                    </TouchableOpacity>
+
+                        <Text style={styles.text}>
+                            Solicitudes realizadas por el usuario
+                        </Text>
+
+                    </View>
                 </View>
-
-                <View style={styles.requests}>
-
-                    <Text style={styles.title}>
-                        Solicitudes enviadas
-                    </Text>
-
-                    <Text style={styles.text}>
-                        Solicitudes realizadas por el usuario
-                    </Text>
-
-                </View>
-            </View>
-        </View >
+            </View >
 
         </>
     );
@@ -312,33 +302,42 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center"
     },
-    dataBox:{
-    backgroundColor:"#F9FAFB",
-    borderWidth:1,
-    borderColor:"#E5E7EB",
-    padding:12,
-    borderRadius:10,
-    marginBottom:12,
-},
-disabledInput:{
-    backgroundColor:"#E5E7EB",
-    padding:12,
-    borderRadius:10,
-    marginBottom:12,
-    opacity:0.7,
-},
-label:{
-    fontSize:13,
-    color:"#6B7280",
-    fontWeight:"bold",
-    marginBottom:5,
-},
-value:{
-    fontSize:16,
-    color:"#111827",
-},
-disabledText:{
-    fontSize:16,
-    color:"#6B7280",
-},
+    dataBox: {
+        backgroundColor: "#F9FAFB",
+        borderWidth: 1,
+        borderColor: "#E5E7EB",
+        padding: 12,
+        borderRadius: 10,
+        marginBottom: 12,
+    },
+    disabledInput: {
+        backgroundColor: "#E5E7EB",
+        padding: 12,
+        borderRadius: 10,
+        marginBottom: 12,
+        opacity: 0.7,
+    },
+    label: {
+        fontSize: 13,
+        color: "#6B7280",
+        fontWeight: "bold",
+        marginBottom: 5,
+    },
+    value: {
+        fontSize: 16,
+        color: "#111827",
+    },
+    disabledText: {
+        fontSize: 16,
+        color: "#6B7280",
+    },
+    avatarContainer: {
+        alignItems: "center",
+        marginBottom: 20,
+    },
+    avatarHint: {
+        marginTop: 8,
+        fontSize: 12,
+        color: "#6B7280",
+    },
 });
