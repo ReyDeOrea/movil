@@ -11,26 +11,26 @@ export default function UserCard({
   onPress,
 }: Props) {
   return (
- <TouchableOpacity
-style={styles.card}
-onPress={() => onPress(user.numUsuario)}
->
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => onPress(user.numUsuario)}
+    >
 
-<Text style={styles.title}>
-{user.nombre}
-</Text>
+      <Text style={styles.title}>
+        {user.nombre}
+      </Text>
 
-<Text>
-Correo: {user.email}
-</Text>
+      <Text>
+        Correo: {user.email}
+      </Text>
 
-<Text>
-Teléfono: {user.telefono}
-</Text>
+      <Text>
+        Teléfono: {user.telefono}
+      </Text>
 
-</TouchableOpacity>
+    </TouchableOpacity>
 
-);
+  );
 
 }
 

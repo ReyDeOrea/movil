@@ -94,7 +94,7 @@ export default function CreateTecnicoExternoView() {
 const styles = StyleSheet.create({
   container: {
     flex:1,
-    backgroundColor: "#fff",
+    backgroundColor: "#F5F5F5",
   },
   title: {
     fontSize: 24,

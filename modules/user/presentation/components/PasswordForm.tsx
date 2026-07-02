@@ -165,7 +165,7 @@ export default function Password() {
             <MaterialCommunityIcons
               name="account"
               size={22}
-              color="#67B346"
+              color="#148248"
             />
 
             <TextInput
@@ -184,7 +184,7 @@ export default function Password() {
             <MaterialIcons
               name="email"
               size={22}
-              color="#67B346"
+              color="#148248"
             />
 
             <TextInput
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
 
   container: {
     flexGrow: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F5F5F5",
     paddingBottom: 40,
   },
 
@@ -325,8 +325,8 @@ const styles = StyleSheet.create({
   BI: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#d1dbd4",
+   // borderWidth: 1,
+    //borderColor: "#d1dbd4",
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    backgroundColor: "#67B346",
+    backgroundColor: "#232323",
     borderRadius: 20,
     paddingVertical: 14,
     paddingHorizontal: 60,

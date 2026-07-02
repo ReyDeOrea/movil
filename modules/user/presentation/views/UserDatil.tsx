@@ -57,38 +57,24 @@ export default function UserDetail() {
                 await getUser.execute(
                     Number(id)
                 );
-
-
             setUser(data);
-
-
         } catch (error) {
 
             console.log(error);
-
         } finally {
 
             setLoading(false);
-
         }
-
     };
-
     if (loading) {
-
         return (
 
             <View style={styles.center}>
-
                 <ActivityIndicator />
-
             </View>
 
         );
-
     }
-
-
 
     return (
         <>
@@ -238,8 +224,7 @@ export default function UserDetail() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#F3F4F6"
-
+        backgroundColor: "#F5F5F5"
     },
     header: {
         width: "100%",
@@ -312,7 +297,7 @@ const styles = StyleSheet.create({
         marginBottom: 12
     },
     button: {
-        backgroundColor: "#76a56f",
+        backgroundColor: "#232323",
         padding: 12,
         borderRadius: 10,
         marginTop: 20

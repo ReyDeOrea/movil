@@ -158,7 +158,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F3F4F6",
   },
-
   header: {
     backgroundColor: "#148248",
     paddingTop: 50,
@@ -168,14 +167,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     position: "relative",
   },
-
   title: {
     color: "#020202",
     fontSize: 20,
     fontWeight: "bold",
     marginLeft: 15,
   },
-
   card: {
     margin: 15,
     padding: 20,
@@ -183,61 +180,53 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     elevation: 3,
   },
-
   label: {
     fontWeight: "bold",
     marginTop: 10,
     marginBottom: 5,
   },
-
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 10,
     padding: 10,
+    backgroundColor: "#ffffff",
     marginBottom: 10,
   },
-
   inputDisabled: {
-    backgroundColor: "#adadad",
+    backgroundColor: "#d8d5d5",
     borderWidth: 1,
-    borderColor: "#D1D5DB",
+    borderColor: "#acacac",
     borderRadius: 10,
     padding: 10,
     marginBottom: 10,
     color: "#6B7280",
   },
-
   button: {
     marginTop: 15,
-    backgroundColor: "#000000",
+    backgroundColor: "#232323",
     padding: 14,
     borderRadius: 10,
     alignItems: "center",
   },
-
   buttonText: {
     color: "#FFFFFF",
     fontWeight: "bold",
   },
-
   avatarContainer: {
     alignItems: "center",
     marginBottom: 15,
   },
-
   avatarHint: {
     marginTop: 8,
     fontSize: 12,
     color: "#6B7280",
   },
-
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-
   imageZucarmex: {
     width: LOGO_WIDTH,
     height: 50,

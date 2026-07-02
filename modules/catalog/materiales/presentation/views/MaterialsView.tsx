@@ -145,7 +145,7 @@ export default function MaterialsView() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#F5F5F5",
     marginBottom: 40
   },
 
