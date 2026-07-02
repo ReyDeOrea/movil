@@ -57,11 +57,11 @@ export default function RequestForm() {
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
-              <Image
-                          source={require('../../../../assets/images/ZUCARMEX.png')}
-                          style={styles.imageZucarmex}
-                          resizeMode="contain"
-                        />
+            <Image
+              source={require('../../../../assets/images/ZUCARMEX.png')}
+              style={styles.imageZucarmex}
+              resizeMode="contain"
+            />
           </View>
         </View>
 
@@ -106,6 +106,12 @@ export default function RequestForm() {
             <Text style={styles.buttonText}>Enviar solicitud</Text>
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.buttonText}>Cancelar</Text>
+          </TouchableOpacity>
         </View>
 
       </ScrollView>
@@ -118,48 +124,41 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
-     paddingBottom: 40,
+    paddingBottom: 40,
   },
-
   header: {
-    backgroundColor: "#67B346",
+    backgroundColor: "#148248",
     flexDirection: "row",
     alignItems: "center",
     paddingTop: 50,
     paddingBottom: 20,
     paddingHorizontal: 15,
   },
-
   headerCenter: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
   },
-
   title: {
     fontSize: 26,
     color: "#fff",
     fontWeight: "bold",
     marginRight: 8,
   },
-
   form: {
     padding: 20,
   },
-
   section: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 12,
     marginTop: 10,
   },
-
   label: {
     marginBottom: 5,
     color: "#444",
   },
-
   input: {
     borderWidth: 1,
     borderColor: "#DDD",
@@ -169,7 +168,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     color: "#000",
   },
-
   textArea: {
     borderWidth: 1,
     borderColor: "#DDD",
@@ -181,19 +179,26 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     color: "#000",
   },
-
   button: {
-    backgroundColor: "#67B346",
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: "#232323",
+    padding: 15,
+    borderRadius: 10,
     alignItems: "center",
     marginTop: 10,
-    marginBottom: 40,
+    marginBottom: 20,
+    marginHorizontal: 20,
   },
   imageZucarmex: {
-  width: '45%',
-  height: 60,
-},
+    width: '45%',
+    height: 60,
+  },
+  cancelButton: {
+    backgroundColor: "#870c0c",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginHorizontal: 20,
+  },
   buttonText: {
     color: "#fff",
     fontWeight: "bold",

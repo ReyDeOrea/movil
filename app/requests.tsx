@@ -2,14 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
 
 import RequestsAssigned from "@/modules/requests/presentation/views/RequestAsigned";
 import RequestsCompleted from "@/modules/requests/presentation/views/RequestCompleted";

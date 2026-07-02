@@ -45,7 +45,7 @@ export function ModalMenu({ visible, onClose, user, setUser, onUpdate }: ModalMe
                                 router.push("/account");
                             }}
                         >
-                            <Feather name="user" size={24} color="#b4f379" />
+                            <Feather name="user" size={24} color="#148248" />
                             <Text style={styles.navText}>Perfil</Text>
                         </TouchableOpacity>
 
@@ -58,7 +58,7 @@ export function ModalMenu({ visible, onClose, user, setUser, onUpdate }: ModalMe
                                     router.push("/catalog");
                                 }}
                             >
-                                <Feather name="clipboard" size={24} color="#b4f379" />
+                                <Feather name="clipboard" size={24} color="#148248" />
                                 <Text style={[styles.navText, styles.navTextActive]}>
                                     Catálogos
                                 </Text>
@@ -69,8 +69,8 @@ export function ModalMenu({ visible, onClose, user, setUser, onUpdate }: ModalMe
                             style={styles.navItem}
                             onPress={logout}
                         >
-                            <Ionicons name="log-out" size={26} color="red" />
-                            <Text style={[styles.navText, { color: "red" }]}>
+                            <Ionicons name="log-out" size={26} color="#870c0c" />
+                            <Text style={[styles.navText, { color: "#870c0c" }]}>
                                 Cerrar sesión
                             </Text>
                         </TouchableOpacity>
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(0,0,0,0.4)",
     },
     modalContainer: {
-        backgroundColor: "#fff",
+        backgroundColor: "#F5F5F5",
         padding: 20,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
@@ -153,8 +153,9 @@ const styles = StyleSheet.create({
     },
     cancelText: {
         textAlign: "center",
-        color: "gray",
+        color: "#000",
         marginTop: 10,
+        fontWeight: "bold",
     }
 
 });

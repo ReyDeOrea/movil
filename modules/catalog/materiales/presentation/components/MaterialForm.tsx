@@ -64,51 +64,59 @@ export default function MaterialForm({
             />
           </View>
         </View>
+        <View style={styles.card}>
+          <TextInput
+            placeholder="Número de material"
+            keyboardType="numeric"
+            value={numMaterial}
+            onChangeText={setNumMaterial}
+            style={styles.input}
+          />
+          <TextInput
+            placeholder="Nombre"
+            value={nombre}
+            onChangeText={setNombre}
+            style={styles.input}
+          />
 
-        <TextInput
-          placeholder="Número de material"
-          keyboardType="numeric"
-          value={numMaterial}
-          onChangeText={setNumMaterial}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Nombre"
-          value={nombre}
-          onChangeText={setNombre}
-          style={styles.input}
-        />
+          <TextInput
+            placeholder="Cantidad"
+            value={cantidad}
+            onChangeText={setCantidad}
+            keyboardType="numeric"
+            style={styles.input}
+          />
 
-        <TextInput
-          placeholder="Cantidad"
-          value={cantidad}
-          onChangeText={setCantidad}
-          keyboardType="numeric"
-          style={styles.input}
-        />
+          <TextInput
+            placeholder="Unidad"
+            value={unidad}
+            onChangeText={setUnidad}
+            style={styles.input}
+          />
 
-        <TextInput
-          placeholder="Unidad"
-          value={unidad}
-          onChangeText={setUnidad}
-          style={styles.input}
-        />
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() =>
+              onSubmit(
+                Number(numMaterial),
+                nombre,
+                Number(cantidad),
+                unidad
+              )
+            }
+          >
+            <Text style={styles.buttonText}>
+              Guardar
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() =>
-            onSubmit(
-              Number(numMaterial),
-              nombre,
-              Number(cantidad),
-              unidad
-            )
-          }
-        >
-          <Text style={styles.buttonText}>
-            Guardar
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.buttonText}>Cancelar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </>
   );
@@ -119,7 +127,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     minHeight: "100%",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#F5F5F5",
   },
   input: {
     borderWidth: 1,
@@ -128,13 +136,15 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 15,
     marginHorizontal: 20,
+    backgroundColor: "#fff",
   },
   button: {
-    backgroundColor: "#000000",
+    backgroundColor: "#232323",
     padding: 14,
     borderRadius: 10,
     alignItems: "center",
     marginHorizontal: 20,
+    marginBottom:20,
   },
   buttonText: {
     color: "#fff",
@@ -163,5 +173,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
+  },
+  card: {
+    margin: 15,
+    padding: 20,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    elevation: 3,
+  },
+  cancelButton: {
+    backgroundColor: "#870c0c",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginHorizontal: 20,
   },
 });

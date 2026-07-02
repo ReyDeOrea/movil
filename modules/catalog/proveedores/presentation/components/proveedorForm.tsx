@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
@@ -34,7 +35,7 @@ export default function TecnicoExternoForm({
   const [especialidad, setEspecialidad] = useState(initialEspecialidad);
 
   return (
-    <View>
+   <View style={styles.card}>
       {showNumero && (
         <>
           <Text style={styles.label}>Número de técnico</Text>
@@ -91,6 +92,13 @@ export default function TecnicoExternoForm({
       >
         <Text style={styles.buttonText}>Guardar</Text>
       </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => router.back()}
+        >
+          <Text style={styles.buttonText}>Cancelar</Text>
+        </TouchableOpacity>
     </View>
   );
 }
@@ -109,7 +117,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginHorizontal: 20,
   },
-
+ card: {
+    margin: 15,
+    padding: 20,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    elevation: 3,
+  },
   inputDisabled: {
     borderWidth: 1,
     borderColor: "#D1D5DB",
@@ -122,13 +136,20 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    backgroundColor: "#000000",
+    backgroundColor: "#232323",
     padding: 14,
     borderRadius: 10,
     alignItems: "center",
     marginHorizontal: 20,
+    marginBottom:20,
   },
-
+ cancelButton: {
+    backgroundColor: "#870c0c",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginHorizontal: 20,
+  },
   buttonText: {
     color: "#fff",
     fontWeight: "bold",

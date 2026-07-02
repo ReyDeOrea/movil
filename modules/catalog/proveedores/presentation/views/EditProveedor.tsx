@@ -66,15 +66,15 @@ export default function EditTecnicoExternoView() {
   }
 
   return (
-     <>
+    <>
       <Stack.Screen
         options={{
           headerShown: false,
         }}
       />
-    <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.container}>
 
-   <View style={styles.header}>
+        <View style={styles.header}>
           <TouchableOpacity
             style={styles.backBtn}
             onPress={() =>
@@ -99,23 +99,24 @@ export default function EditTecnicoExternoView() {
           </View>
         </View>
 
-      <TecnicoExternoForm
-        initialNumTecnicoExterno={tecnico.numTecnicoExterno.toString()}
-        showNumero
-        initialNombre={tecnico.nombre}
-        initialEmpresa={tecnico.empresa ?? ""}
-        initialTelefono={tecnico.telefono ?? ""}
-        initialEspecialidad={tecnico.especialidad ?? ""}
-        onSubmit={handleUpdate}
-      />
-    </ScrollView>
+       
+          <TecnicoExternoForm
+            initialNumTecnicoExterno={tecnico.numTecnicoExterno.toString()}
+            showNumero
+            initialNombre={tecnico.nombre}
+            initialEmpresa={tecnico.empresa ?? ""}
+            initialTelefono={tecnico.telefono ?? ""}
+            initialEspecialidad={tecnico.especialidad ?? ""}
+            onSubmit={handleUpdate}
+          />
+      </ScrollView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex:1,
+    flex: 1,
     backgroundColor: "#fff",
   },
   title: {

@@ -100,14 +100,14 @@ export default function EditUserView() {
   };
 
   return (
-   <>
+    <>
       <Stack.Screen
         options={{
           headerShown: false,
         }}
       />
       <View style={styles.container}>
-        
+
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backBtn}
@@ -133,43 +133,54 @@ export default function EditUserView() {
           </View>
         </View>
 
-      <AvatarView
-        size={110}
-        url={avatarUrl}
-        editable
-        onUpload={(url) => setAvatarUrl(url)}
-      />
+        <View style={styles.card}>
+          <View style={styles.avatarContainer}>
+            <AvatarView
+              size={110}
+              url={avatarUrl}
+              editable
+              onUpload={(url) => setAvatarUrl(url)}
+            />
+          </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Nombre"
-        value={nombre}
-        onChangeText={setNombre}
-      />
+          <TextInput
+            style={styles.input}
+            placeholder="Nombre"
+            value={nombre}
+            onChangeText={setNombre}
+          />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Correo"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
+          <TextInput
+            style={styles.input}
+            placeholder="Correo"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Teléfono"
-        value={telefono}
-        onChangeText={setTelefono}
-        keyboardType="phone-pad"
-      />
+          <TextInput
+            style={styles.input}
+            placeholder="Teléfono"
+            value={telefono}
+            onChangeText={setTelefono}
+            keyboardType="phone-pad"
+          />
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleUpdate}
-      >
-        <Text style={styles.buttonText}>Guardar cambios</Text>
-      </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleUpdate}
+          >
+            <Text style={styles.buttonText}>Guardar cambios</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.buttonText}>Cancelar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </>
   );
@@ -178,7 +189,7 @@ export default function EditUserView() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#F5F5F5",
   },
   input: {
     borderWidth: 1,
@@ -187,10 +198,12 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 15,
     marginHorizontal: 20,
+    backgroundColor: "#fff",
   },
   button: {
-    backgroundColor: "#000000",
+    backgroundColor: "#232323",
     padding: 15,
+     marginBottom:20,
     borderRadius: 10,
     alignItems: "center",
     marginHorizontal: 20,
@@ -222,5 +235,23 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#FFF",
     fontWeight: "bold",
+  },
+  avatarContainer: {
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  card: {
+    margin: 15,
+    padding: 20,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    elevation: 3,
+  },
+  cancelButton: {
+    backgroundColor: "#870c0c",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginHorizontal: 20,
   },
 });

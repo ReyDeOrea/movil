@@ -111,37 +111,45 @@ export default function EditMaterial() {
           </View>
         </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Nombre del material"
-          value={nombreMaterial}
-          onChangeText={setNombreMaterial}
-        />
+        <View style={styles.card}>
+          <TextInput
+            style={styles.input}
+            placeholder="Nombre del material"
+            value={nombreMaterial}
+            onChangeText={setNombreMaterial}
+          />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Unidad"
-          value={unidad}
-          onChangeText={setUnidad}
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Unidad"
+            value={unidad}
+            onChangeText={setUnidad}
+          />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Cantidad"
-          keyboardType="numeric"
-          value={cantidad}
-          onChangeText={setCantidad}
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Cantidad"
+            keyboardType="numeric"
+            value={cantidad}
+            onChangeText={setCantidad}
+          />
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleUpdate}
-        >
-          <Text style={styles.buttonText}>
-            Guardar cambios
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleUpdate}
+          >
+            <Text style={styles.buttonText}>
+              Guardar cambios
+            </Text>
+          </TouchableOpacity>
 
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.buttonText}>Cancelar</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </>
   );
@@ -151,7 +159,7 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 40,
     flex: 1,
-    backgroundColor: "#fff"
+    backgroundColor: "#F5F5F5"
   },
   rowHeader: {
     flex: 1,
@@ -192,16 +200,30 @@ const styles = StyleSheet.create({
     height: 60,
   },
   button: {
-    backgroundColor: "#000000",
+    backgroundColor: "#232323",
     padding: 15,
     borderRadius: 10,
     marginHorizontal: 20,
     alignItems: "center",
+    marginBottom: 20,
   },
-
   buttonText: {
     color: "#ffffff",
     fontWeight: "bold",
+  },
+  card: {
+    margin: 15,
+    padding: 20,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    elevation: 3,
+  },
+  cancelButton: {
+    backgroundColor: "#870c0c",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginHorizontal: 20,
   },
 });
 

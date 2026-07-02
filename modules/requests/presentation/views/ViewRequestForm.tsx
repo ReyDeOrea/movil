@@ -48,16 +48,19 @@ export default function ViewRequest() {
 
       <ScrollView style={styles.container}>
 
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <MaterialCommunityIcons name="arrow-left" size={28} color="#fff" />
-          </TouchableOpacity>
-
-          <View style={styles.headerCenter}>
-            <Text style={styles.title}>Solicitud</Text>
-            <MaterialCommunityIcons name="clipboard-text" size={28} color="#fff" />
-          </View>
-        </View>
+         <View style={styles.header}>
+                 <TouchableOpacity onPress={() => router.back()}>
+                   <MaterialCommunityIcons name="arrow-left" size={28} color="#fff" />
+                 </TouchableOpacity>
+       
+                 <View style={styles.headerCenter}>
+                   <Image
+                     source={require('../../../../assets/images/ZUCARMEX.png')}
+                     style={styles.imageZucarmex}
+                     resizeMode="contain"
+                   />
+                 </View>
+               </View>
 
         <View style={styles.content}>
 
@@ -135,11 +138,11 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#F5F5F5",
   },
 
   header: {
-    backgroundColor: "#4F46E5",
+    backgroundColor: "#148248",
     flexDirection: "row",
     alignItems: "center",
     paddingTop: 50,
@@ -205,7 +208,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignSelf: "flex-start",
   },
-
+imageZucarmex: {
+    width: '45%',
+    height: 60,
+  },
   center: {
     flex: 1,
     justifyContent: "center",

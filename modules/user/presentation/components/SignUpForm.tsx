@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     cancelButton: {
-        backgroundColor: "#E8B4B4",
+        backgroundColor: "#870c0c",
         padding: 14,
         borderRadius: 15,
         width: "100%",
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     button: {
-        backgroundColor: "#000000",
+        backgroundColor: "#232323",
         padding: 15,
         borderRadius: 10,
         alignItems: "center",

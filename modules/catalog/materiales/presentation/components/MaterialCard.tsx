@@ -76,14 +76,14 @@ const styles = StyleSheet.create({
   },
 
   editButton: {
-    backgroundColor: "#76a56f",
+    backgroundColor: "#3a6e19",
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 8,
   },
 
   deleteButton: {
-    backgroundColor: "#DC2626",
+    backgroundColor: "#870c0c",
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 8,
