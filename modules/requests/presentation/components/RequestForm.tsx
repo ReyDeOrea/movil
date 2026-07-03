@@ -64,28 +64,39 @@ export default function RequestForm() {
   }, []);
 
   const enviarSolicitud = async () => {
-
     try {
-
       const userData = await AsyncStorage.getItem("user");
-      const user = JSON.parse(userData!);
 
-      await createRequest.execute({
-        numSolicitante: user.numUsuario,
-        fecha: new Date().toISOString().split("T")[0],
-        numTipo: Number(numTipo),
-        numTipoMantenimiento: numTipoMantenimiento
-          ? Number(numTipoMantenimiento)
-          : undefined,
-        numArea: Number(numArea),
-        descripcion: descripcion.trim(),
-      });
+      if (!userData) {
+        Alert.alert("Error", "No se encontró la sesión del usuario");
+        return;
+      }
+
+      const user = JSON.parse(userData);
+
+      await createRequest.execute(
+        {
+          numSolicitante: user.numUsuario,
+          fecha: new Date().toISOString().split("T")[0],
+          numTipo: Number(numTipo),
+          numTipoMantenimiento: numTipoMantenimiento
+            ? Number(numTipoMantenimiento)
+            : undefined,
+          numArea: Number(numArea),
+          descripcion: descripcion.trim(),
+        },
+        imagenes,
+        "solicitante"
+      );
 
       Alert.alert("Solicitud enviada correctamente");
       router.replace("/requests");
 
     } catch (error: any) {
-      Alert.alert(error.message);
+      Alert.alert(
+        "Error",
+        error.message || "No se pudo enviar la solicitud"
+      );
     }
   };
 
@@ -132,7 +143,7 @@ export default function RequestForm() {
               selectedValue={numTipo}
               onValueChange={(itemValue) => setNumTipo(itemValue)}
             >
-              <Picker.Item label="Seleccione..." value="" enabled={false} color="#999"/>
+              <Picker.Item label="Seleccione..." value="" enabled={false} color="#999" />
               <Picker.Item label="Servicio" value="1" />
               <Picker.Item label="Mantenimiento" value="2" />
             </Picker>
