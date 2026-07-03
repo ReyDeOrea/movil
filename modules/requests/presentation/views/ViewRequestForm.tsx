@@ -1,25 +1,65 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from "react-native";
+
+import { RequestsForm } from "../../domain/request";
+import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
 
 const screenWidth = Dimensions.get("window").width;
+const repository = new SupabaseRequestsRepository();
 
 export default function ViewRequest() {
-
   const params = useLocalSearchParams();
   const router = useRouter();
-  const [request, setRequest] = useState<any>(null);
+
+  const [request, setRequest] = useState<RequestsForm | null>(null);
 
   useEffect(() => {
-    if (params.request && typeof params.request === "string") {
-      try {
-        setRequest(JSON.parse(params.request));
-      } catch (error) {
-        console.log("ERROR parsing request:", error);
-      }
-    }
+    cargarSolicitud();
   }, [params.request]);
+
+  const cargarSolicitud = async () => {
+    if (!params.request || typeof params.request !== "string") return;
+
+    try {
+      const parsed = JSON.parse(params.request);
+      const numSolicitud = parsed.numSolicitud;
+
+      if (numSolicitud) {
+        const data = await repository.getRequestById(numSolicitud);
+
+        if (data) {
+          setRequest(data);
+          return;
+        }
+      }
+
+      setRequest(parsed);
+    } catch (error) {
+      console.log("ERROR parsing request:", error);
+    }
+  };
+
+  const evidenciasSolicitante = useMemo(() => {
+    return request?.evidencias?.filter(
+      (e) => e.tipoEvidencia === "solicitante"
+    ) ?? [];
+  }, [request]);
+
+  const evidenciasTecnico = useMemo(() => {
+    return request?.evidencias?.filter(
+      (e) => e.tipoEvidencia === "tecnico"
+    ) ?? [];
+  }, [request]);
 
   const statusColors: Record<number, { background: string; text: string }> = {
     1: { background: "#d7d7d7", text: "#6c6c6c" },
@@ -60,7 +100,7 @@ export default function ViewRequest() {
     }
   };
 
-  const getTipoMantenimiento = (tipo: number) => {
+  const getTipoMantenimiento = (tipo?: number) => {
     switch (tipo) {
       case 1:
         return "Preventivo";
@@ -103,7 +143,6 @@ export default function ViewRequest() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <ScrollView style={styles.container}>
-
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
             <MaterialCommunityIcons
@@ -123,14 +162,13 @@ export default function ViewRequest() {
         </View>
 
         <View style={styles.content}>
-
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Información general</Text>
 
             <Text style={styles.label}>Solicitante:</Text>
             <Text style={styles.value}>
-              {request.solicitante ??
-                request.nombreSolicitante ??
+              {(request as any).solicitante ??
+                (request as any).nombreSolicitante ??
                 "No disponible"}
             </Text>
 
@@ -164,15 +202,38 @@ export default function ViewRequest() {
             </Text>
           </View>
 
-          {request.evidencias?.length > 0 && (
+          {evidenciasSolicitante.length > 0 && (
             <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Evidencias</Text>
+              <Text style={styles.sectionTitle}>
+                Evidencias del solicitante
+              </Text>
 
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
               >
-                {request.evidencias.map((e: any) => (
+                {evidenciasSolicitante.map((e) => (
+                  <Image
+                    key={e.idEvidencia}
+                    source={{ uri: e.ruta }}
+                    style={styles.image}
+                  />
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {evidenciasTecnico.length > 0 && (
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>
+                Evidencias del técnico
+              </Text>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+              >
+                {evidenciasTecnico.map((e) => (
                   <Image
                     key={e.idEvidencia}
                     source={{ uri: e.ruta }}
@@ -222,7 +283,6 @@ export default function ViewRequest() {
               </Text>
             </View>
           </View>
-
         </View>
       </ScrollView>
     </>
@@ -230,7 +290,6 @@ export default function ViewRequest() {
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",

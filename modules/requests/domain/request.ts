@@ -1,109 +1,108 @@
 export interface RequestsForm {
+  numSolicitud: number;
+  fecha: string;
 
-    numSolicitud: number;
-    fecha: string;
+  numSolicitante: number;
 
-    numSolicitante: number;
+  numTipo: number;
+  numTipoMantenimiento?: number;
 
-    numTipo: number;
-    numTipoMantenimiento?: number;
+  numArea: number;
 
-    numArea: number;
+  descripcion: string;
+  prioridad?: Prioridad;
 
-    descripcion: string;
-    prioridad?: Prioridad; //DB
+  numStatus: StatusSolicitud;
 
-    numStatus: StatusSolicitud;
+  motivoCancelacion?: string;
 
-    motivoCancelacion?: string;
+  fechaAsignacion?: string;
+  fechaProgInicio?: string;
+  fechaProgFin?: string;
 
-    fechaAsignacion?: string;
-    fechaProgInicio?: string;
-    fechaProgFin?: string;
+  fechaInicioReal?: string;
+  fechaFinReal?: string;
 
-    fechaInicioReal?: string;
-    fechaFinReal?: string;
+  comentarios?: string;
+  evidencias?: Evidence[];
 
-    comentarios?: string;
-    evidencias?: Evidence[];
+  bitacora?: Bitacora[];
 
-    bitacora?: Bitacora[];
+  materiales?: DetalleMaterial[];
 
-    materiales?: DetalleMaterial[];
+  tecnicoInterno?: SolicitudTecnicoInterno;
 
-    tecnicoInterno?: SolicitudTecnicoInterno;
-
-    tecnicoExterno?: SolicitudTecnicoExterno;
-
+  tecnicoExterno?: SolicitudTecnicoExterno;
 }
 
 export interface Evidence {
-    idEvidencia: string;
-    numSolicitud: number;
-    tipoEvidencia: string;
-    ruta: string;
-    fecha: string;
+  idEvidencia: string;
+  numSolicitud: number;
+  tipoEvidencia: "solicitante" | "tecnico";
+  ruta: string;
+  fecha: string;
 }
 
 export interface Bitacora {
-    numBitacora: number;
-    numSolicitud: number;
-    numUsuario: number;
-    fecha: string;
-    accion: string;
-    descripcion: string;
+  numBitacora: number;
+  numSolicitud: number;
+  numUsuario: number;
+  fecha: string;
+  accion: string;
+  descripcion: string;
 }
 
 export interface DetalleMaterial {
-    numSolicitud: number;
-    numMaterial: number;
-    cantidad: number;
-    unidad: string;
+  numSolicitud: number;
+  numMaterial: number;
+  cantidad: number;
+  unidad: string;
 }
 
 export interface SolicitudTecnicoInterno {
-    id: number;
-    numSolicitud: number;
-    numTecnicoInterno: number;
+  id: number;
+  numSolicitud: number;
+  numTecnicoInterno: number;
 }
-
 
 export interface SolicitudTecnicoExterno {
-    id: number;
-    numSolicitud: number;
-    numTecnicoExterno: number;
+  id: number;
+  numSolicitud: number;
+  numTecnicoExterno: number;
 }
-
 
 export type Prioridad =
-    | "baja"
-    | "media"
-    | "alta";
+  | "baja"
+  | "media"
+  | "alta";
 
 export enum StatusSolicitud {
-    GENERADA = 1,
-    ASIGNADA = 2,
-    EN_PROCESO = 3,
-    TERMINADA = 4,
-    RECHAZADA = 5
+  GENERADA = 1,
+  ASIGNADA = 2,
+  EN_PROCESO = 3,
+  TERMINADA = 4,
+  RECHAZADA = 5,
 }
+
+export type TipoEvidencia = "solicitante" | "tecnico";
+
 export type CreateRequest = Omit<
-    RequestsForm,
-    | "numSolicitud"
-    | "numStatus"
-    | "motivoCancelacion"
-    | "fechaAsignacion"
-    | "fechaProgInicio"
-    | "fechaProgFin"
-    | "fechaInicioReal"
-    | "fechaFinReal"
-    | "comentarios"
-    | "evidencias"
-    | "bitacora"
-    | "materiales"
-    | "prioridad"
-    | "tecnicoInterno"
-    | "tecnicoExterno"
+  RequestsForm,
+  | "numSolicitud"
+  | "numStatus"
+  | "motivoCancelacion"
+  | "fechaAsignacion"
+  | "fechaProgInicio"
+  | "fechaProgFin"
+  | "fechaInicioReal"
+  | "fechaFinReal"
+  | "comentarios"
+  | "evidencias"
+  | "bitacora"
+  | "materiales"
+  | "prioridad"
+  | "tecnicoInterno"
+  | "tecnicoExterno"
 >;
 
 export type UpdateRequests = Partial<RequestsForm>;
