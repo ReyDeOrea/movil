@@ -4,20 +4,20 @@ import { Picker } from "@react-native-picker/picker";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-    Alert,
-    Image,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 
 import { api } from "@/lib/api";
 import { validateAdminAssignment } from "../../application/validateAdminAssignment";
 import { Prioridad } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
+import EditRequestModal from "./ModalEditRequestAdmin";
 
 type TipoTecnico = "externo" | "interno" | "ambos";
 
@@ -52,7 +52,9 @@ export default function FormAdmin() {
   const router = useRouter();
   const { request } = useLocalSearchParams();
 
-  const data = parseRequestParam(request);
+ const data = useMemo(() => parseRequestParam(request), [request]);
+  
+ const [solicitud, setSolicitud] = useState<any>(data);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [tipoTecnico, setTipoTecnico] = useState<TipoTecnico>("interno");
@@ -65,6 +67,10 @@ export default function FormAdmin() {
   const [prioridad, setPrioridad] = useState<Prioridad>("media");
   const [tecnicosInternos, setTecnicosInternos] = useState<TecnicoOption[]>([]);
   const [tecnicosExternos, setTecnicosExternos] = useState<TecnicoOption[]>([]);
+
+   useEffect(() => {
+    setSolicitud(data);
+  }, [data]);
 
   useEffect(() => {
     cargarTecnicos();
@@ -156,8 +162,8 @@ export default function FormAdmin() {
 
   const guardar = async () => {
     try {
-      if (!data?.numSolicitud) {
-        Alert.alert("Error", "No se encontró el número de solicitud");
+if (!solicitud?.numSolicitud) {
+          Alert.alert("Error", "No se encontró el número de solicitud");
         return;
       }
 
@@ -171,7 +177,7 @@ export default function FormAdmin() {
       const [tipo, id] = personaAsignada.split("-");
       const tecnicoId = Number(id);
 
-      await repository.updateRequest(data.numSolicitud, {
+      await repository.updateRequest(solicitud.numSolicitud, {
         fechaAsignacion: fechaAsignada,
         fechaProgInicio: dateToApi(fechaInicio),
         fechaProgFin: dateToApi(fechaFin),
@@ -212,7 +218,15 @@ export default function FormAdmin() {
     );
   }
 
-  const statusStyle = getStatusStyle(data.numStatus);
+   if (!solicitud) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>No llegó la solicitud</Text>
+      </View>
+    );
+  }
+
+  const statusStyle = getStatusStyle(solicitud.numStatus);
 
   return (
     <>
@@ -232,15 +246,15 @@ export default function FormAdmin() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.title}>{getTipo(data.numTipo)}</Text>
+          <Text style={styles.title}>{getTipo(solicitud.numTipo)}</Text>
 
-          <Text>Fecha: {data.fecha}</Text>
+          <Text>Fecha: {solicitud.fecha}</Text>
 
-          <Text>Nombre: {data.nombreSolicitante || "Sin nombre"}</Text>
+          <Text>Nombre: {solicitud.nombreSolicitante || "Sin nombre"}</Text>
 
-          <Text>Área: {getArea(data.numArea)}</Text>
+          <Text>Área: {getArea(solicitud.numArea)}</Text>
 
-          <Text>Descripción: {data.descripcion}</Text>
+          <Text>Descripción: {solicitud.descripcion}</Text>
 
           <Text style={styles.label}>Estado:</Text>
 
@@ -251,7 +265,7 @@ export default function FormAdmin() {
             ]}
           >
             <Text style={{ color: statusStyle.text, fontWeight: "bold" }}>
-              {getStatusName(data.numStatus)}
+              {getStatusName(solicitud.numStatus)}
             </Text>
           </View>
 
@@ -373,18 +387,14 @@ export default function FormAdmin() {
         </View>
       </ScrollView>
 
-      <Modal visible={modalVisible} animationType="slide">
-        <View style={styles.modal}>
-          <Text style={styles.title}>Editar descripción</Text>
-
-          <TouchableOpacity
-            style={styles.saveBtn}
-            onPress={() => setModalVisible(false)}
-          >
-            <Text style={styles.saveText}>Cerrar</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
+      <EditRequestModal
+        visible={modalVisible}
+        solicitud={solicitud}
+        onClose={() => setModalVisible(false)}
+        onUpdated={(solicitudActualizada) => {
+          setSolicitud(solicitudActualizada);
+        }}
+      />
     </>
   );
 }

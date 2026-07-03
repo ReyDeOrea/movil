@@ -425,7 +425,7 @@ modalButtons: {
 
 modalCancelButton: {
   flex: 1,
-  backgroundColor: "#6B7280",
+  backgroundColor: "#232323",
   padding: 13,
   borderRadius: 10,
   alignItems: "center",
