@@ -22,15 +22,71 @@ export default function ViewRequest() {
   }, [params.request]);
 
   const statusColors: Record<number, { background: string; text: string }> = {
-    1: { background: "#FEF3C7", text: "#92400E" },
-    2: { background: "#DBEAFE", text: "#1E40AF" },
-    3: { background: "#EDE9FE", text: "#5B21B6" },
+    1: { background: "#d7d7d7", text: "#6c6c6c" },
+    2: { background: "#FEF3C7", text: "#92400E" },
+    3: { background: "#DBEAFE", text: "#1E40AF" },
     4: { background: "#D1FAE5", text: "#065F46" },
     5: { background: "#FECACA", text: "#991B1B" },
   };
 
   const getStatusStyle = (status: number) =>
     statusColors[status] ?? statusColors[1];
+
+  const getStatusName = (status: number) => {
+    switch (status) {
+      case 1:
+        return "Generada";
+      case 2:
+        return "Asignada";
+      case 3:
+        return "En proceso";
+      case 4:
+        return "Terminada";
+      case 5:
+        return "Cancelada";
+      default:
+        return "Desconocido";
+    }
+  };
+
+  const getTipo = (tipo: number) => {
+    switch (tipo) {
+      case 1:
+        return "Servicio";
+      case 2:
+        return "Mantenimiento";
+      default:
+        return "N/A";
+    }
+  };
+
+  const getTipoMantenimiento = (tipo: number) => {
+    switch (tipo) {
+      case 1:
+        return "Preventivo";
+      case 2:
+        return "Correctivo";
+      case 3:
+        return "Reactivo";
+      default:
+        return "N/A";
+    }
+  };
+
+  const getArea = (area: number) => {
+    switch (area) {
+      case 1:
+        return "Administración";
+      case 2:
+        return "Fábrica";
+      case 3:
+        return "Campo";
+      case 4:
+        return "Zona habitacional";
+      default:
+        return "N/A";
+    }
+  };
 
   if (!request) {
     return (
@@ -48,82 +104,121 @@ export default function ViewRequest() {
 
       <ScrollView style={styles.container}>
 
-         <View style={styles.header}>
-                 <TouchableOpacity onPress={() => router.back()}>
-                   <MaterialCommunityIcons name="arrow-left" size={28} color="#fff" />
-                 </TouchableOpacity>
-       
-                 <View style={styles.headerCenter}>
-                   <Image
-                     source={require('../../../../assets/images/ZUCARMEX.png')}
-                     style={styles.imageZucarmex}
-                     resizeMode="contain"
-                   />
-                 </View>
-               </View>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <MaterialCommunityIcons
+              name="arrow-left"
+              size={28}
+              color="#fff"
+            />
+          </TouchableOpacity>
+
+          <View style={styles.headerCenter}>
+            <Image
+              source={require("../../../../assets/images/ZUCARMEX.png")}
+              style={styles.imageZucarmex}
+              resizeMode="contain"
+            />
+          </View>
+        </View>
 
         <View style={styles.content}>
 
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Información general</Text>
 
-            <Text style={styles.label}>Tipo:</Text>
-            <Text style={styles.value}>{request.numTipo}</Text>
-
-            <Text style={styles.label}>Tipo mantenimiento:</Text>
+            <Text style={styles.label}>Solicitante:</Text>
             <Text style={styles.value}>
-              {request.numTipoMantenimiento ?? "N/A"}
+              {request.solicitante ??
+                request.nombreSolicitante ??
+                "No disponible"}
             </Text>
+
+            <Text style={styles.label}>Tipo:</Text>
+            <Text style={styles.value}>
+              {getTipo(request.numTipo)}
+            </Text>
+
+            {request.numTipo === 2 && (
+              <>
+                <Text style={styles.label}>Tipo de mantenimiento:</Text>
+                <Text style={styles.value}>
+                  {getTipoMantenimiento(request.numTipoMantenimiento)}
+                </Text>
+              </>
+            )}
 
             <Text style={styles.label}>Fecha:</Text>
             <Text style={styles.value}>{request.fecha}</Text>
 
             <Text style={styles.label}>Área:</Text>
-            <Text style={styles.value}>{request.numArea}</Text>
+            <Text style={styles.value}>
+              {getArea(request.numArea)}
+            </Text>
           </View>
 
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Descripción</Text>
-            <Text style={styles.value}>{request.descripcion}</Text>
+            <Text style={styles.value}>
+              {request.descripcion}
+            </Text>
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Evidencias</Text>
+          {request.evidencias?.length > 0 && (
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Evidencias</Text>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {request.evidencias?.map((e: any) => (
-                <Image
-                  key={e.idEvidencia}
-                  source={{ uri: e.ruta }}
-                  style={styles.image}
-                />
-              ))}
-            </ScrollView>
-          </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+              >
+                {request.evidencias.map((e: any) => (
+                  <Image
+                    key={e.idEvidencia}
+                    source={{ uri: e.ruta }}
+                    style={styles.image}
+                  />
+                ))}
+              </ScrollView>
+            </View>
+          )}
 
           {request.comentarios && (
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Comentarios</Text>
-              <Text style={styles.value}>{request.comentarios}</Text>
+              <Text style={styles.value}>
+                {request.comentarios}
+              </Text>
             </View>
           )}
 
           {request.motivoCancelacion && (
             <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Motivo rechazo</Text>
-              <Text style={styles.value}>{request.motivoCancelacion}</Text>
+              <Text style={styles.sectionTitle}>
+                Motivo de cancelación
+              </Text>
+              <Text style={styles.value}>
+                {request.motivoCancelacion}
+              </Text>
             </View>
           )}
 
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Estado</Text>
 
-            <View style={[
-              styles.statusBadge,
-              { backgroundColor: statusStyle.background }
-            ]}>
-              <Text style={{ color: statusStyle.text, fontWeight: "bold" }}>
-                {request.numStatus}
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: statusStyle.background },
+              ]}
+            >
+              <Text
+                style={{
+                  color: statusStyle.text,
+                  fontWeight: "bold",
+                }}
+              >
+                {getStatusName(request.numStatus)}
               </Text>
             </View>
           </View>
@@ -157,11 +252,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  title: {
-    fontSize: 28,
-    color: "#fff",
-    fontWeight: "bold",
-    marginRight: 8,
+  imageZucarmex: {
+    width: "45%",
+    height: 60,
   },
 
   content: {
@@ -185,7 +278,7 @@ const styles = StyleSheet.create({
 
   label: {
     fontWeight: "bold",
-    marginTop: 5,
+    marginTop: 8,
     color: "#374151",
   },
 
@@ -208,10 +301,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignSelf: "flex-start",
   },
-imageZucarmex: {
-    width: '45%',
-    height: 60,
-  },
+
   center: {
     flex: 1,
     justifyContent: "center",

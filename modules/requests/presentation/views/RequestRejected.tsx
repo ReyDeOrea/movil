@@ -45,105 +45,121 @@ export default function RequestsRejected() {
   };
 
   const viewRequest = (request: RequestsForm) => {
-  router.push({
-    pathname: "/viewRequestForm",
-    params: {
-      request: JSON.stringify(request),
-    },
-  });
-};
+    router.push({
+      pathname: "/viewRequestForm",
+      params: {
+        request: JSON.stringify(request),
+      },
+    });
+  };
 
   const renderStatusColor = (status: number) => {
     switch (status) {
       case 5:
-        return "#EF4444"; // rechazada
+        return "#FECACA";
       default:
         return "#6B7280";
     }
   };
+  const renderTipo = (tipo: number) => {
+    switch (tipo) {
+      case 1:
+        return "Servicio";
+      case 2:
+        return "Mantenimiento";
+      default:
+        return "Desconocido";
+    }
+  };
 
   return (
-    <FlatList
-      data={requests}
-      keyExtractor={(item) => item.numSolicitud.toString()}
+    <View style={styles.container}>
+      <FlatList
+        data={requests}
+        keyExtractor={(item) => item.numSolicitud.toString()}
 
-      renderItem={({ item }) => (
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => viewRequest(item)}
-        >
-
-          <Text style={styles.title}>
-            Tipo: {item.numTipo}
-          </Text>
-
-          <Text style={styles.text}>
-            Estado: {item.numStatus}
-          </Text>
-
-          <Text style={styles.text}>
-            Motivo: {item.motivoCancelacion ?? "Sin motivo"}
-          </Text>
-
-          <View
-            style={[
-              styles.badge,
-              { backgroundColor: renderStatusColor(item.numStatus) }
-            ]}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => viewRequest(item)}
           >
-            <Text style={styles.badgeText}>
-              RECHAZADA
+
+            <Text style={styles.title}>
+              {renderTipo(item.numTipo)}
             </Text>
-          </View>
 
-        </TouchableOpacity>
-      )}
+            <Text style={styles.text}>
+              <Text style={styles.label}>Fecha:</Text> {item.fecha}
+            </Text>
 
-      ListEmptyComponent={
-        <Text style={styles.empty}>
-          No hay solicitudes rechazadas
-        </Text>
-      }
-    />
+            <Text style={styles.text}>
+               <Text style={styles.label}>Motivo: </Text>{item.motivoCancelacion ?? "Sin motivo"}
+            </Text>
+
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: renderStatusColor(item.numStatus) }
+              ]}
+            >
+              <Text style={styles.statusText}>
+                Cancelada
+              </Text>
+            </View>
+
+          </TouchableOpacity>
+        )}
+
+        ListEmptyComponent={
+          <Text style={styles.empty}>
+            No hay solicitudes rechazadas
+          </Text>
+        }
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+    padding: 10,
+  },
   card: {
     backgroundColor: "#fff",
-    padding: 15,
-    marginHorizontal: 10,
-    marginBottom: 10,
-    borderRadius: 10,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    elevation: 3,
   },
-
   title: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 5,
   },
-
   text: {
     fontSize: 14,
     marginBottom: 3,
     color: "#374151",
   },
 
-  badge: {
-    marginTop: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-    alignSelf: "flex-start",
-  },
+ statusBadge: {
+  marginTop: 10,
+  paddingVertical: 8,
+  paddingHorizontal: 14,
+  borderRadius: 20,
+  alignSelf: "flex-start",
+},
 
-  badgeText: {
-    color: "#fff",
+statusText: {
+  color: "#991B1B",
+  fontWeight: "bold",
+},
+
+  label: {
     fontWeight: "bold",
-    fontSize: 12,
   },
-
   empty: {
     textAlign: "center",
     marginTop: 20,

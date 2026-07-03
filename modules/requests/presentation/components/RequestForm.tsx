@@ -25,7 +25,7 @@ export default function RequestForm() {
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [fecha] = useState(new Date().toISOString().split("T")[0]);
   const [imagenes, setImagenes] = useState<string[]>([]);
-const [bannerPage, setBannerPage] = useState(0);
+  const [bannerPage, setBannerPage] = useState(0);
 
   const seleccionarImagen = async () => {
 
@@ -112,7 +112,6 @@ const [bannerPage, setBannerPage] = useState(0);
         <View style={styles.form}>
 
           <Text style={styles.label}>Fecha</Text>
-
           <TextInput
             style={styles.inputDisabled}
             editable={false}
@@ -133,7 +132,7 @@ const [bannerPage, setBannerPage] = useState(0);
               selectedValue={numTipo}
               onValueChange={(itemValue) => setNumTipo(itemValue)}
             >
-              <Picker.Item label="Seleccione..." value="" />
+              <Picker.Item label="Seleccione..." value="" enabled={false} color="#999"/>
               <Picker.Item label="Servicio" value="1" />
               <Picker.Item label="Mantenimiento" value="2" />
             </Picker>
@@ -148,7 +147,7 @@ const [bannerPage, setBannerPage] = useState(0);
                   selectedValue={numTipoMantenimiento}
                   onValueChange={(itemValue) => setNumTipoMantenimiento(itemValue)}
                 >
-                  <Picker.Item label="Seleccione..." value="" />
+                  <Picker.Item label="Seleccione..." value="" enabled={false} color="#999" />
                   <Picker.Item label="Preventivo" value="1" />
                   <Picker.Item label="Correctivo" value="2" />
                   <Picker.Item label="Reactivo" value="3" />
@@ -163,7 +162,7 @@ const [bannerPage, setBannerPage] = useState(0);
               selectedValue={numArea}
               onValueChange={(itemValue) => setNumArea(itemValue)}
             >
-              <Picker.Item label="Seleccione un área..." value="" />
+              <Picker.Item label="Seleccione un área..." value="" enabled={false} color="#999" />
               <Picker.Item label="Administración" value="1" />
               <Picker.Item label="Fábrica" value="2" />
               <Picker.Item label="Campo" value="3" />
@@ -182,62 +181,59 @@ const [bannerPage, setBannerPage] = useState(0);
           <Text style={styles.label}>Evidencias</Text>
 
           <TouchableOpacity
-            style={styles.button}
+            style={styles.buttonImg}
             onPress={seleccionarImagen}
           >
+            <MaterialCommunityIcons name="camera" size={20} color="#fff" style={{ marginRight: 10 }} />
             <Text style={styles.buttonText}>
               Seleccionar imágenes
             </Text>
           </TouchableOpacity>
-      
-      {imagenes.length > 0 && (
-  <>
-    <ScrollView
-      horizontal
-      pagingEnabled
-      showsHorizontalScrollIndicator={false}
-      onScroll={(e) =>
-        setBannerPage(
-          Math.round(e.nativeEvent.contentOffset.x / width)
-        )
-      }
-      scrollEventThrottle={16}
-    >
-      {imagenes.map((img, index) => (
-        <View
-          key={index}
-          style={{
-            width,
-            alignItems: "center",
-            marginVertical: 10,
-          }}
-        >
-          <Image
-            source={{ uri: img }}
-            style={{
-              width: width * 0.9,
-              height: BANNER_HEIGHT,
-              borderRadius: 20,
-            }}
-            resizeMode="cover"
-          />
         </View>
-      ))}
-    </ScrollView>
+        {imagenes.length > 0 && (
+          <>
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onScroll={(e) =>
+                setBannerPage(
+                  Math.round(e.nativeEvent.contentOffset.x / width)
+                )
+              }
+              scrollEventThrottle={16}
+            >
+              {imagenes.map((img, index) => (
+                <View
+                  key={index}
+                  style={{
+                    width,
+                    alignItems: "center",
+                    marginVertical: 10,
+                  }}
+                >
+                  <Image
+                    source={{ uri: img }}
+                    style={[styles.imgD, { width: width * 0.9 }]}
+                  />
+                </View>
+              ))}
+            </ScrollView>
 
-    <View style={styles.BP}>
-      {imagenes.map((_, i) => (
-        <View
-          key={i}
-          style={[
-            styles.dot,
-            bannerPage === i && styles.dotActive,
-          ]}
-        />
-      ))}
-    </View>
-  </>
-)}
+            <View style={styles.BP}>
+              {imagenes.map((_, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.dot,
+                    bannerPage === i && styles.dotActive,
+                  ]}
+                />
+              ))}
+            </View>
+          </>
+        )}
+        <View style={styles.form2}>
 
           <TouchableOpacity style={styles.button} onPress={enviarSolicitud}>
             <Text style={styles.buttonText}>Enviar solicitud</Text>
@@ -261,7 +257,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
-    paddingBottom: 40,
   },
   header: {
     backgroundColor: "#148248",
@@ -285,6 +280,10 @@ const styles = StyleSheet.create({
   },
   form: {
     padding: 20,
+  },
+  form2: {
+    padding: 20,
+    paddingBottom: 60,
   },
   section: {
     fontSize: 18,
@@ -325,6 +324,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     marginHorizontal: 20,
   },
+  buttonImg: {
+    backgroundColor: "#3a6e19",
+    padding: 15,
+    justifyContent: "center",
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 10,
+    flexDirection: "row",
+    marginHorizontal: 20,
+  },
   imageZucarmex: {
     width: '45%',
     height: 60,
@@ -358,20 +367,24 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   BP: {
-  flexDirection: "row",
-  justifyContent: "center",
-  marginTop: 8,
-  marginBottom: 15,
-},
-
-dot: {
-  width: 8,
-  height: 8,
-  borderRadius: 4,
-  backgroundColor: "#ccc",
-  margin: 5,
-},
-dotActive: {
-  backgroundColor: "#148248",
-},
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 8,
+    marginBottom: 15,
+  },
+  imgD: {
+    width: width * 0.9,
+    height: BANNER_HEIGHT,
+    borderRadius: 20,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#ccc",
+    margin: 5,
+  },
+  dotActive: {
+    backgroundColor: "#148248",
+  },
 });
