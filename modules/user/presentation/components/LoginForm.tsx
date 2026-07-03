@@ -1,6 +1,5 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Stack, useRouter, } from "expo-router";
 import { useState } from "react";
@@ -52,22 +51,6 @@ export default function LoginForm() {
         contentContainerStyle={styles.container}>
 
         <View style={styles.header}>
-
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() =>
-              router.back()
-            }
-          >
-
-            <MaterialCommunityIcons
-              name="arrow-left"
-              size={28}
-              color="#FFFFFF"
-            />
-
-          </TouchableOpacity>
-
           <View style={styles.rowHeader}>
 
             <Image
