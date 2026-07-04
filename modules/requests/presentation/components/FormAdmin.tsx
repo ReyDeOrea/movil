@@ -31,7 +31,7 @@ type TecnicoOption = {
 const repository = new SupabaseRequestsRepository();
 
 const dateToApi = (date: Date) => {
-  return date.toISOString().split("T")[0];
+  return date.toLocaleDateString("en-CA");
 };
 
 const parseRequestParam = (value: string | string[] | undefined) => {
@@ -59,7 +59,7 @@ export default function FormAdmin() {
   const [modalVisible, setModalVisible] = useState(false);
   const [tipoTecnico, setTipoTecnico] = useState<TipoTecnico>("interno");
   const [personaAsignada, setPersonaAsignada] = useState("");
-  const [fechaAsignada] = useState(new Date().toISOString().split("T")[0]);
+  const [fechaAsignada] =useState(new Date().toLocaleDateString("en-CA"));
   const [fechaInicio, setFechaInicio] = useState(new Date());
   const [fechaFin, setFechaFin] = useState(new Date());
   const [showInicio, setShowInicio] = useState(false);
@@ -187,14 +187,14 @@ if (!solicitud?.numSolicitud) {
 
       if (tipo === "interno") {
         await repository.assignInternalTechnician(
-          data.numSolicitud,
+          solicitud.numSolicitud,
           tecnicoId
         );
       }
 
       if (tipo === "externo") {
         await repository.assignExternalTechnician(
-          data.numSolicitud,
+          solicitud.numSolicitud,
           tecnicoId
         );
       }

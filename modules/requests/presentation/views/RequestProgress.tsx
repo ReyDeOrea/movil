@@ -1,11 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import {
   FlatList,
   StyleSheet,
   Text,
-  TouchableOpacity
+  TouchableOpacity,
+  View
 } from "react-native";
 
 import { GetRequestsInProgress } from "../../application/getRequestProgress";
@@ -16,17 +17,19 @@ const repository = new SupabaseRequestsRepository();
 const getRequests = new GetRequestsInProgress(repository);
 
 export default function RequestsInProgress() {
-
   const [requests, setRequests] = useState<RequestsForm[]>([]);
   const router = useRouter();
 
-  useEffect(() => {
-    loadRequests();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadRequests();
+    }, [])
+  );
 
   const loadRequests = async () => {
     try {
       const userData = await AsyncStorage.getItem("user");
+
       if (!userData) return;
 
       const user = JSON.parse(userData);
@@ -36,75 +39,218 @@ export default function RequestsInProgress() {
         user.numRol
       );
 
-      setRequests(data ?? []);
+      const solicitudesEnProceso = (data ?? []).filter((item) => {
+        const status = Number(
+          item.numStatus ??
+          (item as any).numstatus ??
+          (item as any).num_status
+        );
 
+        return status === 3;
+      });
+
+      setRequests(solicitudesEnProceso);
     } catch (error) {
-      console.log("ERROR loading requests:", error);
+      console.log("ERROR loading requests in progress:", error);
     }
   };
 
   const viewRequest = (request: RequestsForm) => {
-  router.push({
-    pathname: "/viewRequestForm",
-    params: {
-      request: JSON.stringify(request),
-    },
-  });
-};
+    router.push({
+      pathname: "/viewRequestForm",
+      params: {
+        request: JSON.stringify(request),
+      },
+    });
+  };
+
+  const completeRequest = (request: RequestsForm) => {
+    router.push({
+      pathname: "/formTec",
+      params: {
+        request: JSON.stringify(request),
+      },
+    });
+  };
+
+  const renderStatusColor = (status: number) => {
+    switch (Number(status)) {
+      case 3:
+        return "#DBEAFE";
+      default:
+        return "#E5E7EB";
+    }
+  };
+
+  const renderStatusTextColor = (status: number) => {
+    switch (Number(status)) {
+      case 3:
+        return "#1E40AF";
+      default:
+        return "#374151";
+    }
+  };
+
+  const renderStatusName = (status: number) => {
+    switch (Number(status)) {
+      case 3:
+        return "En proceso";
+      default:
+        return "Desconocido";
+    }
+  };
+
+  const renderTipo = (tipo: number) => {
+    switch (Number(tipo)) {
+      case 1:
+        return "Servicio";
+      case 2:
+        return "Mantenimiento";
+      default:
+        return "Desconocido";
+    }
+  };
+
+  const formatDate = (date?: string | null) => {
+    if (!date) return "Sin fecha";
+
+    const cleanDate = String(date).split("T")[0];
+    const parts = cleanDate.split("-");
+
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return `${day}/${month}/${year}`;
+    }
+
+    return String(date);
+  };
 
   return (
-    <FlatList
-      data={requests}
-      keyExtractor={(item) => item.numSolicitud.toString()}
+    <View style={styles.container}>
+      <FlatList
+        data={requests}
+        keyExtractor={(item) => item.numSolicitud.toString()}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => viewRequest(item)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.title}>
+              {renderTipo(item.numTipo)}
+            </Text>
 
-      renderItem={({ item }) => (
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => viewRequest(item)}
-        >
+            <Text style={styles.text}>
+              <Text style={styles.label}>Fecha:</Text> {formatDate(item.fecha)}
+            </Text>
 
-          <Text style={styles.title}>
-            Solicitud #{item.numSolicitud}
+            <Text style={styles.text}>
+              <Text style={styles.label}>Prioridad:</Text>{" "}
+              {item.prioridad ?? "Sin prioridad"}
+            </Text>
+
+            <Text style={styles.text} numberOfLines={2}>
+              <Text style={styles.label}>Descripción:</Text>{" "}
+              {item.descripcion ?? "Sin descripción"}
+            </Text>
+
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: renderStatusColor(item.numStatus) }
+              ]}
+            >
+              <Text
+                style={[
+                  styles.statusText,
+                  { color: renderStatusTextColor(item.numStatus) }
+                ]}
+              >
+                {renderStatusName(item.numStatus)}
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.completeButton}
+              onPress={(event) => {
+                event.stopPropagation();
+                completeRequest(item);
+              }}
+            >
+              <Text style={styles.completeButtonText}>
+                Marcar completada
+              </Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={
+          <Text style={styles.empty}>
+            No hay solicitudes en proceso
           </Text>
-
-          <Text>
-            Estado: {item.numStatus}
-          </Text>
-
-          <Text>
-            Prioridad: {item.prioridad ?? "Sin prioridad"}
-          </Text>
-
-          <Text numberOfLines={2}>
-            {item.descripcion}
-          </Text>
-
-        </TouchableOpacity>
-      )}
-
-      ListEmptyComponent={
-        <Text style={styles.empty}>
-          No hay solicitudes en proceso
-        </Text>
-      }
-    />
+        }
+        contentContainerStyle={{ paddingBottom: 100 }}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+    padding: 10,
+  },
 
   card: {
     backgroundColor: "#fff",
-    padding: 15,
-    marginHorizontal: 10,
-    marginBottom: 10,
-    borderRadius: 10,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    elevation: 3,
   },
 
   title: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 5,
+    color: "#111827",
+  },
+
+  text: {
+    fontSize: 14,
+    marginBottom: 3,
+    color: "#374151",
+  },
+
+  statusBadge: {
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    alignSelf: "flex-start",
+  },
+
+  statusText: {
+    fontWeight: "bold",
+  },
+
+  completeButton: {
+    marginTop: 14,
+    backgroundColor: "#c7f8bc",
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  completeButtonText: {
+    color: "#111827",
+    fontSize: 15,
+    fontWeight: "bold",
+  },
+
+  label: {
+    fontWeight: "bold",
   },
 
   empty: {
@@ -112,5 +258,4 @@ const styles = StyleSheet.create({
     marginTop: 20,
     color: "#6B7280",
   },
-
 });
