@@ -195,7 +195,12 @@ export default function RequestForm() {
             style={styles.buttonImg}
             onPress={seleccionarImagen}
           >
-            <MaterialCommunityIcons name="camera" size={20} color="#fff" style={{ marginRight: 10 }} />
+            <MaterialCommunityIcons
+              name="image-plus"
+              size={22}
+              color="#fff"
+            />
+
             <Text style={styles.buttonText}>
               Seleccionar imágenes
             </Text>

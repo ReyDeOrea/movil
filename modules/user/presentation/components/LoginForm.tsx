@@ -84,7 +84,7 @@ export default function LoginForm() {
             name="user-circle-o"
             size={170}
             color="#D1D5DB"
-          /> 
+          />
 
         </View>
 
@@ -111,6 +111,7 @@ export default function LoginForm() {
               placeholder="Correo electrónico"
               placeholderTextColor="#999"
               value={email}
+              keyboardType="email-address"
               onChangeText={setEmail}
               autoCapitalize="none"
             />
@@ -167,7 +168,7 @@ export default function LoginForm() {
           />
 
           <TouchableOpacity
-            onPress={() => router.push("/password") }
+            onPress={() => router.push("/password")}
           >
 
             <Text style={styles.txtRP}>
@@ -202,11 +203,11 @@ const styles = StyleSheet.create({
   },
 
   rowHeader: {
-  flex: 1,
-  width: "100%",
-  justifyContent: "center",
-  alignItems: "center",
-},
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
   title: {
     fontWeight: "bold",
@@ -241,7 +242,7 @@ const styles = StyleSheet.create({
   BI: {
     flexDirection: "row",
     alignItems: "center",
-   // borderWidth: 1,
+    // borderWidth: 1,
     //borderColor: "#d1dbd4",
     borderRadius: 12,
     paddingHorizontal: 12,
@@ -284,15 +285,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 5,
   },
-  
-  imageZucarmex: {
-  width: '45%',
-  height: 60,
-},
 
-imagecanero:{
- width: '80%',
- height: 190,
-},
+  imageZucarmex: {
+    width: '45%',
+    height: 60,
+  },
+
+  imagecanero: {
+    width: '80%',
+    height: 190,
+  },
 
 });
