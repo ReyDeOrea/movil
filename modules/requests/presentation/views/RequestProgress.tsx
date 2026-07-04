@@ -16,8 +16,12 @@ import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasu
 const repository = new SupabaseRequestsRepository();
 const getRequests = new GetRequestsInProgress(repository);
 
+const ROL_TECNICO = 3;
+
 export default function RequestsInProgress() {
   const [requests, setRequests] = useState<RequestsForm[]>([]);
+  const [userRole, setUserRole] = useState<number | null>(null);
+
   const router = useRouter();
 
   useFocusEffect(
@@ -34,10 +38,31 @@ export default function RequestsInProgress() {
 
       const user = JSON.parse(userData);
 
-      const data = await getRequests.execute(
-        user.numUsuario,
-        user.numRol
+      const numUsuario = Number(
+        user.numUsuario ??
+        user.numusuario ??
+        user.num_usuario
       );
+
+      const numRol = Number(
+        user.numRol ??
+        user.numrol ??
+        user.num_rol
+      );
+
+      setUserRole(numRol);
+
+      const data = await getRequests.execute(
+        numUsuario,
+        numRol
+      );
+
+      console.log("USUARIO ACTUAL:", {
+        numUsuario,
+        numRol
+      });
+
+      console.log("SOLICITUDES RECIBIDAS:", data);
 
       const solicitudesEnProceso = (data ?? []).filter((item) => {
         const status = Number(
@@ -65,6 +90,8 @@ export default function RequestsInProgress() {
   };
 
   const completeRequest = (request: RequestsForm) => {
+    if (userRole !== ROL_TECNICO) return;
+
     router.push({
       pathname: "/formTec",
       params: {
@@ -141,7 +168,8 @@ export default function RequestsInProgress() {
             </Text>
 
             <Text style={styles.text}>
-              <Text style={styles.label}>Fecha:</Text> {formatDate(item.fecha)}
+              <Text style={styles.label}>Fecha:</Text>{" "}
+              {formatDate(item.fecha)}
             </Text>
 
             <Text style={styles.text}>
@@ -157,30 +185,36 @@ export default function RequestsInProgress() {
             <View
               style={[
                 styles.statusBadge,
-                { backgroundColor: renderStatusColor(item.numStatus) }
+                {
+                  backgroundColor: renderStatusColor(item.numStatus)
+                }
               ]}
             >
               <Text
                 style={[
                   styles.statusText,
-                  { color: renderStatusTextColor(item.numStatus) }
+                  {
+                    color: renderStatusTextColor(item.numStatus)
+                  }
                 ]}
               >
                 {renderStatusName(item.numStatus)}
               </Text>
             </View>
 
-            <TouchableOpacity
-              style={styles.completeButton}
-              onPress={(event) => {
-                event.stopPropagation();
-                completeRequest(item);
-              }}
-            >
-              <Text style={styles.completeButtonText}>
-                Marcar completada
-              </Text>
-            </TouchableOpacity>
+            {userRole === ROL_TECNICO && (
+              <TouchableOpacity
+                style={styles.completeButton}
+                onPress={(event) => {
+                  event.stopPropagation();
+                  completeRequest(item);
+                }}
+              >
+                <Text style={styles.completeButtonText}>
+                  Marcar completada
+                </Text>
+              </TouchableOpacity>
+            )}
           </TouchableOpacity>
         )}
         ListEmptyComponent={

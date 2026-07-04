@@ -2,7 +2,12 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
-import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import {
+    Stack,
+    useFocusEffect,
+    useLocalSearchParams,
+    useRouter
+} from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
     Alert,
@@ -16,6 +21,7 @@ import {
     View
 } from "react-native";
 
+import { api } from "@/lib/api";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
 
 const repository = new SupabaseRequestsRepository();
@@ -129,6 +135,7 @@ const getAreaName = (area: number | string | undefined | null) => {
 
     return String(area);
 };
+
 export default function CompleteRequestForm() {
     const router = useRouter();
     const params = useLocalSearchParams();
@@ -155,6 +162,8 @@ export default function CompleteRequestForm() {
     const [loading, setLoading] = useState(false);
 
     const [materiales, setMateriales] = useState<MaterialCatalogo[]>([]);
+    const [loadingMateriales, setLoadingMateriales] = useState(false);
+
     const [materialesSeleccionados, setMaterialesSeleccionados] = useState<
         MaterialSeleccionado[]
     >([]);
@@ -205,42 +214,108 @@ export default function CompleteRequestForm() {
 
     const cargarMateriales = async () => {
         try {
-            const repo: any = repository;
+            setLoadingMateriales(true);
 
-            let data: any[] = [];
+            const response = await api.get("/materiales/");
 
-            if (typeof repo.getMaterials === "function") {
-                data = await repo.getMaterials();
-            } else if (typeof repo.getMateriales === "function") {
-                data = await repo.getMateriales();
-            } else if (typeof repo.getAllMaterials === "function") {
-                data = await repo.getAllMaterials();
-            } else if (typeof repo.getCatalogoMateriales === "function") {
-                data = await repo.getCatalogoMateriales();
-            } else {
-                console.log("No existe método para cargar materiales en el repositorio.");
-                data = [];
-            }
+            const data = Array.isArray(response.data)
+                ? response.data
+                : response.data?.data ??
+                response.data?.materiales ??
+                response.data?.items ??
+                [];
 
-            const materialesNormalizados = (data ?? []).map((item: any) => ({
-                numMaterial: Number(
-                    getValue(item, "numMaterial", "nummaterial", "num_material", "id")
-                ),
-                nombre:
-                    getValue<string>(item, "nombre", "nombreMaterial", "nombre_material") ??
-                    "Material sin nombre",
-                descripcion:
-                    getValue<string>(item, "descripcion", "description") ?? "",
-                unidad:
-                    getValue<string>(item, "unidad", "unit") ?? "unidad",
-                stock: Number(getValue(item, "stock", "existencia") ?? 0),
-            }));
+            console.log("MATERIALES RECIBIDOS:", data);
+
+            const materialesNormalizados = (data ?? [])
+                .map((item: any) => {
+                    console.log("MATERIAL ITEM:", item);
+
+                    const numMaterial = Number(
+                        getValue(
+                            item,
+                            "numMaterial",
+                            "nummaterial",
+                            "num_material",
+                            "id",
+                            "idMaterial",
+                            "idmaterial",
+                            "id_material"
+                        )
+                    );
+
+                    const nombre =
+                        getValue<string>(
+                            item,
+                            "nombre",
+                            "nombrematerial",
+                            "nombreMaterial",
+                            "nombre_material",
+                            "material",
+                            "name"
+                        ) ?? "Material sin nombre";
+
+                    const descripcion =
+                        getValue<string>(
+                            item,
+                            "descripcion",
+                            "descripcionmaterial",
+                            "descripcionMaterial",
+                            "descripcion_material",
+                            "description"
+                        ) ?? "";
+
+                    const unidad =
+                        getValue<string>(
+                            item,
+                            "unidad",
+                            "unidadmedida",
+                            "unidadMedida",
+                            "unidad_medida",
+                            "unit"
+                        ) ?? "unidad";
+
+                    const stock = Number(
+                        getValue(
+                            item,
+                            "stock",
+                            "existencia",
+                            "cantidad",
+                            "cantidadDisponible",
+                            "cantidad_disponible"
+                        ) ?? 0
+                    );
+
+                    return {
+                        numMaterial,
+                        nombre,
+                        descripcion,
+                        unidad,
+                        stock,
+                    };
+                })
+                .filter((material: MaterialCatalogo) => {
+                    return !isNaN(material.numMaterial);
+                });
 
             setMateriales(materialesNormalizados);
-        } catch (error) {
+        } catch (error: any) {
             console.log("ERROR cargando materiales:", error);
+
+            Alert.alert(
+                "Error",
+                error.message || "No se pudieron cargar los materiales."
+            );
+
             setMateriales([]);
+        } finally {
+            setLoadingMateriales(false);
         }
+    };
+
+    const abrirModalMateriales = async () => {
+        setModalMaterialesVisible(true);
+        await cargarMateriales();
     };
 
     const materialesFiltrados = useMemo(() => {
@@ -499,19 +574,34 @@ export default function CompleteRequestForm() {
         <>
             <Stack.Screen options={{ headerShown: false }} />
 
-            <ScrollView style={styles.container}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()}>
+<ScrollView
+    style={styles.container}
+    contentContainerStyle={styles.scrollContent}
+>
+                    <View style={styles.header}>
+
+                    <TouchableOpacity
+                        style={styles.backBtn}
+                        onPress={() =>
+                            router.back()
+                        }
+                    >
+
                         <MaterialCommunityIcons
                             name="arrow-left"
                             size={28}
-                            color="#fff"
+                            color="#FFFFFF"
                         />
+
                     </TouchableOpacity>
 
-                    <Text style={styles.headerTitle}>
-                        Completar solicitud
-                    </Text>
+                    <View style={styles.rowHeader}>
+                        <Image
+                            source={require('../../../../assets/images/ZUCARMEX.png')}
+                            style={styles.imageZucarmex}
+                            resizeMode="contain"
+                        />
+                    </View>
                 </View>
 
                 <View style={styles.content}>
@@ -591,7 +681,7 @@ export default function CompleteRequestForm() {
 
                         <TouchableOpacity
                             style={styles.selectButton}
-                            onPress={() => setModalMaterialesVisible(true)}
+                            onPress={abrirModalMateriales}
                         >
                             <MaterialCommunityIcons
                                 name="plus-circle-outline"
@@ -720,6 +810,13 @@ export default function CompleteRequestForm() {
                             {loading ? "Guardando..." : "Guardar"}
                         </Text>
                     </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={() => router.back()}
+                    >
+                        <Text style={styles.buttonText}>Cancelar</Text>
+                    </TouchableOpacity>
                 </View>
             </ScrollView>
 
@@ -754,32 +851,43 @@ export default function CompleteRequestForm() {
                             placeholder="Buscar material..."
                         />
 
-                        <ScrollView>
-                            {materialesFiltrados.length === 0 && (
+                        <ScrollView
+                            keyboardShouldPersistTaps="handled"
+                            contentContainerStyle={styles.modalScrollContent}
+                        >
+                            {loadingMateriales && (
                                 <Text style={styles.emptyMaterials}>
-                                    No hay materiales disponibles
+                                    Cargando materiales...
                                 </Text>
                             )}
 
-                            {materialesFiltrados.map((material) => (
-                                <TouchableOpacity
-                                    key={material.numMaterial}
-                                    style={styles.materialCatalogCard}
-                                    onPress={() => agregarMaterial(material)}
-                                >
-                                    <Text style={styles.materialCatalogName}>
-                                        {material.nombre}
+                            {!loadingMateriales &&
+                                materialesFiltrados.length === 0 && (
+                                    <Text style={styles.emptyMaterials}>
+                                        No hay materiales disponibles
                                     </Text>
+                                )}
 
-                                    <Text style={styles.materialCatalogText}>
-                                        Unidad: {material.unidad ?? "unidad"}
-                                    </Text>
+                            {!loadingMateriales &&
+                                materialesFiltrados.map((material) => (
+                                    <TouchableOpacity
+                                        key={material.numMaterial}
+                                        style={styles.materialCatalogCard}
+                                        onPress={() => agregarMaterial(material)}
+                                    >
+                                        <Text style={styles.materialCatalogName}>
+                                            {material.nombre}
+                                        </Text>
 
-                                    <Text style={styles.materialCatalogText}>
-                                        Stock: {material.stock ?? 0}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
+                                        <Text style={styles.materialCatalogText}>
+                                            Unidad: {material.unidad ?? "unidad"}
+                                        </Text>
+
+                                        <Text style={styles.materialCatalogText}>
+                                            Stock: {material.stock ?? 0}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
                         </ScrollView>
                     </View>
                 </View>
@@ -795,14 +903,14 @@ const styles = StyleSheet.create({
     },
 
     header: {
+        width: "100%",
+        height: 100,
+        paddingTop: 35,
         backgroundColor: "#148248",
-        paddingTop: 50,
-        paddingBottom: 20,
-        paddingHorizontal: 16,
-        flexDirection: "row",
+        justifyContent: "center",
         alignItems: "center",
+        marginBottom: 20,
     },
-
     headerTitle: {
         color: "#fff",
         fontSize: 20,
@@ -828,7 +936,9 @@ const styles = StyleSheet.create({
         color: "#111827",
         marginBottom: 12,
     },
-
+scrollContent: {
+    paddingBottom: 80,
+},
     label: {
         fontWeight: "bold",
         color: "#374151",
@@ -840,7 +950,11 @@ const styles = StyleSheet.create({
         color: "#4B5563",
         marginBottom: 5,
     },
-
+    backBtn: {
+        position: "absolute",
+        left: 15,
+        top: 45,
+    },
     input: {
         backgroundColor: "#F9FAFB",
         borderWidth: 1,
@@ -912,7 +1026,7 @@ const styles = StyleSheet.create({
     },
 
     imageButton: {
-        backgroundColor: "#148248",
+        backgroundColor: "#3a6e19",
         borderRadius: 10,
         paddingVertical: 12,
         paddingHorizontal: 12,
@@ -955,8 +1069,9 @@ const styles = StyleSheet.create({
     },
 
     saveButton: {
-        backgroundColor: "#148248",
+        backgroundColor: "#232323",
         paddingVertical: 14,
+        marginHorizontal: 20,
         borderRadius: 12,
         alignItems: "center",
         marginTop: 4,
@@ -977,14 +1092,15 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "rgba(0,0,0,0.35)",
         justifyContent: "flex-end",
+        paddingBottom: 34,
     },
 
     modalContent: {
         backgroundColor: "#fff",
-        borderTopLeftRadius: 22,
-        borderTopRightRadius: 22,
+        borderRadius: 22,
         padding: 16,
-        maxHeight: "80%",
+        maxHeight: "75%",
+        marginHorizontal: 8,
     },
 
     modalHeader: {
@@ -1008,6 +1124,10 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         marginTop: 14,
         marginBottom: 12,
+    },
+
+    modalScrollContent: {
+        paddingBottom: 25,
     },
 
     materialCatalogCard: {
@@ -1034,8 +1154,29 @@ const styles = StyleSheet.create({
         textAlign: "center",
         color: "#6B7280",
         marginTop: 20,
+        marginBottom: 20,
     },
-
+    cancelButton: {
+        backgroundColor: "#870c0c",
+        padding: 15,
+        borderRadius: 10,
+        alignItems: "center",
+        marginHorizontal: 20,
+    },
+    buttonText: {
+        color: "#FFF",
+        fontWeight: "bold",
+    },
+    rowHeader: {
+        flex: 1,
+        width: "100%",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    imageZucarmex: {
+        width: '45%',
+        height: 60,
+    },
     center: {
         flex: 1,
         justifyContent: "center",

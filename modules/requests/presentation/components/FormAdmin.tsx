@@ -52,14 +52,14 @@ export default function FormAdmin() {
   const router = useRouter();
   const { request } = useLocalSearchParams();
 
- const data = useMemo(() => parseRequestParam(request), [request]);
-  
- const [solicitud, setSolicitud] = useState<any>(data);
+  const data = useMemo(() => parseRequestParam(request), [request]);
+
+  const [solicitud, setSolicitud] = useState<any>(data);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [tipoTecnico, setTipoTecnico] = useState<TipoTecnico>("interno");
   const [personaAsignada, setPersonaAsignada] = useState("");
-  const [fechaAsignada] =useState(new Date().toLocaleDateString("en-CA"));
+  const [fechaAsignada] = useState(new Date().toLocaleDateString("en-CA"));
   const [fechaInicio, setFechaInicio] = useState(new Date());
   const [fechaFin, setFechaFin] = useState(new Date());
   const [showInicio, setShowInicio] = useState(false);
@@ -68,7 +68,7 @@ export default function FormAdmin() {
   const [tecnicosInternos, setTecnicosInternos] = useState<TecnicoOption[]>([]);
   const [tecnicosExternos, setTecnicosExternos] = useState<TecnicoOption[]>([]);
 
-   useEffect(() => {
+  useEffect(() => {
     setSolicitud(data);
   }, [data]);
 
@@ -162,8 +162,8 @@ export default function FormAdmin() {
 
   const guardar = async () => {
     try {
-if (!solicitud?.numSolicitud) {
-          Alert.alert("Error", "No se encontró el número de solicitud");
+      if (!solicitud?.numSolicitud) {
+        Alert.alert("Error", "No se encontró el número de solicitud");
         return;
       }
 
@@ -218,7 +218,7 @@ if (!solicitud?.numSolicitud) {
     );
   }
 
-   if (!solicitud) {
+  if (!solicitud) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <Text>No llegó la solicitud</Text>
@@ -367,22 +367,37 @@ if (!solicitud?.numSolicitud) {
           <Text style={styles.label}>Prioridad</Text>
 
           <View style={styles.row}>
-            {["baja", "media", "alta"].map((p) => (
-              <TouchableOpacity
-                key={p}
-                style={[
-                  styles.option,
-                  prioridad === p && styles.optionSelected,
-                ]}
-                onPress={() => setPrioridad(p as Prioridad)}
-              >
-                <Text>{p}</Text>
-              </TouchableOpacity>
-            ))}
+            {["baja", "media", "alta"].map((p) => {
+              const selected = prioridad === p;
+
+              return (
+                <TouchableOpacity
+                  key={p}
+                  style={[
+                    styles.option,
+                    selected && p === "baja" && styles.optionSelectedB,
+                    selected && p === "media" && styles.optionSelectedM,
+                    selected && p === "alta" && styles.optionSelectedA,
+                  ]}
+                  onPress={() => setPrioridad(p as Prioridad)}
+                >
+                  <Text style={selected && styles.prioritySelectedText}>
+                    {p}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
           <TouchableOpacity style={styles.saveBtn} onPress={guardar}>
             <Text style={styles.saveText}>Guardar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.buttonText}>Cancelar</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -456,19 +471,32 @@ const styles = StyleSheet.create({
 
   option: {
     padding: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 10,
+    marginRight: 10,
+    marginBottom: 10,
   },
 
   optionSelected: {
-    backgroundColor: "#DBEAFE",
-    borderColor: "#1E40AF",
+    backgroundColor: "#b8e6b4",
   },
 
+  optionSelectedB: {
+    backgroundColor: "#FECACA",
+  },
+  optionSelectedM: {
+    backgroundColor: "#FEF3C7",
+  },
+  optionSelectedA: {
+    backgroundColor: "#b8e6b4",
+  },
+  prioritySelectedText: {
+    fontWeight: "bold",
+    color: "#111827",
+  },
   editBtn: {
     marginTop: 10,
-    backgroundColor: "#1E40AF",
+    backgroundColor: "#232323",
     padding: 10,
     borderRadius: 8,
   },
@@ -480,9 +508,11 @@ const styles = StyleSheet.create({
 
   saveBtn: {
     marginTop: 15,
-    backgroundColor: "#16A34A",
+    backgroundColor: "#232323",
     padding: 12,
     borderRadius: 10,
+     marginHorizontal: 20,
+    marginBottom:20,
   },
 
   saveText: {
@@ -535,5 +565,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
+  },
+  cancelButton: {
+    backgroundColor: "#870c0c",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginHorizontal: 20,
+  },
+  buttonText: {
+    color: "#FFF",
+    fontWeight: "bold",
   },
 });

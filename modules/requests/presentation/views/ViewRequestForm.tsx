@@ -1,7 +1,12 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Print from "expo-print";
-import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import {
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import * as Sharing from "expo-sharing";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -12,7 +17,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 import { RequestsForm } from "../../domain/request";
@@ -66,11 +71,16 @@ const formatDate = (date?: string | null) => {
 
 const capitalize = (text?: string | null) => {
   if (!text) return "No asignada";
-  return text.charAt(0).toUpperCase() + text.slice(1);
+
+  const cleanText = String(text).toLowerCase().trim();
+
+  return cleanText.charAt(0).toUpperCase() + cleanText.slice(1);
 };
 
 const limpiarTextoHtml = (value?: any) => {
-  if (value === null || value === undefined || value === "") return "No asignada";
+  if (value === null || value === undefined || value === "") {
+    return "No asignada";
+  }
 
   return String(value)
     .replace(/&/g, "&amp;")
@@ -124,15 +134,15 @@ export default function ViewRequest() {
         "tipoRol",
         "tipo_rol"
       ) ??
-      getValue(
-        rolObjeto,
-        "nombreRol",
-        "nombrerol",
-        "nombre_rol",
-        "nombre",
-        "name"
-      ) ??
-      ""
+        getValue(
+          rolObjeto,
+          "nombreRol",
+          "nombrerol",
+          "nombre_rol",
+          "nombre",
+          "name"
+        ) ??
+        ""
     ).toLowerCase();
 
     return numRol === 1 || nombreRol.includes("admin");
@@ -277,14 +287,8 @@ export default function ViewRequest() {
           "tipoImagen"
         ) ?? "",
       ruta:
-        getValue<string>(
-          e,
-          "ruta",
-          "url",
-          "uri",
-          "imagen",
-          "rutaImagen"
-        ) ?? "",
+        getValue<string>(e, "ruta", "url", "uri", "imagen", "rutaImagen") ??
+        "",
     }));
   }, [request]);
 
@@ -351,8 +355,27 @@ export default function ViewRequest() {
     5: { background: "#FECACA", text: "#991B1B" },
   };
 
+  const prioridadColors: Record<string, { background: string; text: string }> = {
+    baja: { background: "#FECACA", text: "#991B1B" },
+    media: { background: "#FEF3C7", text: "#92400E" },
+    alta: { background: "#D1FAE5", text: "#065F46" },
+  };
+
   const getStatusStyle = (status: number) =>
     statusColors[status] ?? statusColors[1];
+
+  const getPrioridadStyle = (prioridad?: string | null) => {
+    const prioridadNormalizada = String(prioridad ?? "")
+      .toLowerCase()
+      .trim();
+
+    return (
+      prioridadColors[prioridadNormalizada] ?? {
+        background: "#E5E7EB",
+        text: "#374151",
+      }
+    );
+  };
 
   const getStatusName = (status: number) => {
     switch (status) {
@@ -572,6 +595,7 @@ export default function ViewRequest() {
   );
 
   const statusStyle = getStatusStyle(numStatus);
+  const prioridadStyle = getPrioridadStyle(prioridad);
 
   const mostrarAsignacion =
     numStatus >= 2 ||
@@ -632,27 +656,25 @@ export default function ViewRequest() {
               display: inline-block;
               padding: 6px 12px;
               border-radius: 20px;
-              background: #FEF3C7;
-              color: #92400E;
               font-weight: bold;
             }
 
             .comments-section {
-  min-height: 260px;
-}
+              min-height: 260px;
+            }
 
-.comments-writing-box {
-  height: 220px;
-  border: 1.5px solid #9CA3AF;
-  border-radius: 8px;
-  margin-top: 10px;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    #ffffff 0px,
-    #ffffff 31px,
-    #D1D5DB 32px
-  );
-}
+            .comments-writing-box {
+              height: 220px;
+              border: 1.5px solid #9CA3AF;
+              border-radius: 8px;
+              margin-top: 10px;
+              background-image: repeating-linear-gradient(
+                to bottom,
+                #ffffff 0px,
+                #ffffff 31px,
+                #D1D5DB 32px
+              );
+            }
           </style>
         </head>
 
@@ -673,7 +695,9 @@ export default function ViewRequest() {
             <div class="value">${limpiarTextoHtml(getTipo(numTipo))}</div>
 
             <div class="label">Tipo de mantenimiento:</div>
-            <div class="value">${limpiarTextoHtml(getTipoMantenimiento(numTipoMantenimiento))}</div>
+            <div class="value">${limpiarTextoHtml(
+              getTipoMantenimiento(numTipoMantenimiento)
+            )}</div>
 
             <div class="label">Fecha:</div>
             <div class="value">${limpiarTextoHtml(formatDate(fecha))}</div>
@@ -683,32 +707,54 @@ export default function ViewRequest() {
 
             <div class="label">Estado:</div>
             <div class="value">
-              <span class="badge">${limpiarTextoHtml(getStatusName(numStatus))}</span>
+              <span
+                class="badge"
+                style="background: ${statusStyle.background}; color: ${statusStyle.text};"
+              >
+                ${limpiarTextoHtml(getStatusName(numStatus))}
+              </span>
             </div>
           </div>
 
           <div class="section">
             <div class="title">Descripción</div>
-            <div class="value">${limpiarTextoHtml(descripcion || "Sin descripción")}</div>
+            <div class="value">${limpiarTextoHtml(
+              descripcion || "Sin descripción"
+            )}</div>
           </div>
 
           <div class="section">
             <div class="title">Datos de asignación</div>
 
             <div class="label">Técnico asignado:</div>
-            <div class="value">${limpiarTextoHtml(getTecnicosAsignados())}</div>
+            <div class="value">${limpiarTextoHtml(
+              getTecnicosAsignados()
+            )}</div>
 
             <div class="label">Fecha de asignación:</div>
-            <div class="value">${limpiarTextoHtml(formatDate(fechaAsignacion))}</div>
+            <div class="value">${limpiarTextoHtml(
+              formatDate(fechaAsignacion)
+            )}</div>
 
             <div class="label">Fecha programada de inicio:</div>
-            <div class="value">${limpiarTextoHtml(formatDate(fechaProgInicio))}</div>
+            <div class="value">${limpiarTextoHtml(
+              formatDate(fechaProgInicio)
+            )}</div>
 
             <div class="label">Fecha programada de fin:</div>
-            <div class="value">${limpiarTextoHtml(formatDate(fechaProgFin))}</div>
+            <div class="value">${limpiarTextoHtml(
+              formatDate(fechaProgFin)
+            )}</div>
 
             <div class="label">Prioridad:</div>
-            <div class="value">${limpiarTextoHtml(capitalize(prioridad))}</div>
+            <div class="value">
+              <span
+                class="badge"
+                style="background: ${prioridadStyle.background}; color: ${prioridadStyle.text};"
+              >
+                ${limpiarTextoHtml(capitalize(prioridad))}
+              </span>
+            </div>
           </div>
 
           <div class="section">
@@ -719,10 +765,10 @@ export default function ViewRequest() {
             <div class="label">Fin real:</div>
           </div>
 
-         <div class="section comments-section">
-           <div class="title">Comentarios</div>
+          <div class="section comments-section">
+            <div class="title">Comentarios</div>
             <div class="comments-writing-box"></div>
-        </div>
+          </div>
         </body>
       </html>
     `;
@@ -819,24 +865,31 @@ export default function ViewRequest() {
               <Text style={styles.value}>{getTecnicosAsignados()}</Text>
 
               <Text style={styles.label}>Fecha de asignación:</Text>
-              <Text style={styles.value}>
-                {formatDate(fechaAsignacion)}
-              </Text>
+              <Text style={styles.value}>{formatDate(fechaAsignacion)}</Text>
 
               <Text style={styles.label}>Fecha programada de inicio:</Text>
-              <Text style={styles.value}>
-                {formatDate(fechaProgInicio)}
-              </Text>
+              <Text style={styles.value}>{formatDate(fechaProgInicio)}</Text>
 
               <Text style={styles.label}>Fecha programada de fin:</Text>
-              <Text style={styles.value}>
-                {formatDate(fechaProgFin)}
-              </Text>
+              <Text style={styles.value}>{formatDate(fechaProgFin)}</Text>
 
               <Text style={styles.label}>Prioridad:</Text>
-              <Text style={styles.value}>
-                {capitalize(prioridad)}
-              </Text>
+
+              <View
+                style={[
+                  styles.priorityBadge,
+                  { backgroundColor: prioridadStyle.background },
+                ]}
+              >
+                <Text
+                  style={{
+                    color: prioridadStyle.text,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {capitalize(prioridad)}
+                </Text>
+              </View>
             </View>
           )}
 
@@ -845,14 +898,10 @@ export default function ViewRequest() {
               <Text style={styles.sectionTitle}>Fechas reales</Text>
 
               <Text style={styles.label}>Inicio real:</Text>
-              <Text style={styles.value}>
-                {formatDate(fechaInicioReal)}
-              </Text>
+              <Text style={styles.value}>{formatDate(fechaInicioReal)}</Text>
 
               <Text style={styles.label}>Fin real:</Text>
-              <Text style={styles.value}>
-                {formatDate(fechaFinReal)}
-              </Text>
+              <Text style={styles.value}>{formatDate(fechaFinReal)}</Text>
             </View>
           )}
 
@@ -862,10 +911,7 @@ export default function ViewRequest() {
                 Evidencias del solicitante
               </Text>
 
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-              >
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {evidenciasSolicitante.map((e) => (
                   <Image
                     key={String(e.id)}
@@ -879,14 +925,9 @@ export default function ViewRequest() {
 
           {evidenciasTecnico.length > 0 && (
             <View style={styles.card}>
-              <Text style={styles.sectionTitle}>
-                Evidencias del técnico
-              </Text>
+              <Text style={styles.sectionTitle}>Evidencias del técnico</Text>
 
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-              >
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {evidenciasTecnico.map((e) => (
                   <Image
                     key={String(e.id)}
@@ -907,9 +948,7 @@ export default function ViewRequest() {
 
           {motivoCancelacion && (
             <View style={styles.card}>
-              <Text style={styles.sectionTitle}>
-                Motivo de cancelación
-              </Text>
+              <Text style={styles.sectionTitle}>Motivo de cancelación</Text>
               <Text style={styles.value}>{motivoCancelacion}</Text>
             </View>
           )}
@@ -1049,6 +1088,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 20,
     alignSelf: "flex-start",
+  },
+
+  priorityBadge: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    alignSelf: "flex-start",
+    marginTop: 5,
+    marginBottom: 5,
   },
 
   center: {
