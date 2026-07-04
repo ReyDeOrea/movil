@@ -23,7 +23,7 @@ export default function RequestForm() {
   const [descripcion, setDescripcion] = useState("");
   const [numArea, setNumArea] = useState("");
   const [nombreUsuario, setNombreUsuario] = useState("");
-  const [fecha] = useState(new Date().toISOString().split("T")[0]);
+  const [fecha] = useState(new Date().toLocaleDateString("en-CA"));
   const [imagenes, setImagenes] = useState<string[]>([]);
   const [bannerPage, setBannerPage] = useState(0);
 
@@ -77,7 +77,7 @@ export default function RequestForm() {
       await createRequest.execute(
         {
           numSolicitante: user.numUsuario,
-          fecha: new Date().toISOString().split("T")[0],
+          fecha: fecha,
           numTipo: Number(numTipo),
           numTipoMantenimiento: numTipoMantenimiento
             ? Number(numTipoMantenimiento)

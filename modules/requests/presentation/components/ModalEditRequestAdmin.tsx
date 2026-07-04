@@ -28,6 +28,7 @@ export default function EditRequestModal({
     onClose,
     onUpdated,
 }: Props) {
+    const [editNumTipoMantenimiento, setEditNumTipoMantenimiento] = useState("");
     const [editNumTipo, setEditNumTipo] = useState("");
     const [editNumArea, setEditNumArea] = useState("");
     const [editDescripcion, setEditDescripcion] = useState("");
@@ -35,11 +36,20 @@ export default function EditRequestModal({
 
     useEffect(() => {
         if (solicitud && visible) {
+            setEditNumTipoMantenimiento(String(solicitud.numTipoMantenimiento ?? ""));
             setEditNumTipo(String(solicitud.numTipo ?? ""));
             setEditNumArea(String(solicitud.numArea ?? ""));
             setEditDescripcion(solicitud.descripcion ?? "");
         }
     }, [solicitud, visible]);
+
+    const cambiarTipoSolicitud = (value: string) => {
+        setEditNumTipo(value);
+
+        if (value !== "2") {
+            setEditNumTipoMantenimiento("");
+        }
+    };
 
     const guardarCambios = async () => {
         try {
@@ -50,6 +60,11 @@ export default function EditRequestModal({
 
             if (!editNumTipo) {
                 Alert.alert("Error", "Selecciona el tipo de solicitud");
+                return;
+            }
+
+            if (editNumTipo === "2" && !editNumTipoMantenimiento) {
+                Alert.alert("Error", "Selecciona el tipo de mantenimiento");
                 return;
             }
 
@@ -67,10 +82,12 @@ export default function EditRequestModal({
 
             const datosActualizados = {
                 numTipo: Number(editNumTipo),
+                numTipoMantenimiento: editNumTipoMantenimiento
+                    ? Number(editNumTipoMantenimiento)
+                    : undefined,
                 numArea: Number(editNumArea),
                 descripcion: editDescripcion.trim(),
             };
-
             await repository.updateRequest(
                 solicitud.numSolicitud,
                 datosActualizados
@@ -103,7 +120,7 @@ export default function EditRequestModal({
 
                 <Picker
                     selectedValue={editNumTipo}
-                    onValueChange={(value) => setEditNumTipo(value)}
+                    onValueChange={cambiarTipoSolicitud}
                     style={styles.picker}
                 >
                     <Picker.Item label="Servicio" value="1" />
@@ -116,10 +133,15 @@ export default function EditRequestModal({
 
                         <View style={styles.pickerContainer}>
                             <Picker
-                                selectedValue={editNumTipo}
-                                onValueChange={(value) => setEditNumTipo(value)}
+                                selectedValue={editNumTipoMantenimiento}
+                                onValueChange={(value) => setEditNumTipoMantenimiento(value)}
                             >
-                                <Picker.Item label="Seleccione..." value="" enabled={false} color="#999" />
+                                <Picker.Item
+                                    label="Seleccione..."
+                                    value=""
+                                    enabled={false}
+                                    color="#999"
+                                />
                                 <Picker.Item label="Preventivo" value="1" />
                                 <Picker.Item label="Correctivo" value="2" />
                                 <Picker.Item label="Reactivo" value="3" />
@@ -127,6 +149,7 @@ export default function EditRequestModal({
                         </View>
                     </>
                 )}
+
 
                 <Text style={styles.label}>Área</Text>
 
@@ -230,11 +253,11 @@ const styles = StyleSheet.create({
         textAlign: "center",
         fontWeight: "bold",
     },
-      pickerContainer: {
-    borderWidth: 1,
-    borderColor: "#DDD",
-    borderRadius: 10,
-    backgroundColor: "#FFF",
-    marginBottom: 15,
-  },
+    pickerContainer: {
+        borderWidth: 1,
+        borderColor: "#DDD",
+        borderRadius: 10,
+        backgroundColor: "#FFF",
+        marginBottom: 15,
+    },
 });
