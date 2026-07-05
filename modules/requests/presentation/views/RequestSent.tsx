@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
@@ -7,18 +8,25 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 import { GetRequestsBySolicitante } from "../../application/getRequestSent";
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
+import RequestFilterModal, { EMPTY_REQUEST_FILTERS, RequestFilters } from "../components/ModalFilters";
+
 
 const repository = new SupabaseRequestsRepository();
 const getRequests = new GetRequestsBySolicitante(repository);
 
 export default function RequestsSent() {
   const [requests, setRequests] = useState<RequestsForm[]>([]);
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [filters, setFilters] = useState<RequestFilters>(
+    EMPTY_REQUEST_FILTERS
+  );
+
   const router = useRouter();
 
   useFocusEffect(
@@ -37,11 +45,115 @@ export default function RequestsSent() {
 
       const data = await getRequests.execute(user.numUsuario);
 
-      setRequests(data);
+      setRequests(data ?? []);
     } catch (error) {
       console.log("ERROR loading requests:", error);
     }
   };
+
+  const normalizeText = (text: string) => {
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  };
+
+  const getTipoText = (tipo: number) => {
+    switch (Number(tipo)) {
+      case 1:
+        return "servicio";
+      case 2:
+        return "mantenimiento";
+      default:
+        return "";
+    }
+  };
+
+  const getTipoMantenimientoText = (
+    tipoMantenimiento?: number | null
+  ) => {
+    switch (Number(tipoMantenimiento)) {
+      case 1:
+        return "correctivo";
+      case 2:
+        return "preventivo";
+      case 3:
+        return "reactivo";
+      default:
+        return "";
+    }
+  };
+
+  const formatDate = (date?: string | null) => {
+    if (!date) return "Sin fecha";
+
+    const cleanDate = String(date).split("T")[0];
+    const parts = cleanDate.split("-");
+
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return `${day}/${month}/${year}`;
+    }
+
+    return String(date);
+  };
+
+  const filteredRequests = requests.filter((request) => {
+    const item = request as any;
+
+    const tipo = getTipoText(
+      item.numTipo ??
+        item.numtipo ??
+        item.num_tipo
+    );
+
+    const tipoMantenimiento = getTipoMantenimientoText(
+      item.numTipoMantenimiento ??
+        item.numtipomantenimiento ??
+        item.num_tipo_mantenimiento
+    );
+
+    const prioridad = normalizeText(
+      String(item.prioridad ?? "")
+    );
+
+    const fechaOriginal = String(
+      item.fecha ??
+        item.fechaSolicitud ??
+        item.fechasolicitud ??
+        ""
+    );
+
+    const fechaFormateada = formatDate(fechaOriginal);
+
+    const matchesTipo =
+      filters.tipo === "" || tipo.includes(filters.tipo);
+
+    const matchesTipoMantenimiento =
+      filters.tipoMantenimiento === "" ||
+      tipoMantenimiento.includes(filters.tipoMantenimiento);
+
+    const matchesPrioridad =
+      filters.prioridad === "" ||
+      prioridad.includes(filters.prioridad);
+
+    const matchesFecha =
+      filters.fecha === "" ||
+      fechaOriginal.includes(filters.fecha) ||
+      fechaFormateada.includes(filters.fecha);
+
+    return (
+      matchesTipo &&
+      matchesTipoMantenimiento &&
+      matchesPrioridad &&
+      matchesFecha
+    );
+  });
+
+  const activeFiltersCount = Object.values(filters).filter(
+    (value) => value.trim() !== ""
+  ).length;
 
   const cancelarSolicitud = async (numSolicitud: number) => {
     Alert.alert(
@@ -98,10 +210,13 @@ export default function RequestsSent() {
   };
 
   const getStatusStyle = (status: number) =>
-    statusColors[status] ?? { background: "#6B7280", text: "#fff" };
+    statusColors[status] ?? {
+      background: "#6B7280",
+      text: "#fff",
+    };
 
   const getStatusName = (estado: number) => {
-    switch (estado) {
+    switch (Number(estado)) {
       case 1:
         return "Generada";
       case 2:
@@ -118,7 +233,7 @@ export default function RequestsSent() {
   };
 
   const getTipo = (tipo: number) => {
-    switch (tipo) {
+    switch (Number(tipo)) {
       case 1:
         return "Servicio";
       case 2:
@@ -134,7 +249,9 @@ export default function RequestsSent() {
     }
 
     if (item.tecnicos && item.tecnicos.length > 0) {
-      return item.tecnicos.map((tecnico) => tecnico.nombre).join(", ");
+      return item.tecnicos
+        .map((tecnico) => tecnico.nombre)
+        .join(", ");
     }
 
     return "No asignado";
@@ -142,8 +259,31 @@ export default function RequestsSent() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.headerFilters}>
+
+
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => setFilterModalOpen(true)}
+        >
+          <MaterialCommunityIcons
+            name="filter-variant"
+            size={24}
+            color="#148248"
+          />
+
+          {activeFiltersCount > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>
+                {activeFiltersCount}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+
       <FlatList
-        data={requests}
+        data={filteredRequests}
         keyExtractor={(item) => item.numSolicitud.toString()}
         renderItem={({ item }) => {
           const statusStyle = getStatusStyle(item.numStatus);
@@ -152,14 +292,23 @@ export default function RequestsSent() {
             <TouchableOpacity
               style={styles.card}
               onPress={() => viewRequest(item)}
+              activeOpacity={0.85}
             >
               <Text style={styles.title}>
                 {getTipo(item.numTipo)}
               </Text>
 
               <Text style={styles.text}>
-                <Text style={styles.label}>Fecha:</Text> {item.fecha}
+                <Text style={styles.label}>Fecha:</Text>{" "}
+                {formatDate(item.fecha)}
               </Text>
+
+              {(item as any).prioridad && (
+                <Text style={styles.text}>
+                  <Text style={styles.label}>Prioridad:</Text>{" "}
+                  {(item as any).prioridad}
+                </Text>
+              )}
 
               <Text style={styles.text}>
                 <Text style={styles.label}>Descripción:</Text>{" "}
@@ -177,10 +326,17 @@ export default function RequestsSent() {
                 <View
                   style={[
                     styles.statusBadge,
-                    { backgroundColor: statusStyle.background },
+                    {
+                      backgroundColor: statusStyle.background,
+                    },
                   ]}
                 >
-                  <Text style={{ color: statusStyle.text, fontWeight: "bold" }}>
+                  <Text
+                    style={{
+                      color: statusStyle.text,
+                      fontWeight: "bold",
+                    }}
+                  >
                     {getStatusName(item.numStatus)}
                   </Text>
                 </View>
@@ -189,7 +345,10 @@ export default function RequestsSent() {
               {item.numStatus === 1 && (
                 <TouchableOpacity
                   style={styles.cancelButton}
-                  onPress={() => cancelarSolicitud(item.numSolicitud)}
+                  onPress={(event) => {
+                    event.stopPropagation();
+                    cancelarSolicitud(item.numSolicitud);
+                  }}
                 >
                   <Text style={styles.cancelButtonText}>
                     Cancelar solicitud
@@ -209,6 +368,13 @@ export default function RequestsSent() {
           flexGrow: 1,
         }}
       />
+
+      <RequestFilterModal
+        visible={filterModalOpen}
+        filters={filters}
+        setFilters={setFilters}
+        onClose={() => setFilterModalOpen(false)}
+      />
     </View>
   );
 }
@@ -218,6 +384,48 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F5F5F5",
     padding: 10,
+  },
+
+  headerFilters: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+
+  screenTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#111827",
+  },
+
+  filterButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#EAF7EF",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+
+  filterBadge: {
+    position: "absolute",
+    top: -3,
+    right: -3,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "#EF4444",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+
+  filterBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "bold",
   },
 
   card: {

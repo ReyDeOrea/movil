@@ -16,12 +16,12 @@ export default function TecnicoExternoCard({
   return (
     <View style={styles.card}>
 
-      <Text style={styles.title}>
-        {tecnico.nombre}
+   <Text style={styles.title}>
+     {tecnico.empresa}
       </Text>
 
       <Text>
-        Empresa: {tecnico.empresa}
+       Técnico: {tecnico.nombre}
       </Text>
 
       <Text>

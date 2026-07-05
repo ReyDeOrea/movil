@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
@@ -6,12 +7,13 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 import { GetRequestsInProgress } from "../../application/getRequestProgress";
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
+import RequestFilterModal, { EMPTY_REQUEST_FILTERS, RequestFilters } from "../components/ModalFilters";
 
 const repository = new SupabaseRequestsRepository();
 const getRequests = new GetRequestsInProgress(repository);
@@ -21,6 +23,11 @@ const ROL_TECNICO = 3;
 export default function RequestsInProgress() {
   const [requests, setRequests] = useState<RequestsForm[]>([]);
   const [userRole, setUserRole] = useState<number | null>(null);
+
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [filters, setFilters] = useState<RequestFilters>(
+    EMPTY_REQUEST_FILTERS
+  );
 
   const router = useRouter();
 
@@ -40,14 +47,14 @@ export default function RequestsInProgress() {
 
       const numUsuario = Number(
         user.numUsuario ??
-        user.numusuario ??
-        user.num_usuario
+          user.numusuario ??
+          user.num_usuario
       );
 
       const numRol = Number(
         user.numRol ??
-        user.numrol ??
-        user.num_rol
+          user.numrol ??
+          user.num_rol
       );
 
       setUserRole(numRol);
@@ -59,7 +66,7 @@ export default function RequestsInProgress() {
 
       console.log("USUARIO ACTUAL:", {
         numUsuario,
-        numRol
+        numRol,
       });
 
       console.log("SOLICITUDES RECIBIDAS:", data);
@@ -67,8 +74,8 @@ export default function RequestsInProgress() {
       const solicitudesEnProceso = (data ?? []).filter((item) => {
         const status = Number(
           item.numStatus ??
-          (item as any).numstatus ??
-          (item as any).num_status
+            (item as any).numstatus ??
+            (item as any).num_status
         );
 
         return status === 3;
@@ -79,6 +86,87 @@ export default function RequestsInProgress() {
       console.log("ERROR loading requests in progress:", error);
     }
   };
+
+  const normalizeText = (text: string) => {
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  };
+
+  const getTipoText = (tipo: number) => {
+    switch (Number(tipo)) {
+      case 1:
+        return "servicio";
+      case 2:
+        return "mantenimiento";
+      default:
+        return "";
+    }
+  };
+
+  const getTipoMantenimientoText = (
+    tipoMantenimiento?: number | null
+  ) => {
+    switch (Number(tipoMantenimiento)) {
+      case 1:
+        return "correctivo";
+      case 2:
+        return "preventivo";
+      case 3:
+        return "reactivo";
+      default:
+        return "";
+    }
+  };
+
+  const filteredRequests = requests.filter((request: any) => {
+    const tipo = getTipoText(
+      request.numTipo ??
+        request.numtipo ??
+        request.num_tipo
+    );
+
+    const tipoMantenimiento = getTipoMantenimientoText(
+      request.numTipoMantenimiento ??
+        request.numtipomantenimiento ??
+        request.num_tipo_mantenimiento
+    );
+
+    const prioridad = normalizeText(
+      String(request.prioridad ?? "")
+    );
+
+    const fecha = String(
+      request.fecha ??
+        request.fechaSolicitud ??
+        request.fechasolicitud ??
+        ""
+    );
+
+    const matchesTipo =
+      filters.tipo === "" || tipo.includes(filters.tipo);
+
+    const matchesTipoMantenimiento =
+      filters.tipoMantenimiento === "" ||
+      tipoMantenimiento.includes(filters.tipoMantenimiento);
+
+    const matchesPrioridad =
+      filters.prioridad === "" ||
+      prioridad.includes(filters.prioridad);
+
+    const matchesFecha =
+      filters.fecha === "" ||
+      fecha.includes(filters.fecha);
+
+    return (
+      matchesTipo &&
+      matchesTipoMantenimiento &&
+      matchesPrioridad &&
+      matchesFecha
+    );
+  });
 
   const viewRequest = (request: RequestsForm) => {
     router.push({
@@ -154,8 +242,22 @@ export default function RequestsInProgress() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.headerFilters}>
+
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => setFilterModalOpen(true)}
+        >
+          <MaterialCommunityIcons
+            name="filter-variant"
+            size={24}
+            color="#148248"
+          />
+        </TouchableOpacity>
+      </View>
+
       <FlatList
-        data={requests}
+        data={filteredRequests}
         keyExtractor={(item) => item.numSolicitud.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
@@ -191,16 +293,16 @@ export default function RequestsInProgress() {
               style={[
                 styles.statusBadge,
                 {
-                  backgroundColor: renderStatusColor(item.numStatus)
-                }
+                  backgroundColor: renderStatusColor(item.numStatus),
+                },
               ]}
             >
               <Text
                 style={[
                   styles.statusText,
                   {
-                    color: renderStatusTextColor(item.numStatus)
-                  }
+                    color: renderStatusTextColor(item.numStatus),
+                  },
                 ]}
               >
                 {renderStatusName(item.numStatus)}
@@ -229,6 +331,13 @@ export default function RequestsInProgress() {
         }
         contentContainerStyle={{ paddingBottom: 100 }}
       />
+
+      <RequestFilterModal
+        visible={filterModalOpen}
+        filters={filters}
+        setFilters={setFilters}
+        onClose={() => setFilterModalOpen(false)}
+      />
     </View>
   );
 }
@@ -238,6 +347,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F5F5F5",
     padding: 10,
+  },
+
+  headerFilters: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+
+  screenTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#111827",
+  },
+
+  filterButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#EAF7EF",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   card: {
