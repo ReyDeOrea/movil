@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -9,8 +10,6 @@ import {
   View
 } from "react-native";
 
-import { useFocusEffect } from "expo-router";
-import { useCallback, useState } from "react";
 import { GetRequestsBySolicitante } from "../../application/getRequestSent";
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
@@ -19,7 +18,6 @@ const repository = new SupabaseRequestsRepository();
 const getRequests = new GetRequestsBySolicitante(repository);
 
 export default function RequestsSent() {
-
   const [requests, setRequests] = useState<RequestsForm[]>([]);
   const router = useRouter();
 
@@ -44,7 +42,6 @@ export default function RequestsSent() {
       console.log("ERROR loading requests:", error);
     }
   };
-
 
   const cancelarSolicitud = async (numSolicitud: number) => {
     Alert.alert(
@@ -131,15 +128,24 @@ export default function RequestsSent() {
     }
   };
 
+  const getTecnicoAsignado = (item: RequestsForm) => {
+    if (item.tecnicoAsignado) {
+      return item.tecnicoAsignado;
+    }
+
+    if (item.tecnicos && item.tecnicos.length > 0) {
+      return item.tecnicos.map((tecnico) => tecnico.nombre).join(", ");
+    }
+
+    return "No asignado";
+  };
+
   return (
     <View style={styles.container}>
-
       <FlatList
         data={requests}
         keyExtractor={(item) => item.numSolicitud.toString()}
-
         renderItem={({ item }) => {
-
           const statusStyle = getStatusStyle(item.numStatus);
 
           return (
@@ -147,7 +153,6 @@ export default function RequestsSent() {
               style={styles.card}
               onPress={() => viewRequest(item)}
             >
-
               <Text style={styles.title}>
                 {getTipo(item.numTipo)}
               </Text>
@@ -160,6 +165,13 @@ export default function RequestsSent() {
                 <Text style={styles.label}>Descripción:</Text>{" "}
                 {item.descripcion}
               </Text>
+
+              {item.numStatus >= 2 && (
+                <Text style={styles.text}>
+                  <Text style={styles.label}>Técnico asignado:</Text>{" "}
+                  {getTecnicoAsignado(item)}
+                </Text>
+              )}
 
               <View style={styles.rowBetween}>
                 <View
@@ -184,29 +196,24 @@ export default function RequestsSent() {
                   </Text>
                 </TouchableOpacity>
               )}
-
             </TouchableOpacity>
           );
         }}
-
         ListEmptyComponent={
           <Text style={styles.emptyText}>
             No has enviado solicitudes
           </Text>
         }
-
         contentContainerStyle={{
           paddingBottom: 10,
           flexGrow: 1,
         }}
       />
-
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
@@ -233,21 +240,11 @@ const styles = StyleSheet.create({
     marginBottom: 3,
     color: "#374151",
   },
+
   label: {
     fontWeight: "bold",
   },
-  statusContainer: {
-    marginTop: 10,
-    alignSelf: "flex-start",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginBottom: 20,
-  },
-  statusText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
+
   cancelButton: {
     backgroundColor: "#870c0c",
     padding: 15,
@@ -256,21 +253,25 @@ const styles = StyleSheet.create({
     marginHorizontal: 40,
     marginTop: 12,
   },
+
   cancelButtonText: {
     color: "#fff",
     fontWeight: "bold",
   },
+
   rowBetween: {
     flexDirection: "row",
     justifyContent: "flex-start",
     marginTop: 10,
   },
+
   statusBadge: {
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 20,
     alignSelf: "flex-start",
   },
+
   emptyText: {
     marginTop: 50,
     textAlign: "center",

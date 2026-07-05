@@ -6,15 +6,15 @@ export const validateAdminAssignment = (data: {
   fechaFin: Date;
   prioridad: Prioridad;
 }) => {
-  if (!data.personaAsignada) {
+  if (!data.personaAsignada || !data.personaAsignada.trim()) {
     throw new Error("Selecciona una persona asignada");
   }
 
-  if (!data.fechaInicio) {
+  if (!(data.fechaInicio instanceof Date) || isNaN(data.fechaInicio.getTime())) {
     throw new Error("Selecciona la fecha de inicio");
   }
 
-  if (!data.fechaFin) {
+  if (!(data.fechaFin instanceof Date) || isNaN(data.fechaFin.getTime())) {
     throw new Error("Selecciona la fecha de fin");
   }
 

@@ -93,7 +93,12 @@ export default function RequestsRejected() {
             </Text>
 
             <Text style={styles.text}>
-               <Text style={styles.label}>Motivo: </Text>{item.motivoCancelacion ?? "Sin motivo"}
+              <Text style={styles.label}>Solicitante:</Text>{" "}
+              {item.nombreSolicitante ?? "Sin nombre"}
+            </Text>
+
+            <Text style={styles.text}>
+              <Text style={styles.label}>Motivo: </Text>{item.motivoCancelacion ?? "Sin motivo"}
             </Text>
 
             <View
@@ -144,18 +149,18 @@ const styles = StyleSheet.create({
     color: "#374151",
   },
 
- statusBadge: {
-  marginTop: 10,
-  paddingVertical: 8,
-  paddingHorizontal: 14,
-  borderRadius: 20,
-  alignSelf: "flex-start",
-},
+  statusBadge: {
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    alignSelf: "flex-start",
+  },
 
-statusText: {
-  color: "#991B1B",
-  fontWeight: "bold",
-},
+  statusText: {
+    color: "#991B1B",
+    fontWeight: "bold",
+  },
 
   label: {
     fontWeight: "bold",

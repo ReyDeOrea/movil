@@ -1,4 +1,4 @@
-import { CreateRequest, TipoEvidencia } from "../domain/request";
+import { CreateRequest, ImageInput, TipoEvidencia } from "../domain/request";
 import { RequestsRepository } from "../domain/requestRepository";
 
 export class CreateRequestUseCase {
@@ -8,11 +8,15 @@ export class CreateRequestUseCase {
 
   async execute(
     request: CreateRequest,
-    imagenes: string[] = [],
+    imagenes: ImageInput[] = [],
     tipoEvidencia: TipoEvidencia = "solicitante"
   ): Promise<number> {
     if (!request.numSolicitante) {
       throw new Error("No se encontró el usuario solicitante");
+    }
+
+    if (!request.fecha) {
+      throw new Error("La fecha es obligatoria");
     }
 
     if (!request.descripcion || !request.descripcion.trim()) {
@@ -45,8 +49,7 @@ export class CreateRequestUseCase {
       );
 
       return numSolicitud;
-
-    } catch (error) {
+    } catch {
       await this.repository.deleteRequest(numSolicitud);
 
       throw new Error(

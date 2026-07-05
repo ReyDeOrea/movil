@@ -511,8 +511,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#232323",
     padding: 12,
     borderRadius: 10,
-     marginHorizontal: 20,
-    marginBottom:20,
+    marginHorizontal: 20,
+    marginBottom: 20,
   },
 
   saveText: {
