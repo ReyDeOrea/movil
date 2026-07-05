@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -6,19 +7,24 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 import { GetRequestsRejected } from "../../application/getRequestsRejected";
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
+import RequestFilterModal, { EMPTY_REQUEST_FILTERS, RequestFilters } from "../components/ModalFilters";
 
 const repository = new SupabaseRequestsRepository();
 const getRequests = new GetRequestsRejected(repository);
 
 export default function RequestsRejected() {
-
   const [requests, setRequests] = useState<RequestsForm[]>([]);
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [filters, setFilters] = useState<RequestFilters>(
+    EMPTY_REQUEST_FILTERS
+  );
+
   const router = useRouter();
 
   useEffect(() => {
@@ -44,6 +50,74 @@ export default function RequestsRejected() {
     }
   };
 
+  const normalizeText = (text: string) => {
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  };
+
+  const getTipoText = (tipo: number) => {
+    switch (tipo) {
+      case 1:
+        return "servicio";
+      case 2:
+        return "mantenimiento";
+      default:
+        return "";
+    }
+  };
+
+  const getTipoMantenimientoText = (tipoMantenimiento?: number | null) => {
+    switch (tipoMantenimiento) {
+      case 1:
+        return "correctivo";
+      case 2:
+        return "preventivo";
+      case 3:
+        return "reactivo";
+      default:
+        return "";
+    }
+  };
+
+  const filteredRequests = requests.filter((request: any) => {
+    const tipo = getTipoText(request.numTipo);
+
+    const tipoMantenimiento = getTipoMantenimientoText(
+      request.numTipoMantenimiento ?? request.numtipomantenimiento
+    );
+
+    const prioridad = normalizeText(
+      String(request.prioridad ?? "")
+    );
+
+    const fecha = String(request.fecha ?? "");
+
+    const matchesTipo =
+      filters.tipo === "" || tipo.includes(filters.tipo);
+
+    const matchesTipoMantenimiento =
+      filters.tipoMantenimiento === "" ||
+      tipoMantenimiento.includes(filters.tipoMantenimiento);
+
+    const matchesPrioridad =
+      filters.prioridad === "" ||
+      prioridad.includes(filters.prioridad);
+
+    const matchesFecha =
+      filters.fecha === "" ||
+      fecha.includes(filters.fecha);
+
+    return (
+      matchesTipo &&
+      matchesTipoMantenimiento &&
+      matchesPrioridad &&
+      matchesFecha
+    );
+  });
+
   const viewRequest = (request: RequestsForm) => {
     router.push({
       pathname: "/viewRequestForm",
@@ -61,6 +135,7 @@ export default function RequestsRejected() {
         return "#6B7280";
     }
   };
+
   const renderTipo = (tipo: number) => {
     switch (tipo) {
       case 1:
@@ -74,16 +149,28 @@ export default function RequestsRejected() {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={requests}
-        keyExtractor={(item) => item.numSolicitud.toString()}
+      <View style={styles.headerFilters}>
 
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => setFilterModalOpen(true)}
+        >
+          <MaterialCommunityIcons
+            name="filter-variant"
+            size={24}
+            color="#148248"
+          />
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        data={filteredRequests}
+        keyExtractor={(item) => item.numSolicitud.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.card}
             onPress={() => viewRequest(item)}
           >
-
             <Text style={styles.title}>
               {renderTipo(item.numTipo)}
             </Text>
@@ -98,28 +185,36 @@ export default function RequestsRejected() {
             </Text>
 
             <Text style={styles.text}>
-              <Text style={styles.label}>Motivo: </Text>{item.motivoCancelacion ?? "Sin motivo"}
+              <Text style={styles.label}>Motivo: </Text>
+              {item.motivoCancelacion ?? "Sin motivo"}
             </Text>
 
             <View
               style={[
                 styles.statusBadge,
-                { backgroundColor: renderStatusColor(item.numStatus) }
+                {
+                  backgroundColor: renderStatusColor(item.numStatus),
+                },
               ]}
             >
               <Text style={styles.statusText}>
                 Cancelada
               </Text>
             </View>
-
           </TouchableOpacity>
         )}
-
         ListEmptyComponent={
           <Text style={styles.empty}>
             No hay solicitudes rechazadas
           </Text>
         }
+      />
+
+      <RequestFilterModal
+        visible={filterModalOpen}
+        filters={filters}
+        setFilters={setFilters}
+        onClose={() => setFilterModalOpen(false)}
       />
     </View>
   );
@@ -131,6 +226,29 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
     padding: 10,
   },
+
+  headerFilters: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+
+  screenTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#111827",
+  },
+
+  filterButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#EAF7EF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
   card: {
     backgroundColor: "#fff",
     padding: 16,
@@ -138,11 +256,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     elevation: 3,
   },
+
   title: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 5,
   },
+
   text: {
     fontSize: 14,
     marginBottom: 3,
@@ -165,6 +285,7 @@ const styles = StyleSheet.create({
   label: {
     fontWeight: "bold",
   },
+
   empty: {
     textAlign: "center",
     marginTop: 20,

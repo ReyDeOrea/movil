@@ -106,9 +106,6 @@ export default function Requests() {
 
         <View style={styles.body}>
           <View style={styles.topSection}>
-            <Text style={styles.title}>Solicitudes</Text>
-
-
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}

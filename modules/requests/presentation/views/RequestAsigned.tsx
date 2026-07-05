@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
@@ -8,11 +9,15 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 import { GetRequestsByTecnicoInterno } from "../../application/getRequestAsignedInterno";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
+import RequestFilterModal, {
+  EMPTY_REQUEST_FILTERS,
+  RequestFilters,
+} from "../components/ModalFilters";
 
 const repository = new SupabaseRequestsRepository();
 const getRequestsInterno = new GetRequestsByTecnicoInterno(repository);
@@ -20,6 +25,11 @@ const getRequestsInterno = new GetRequestsByTecnicoInterno(repository);
 export default function RequestsAssigned() {
   const [requests, setRequests] = useState<any[]>([]);
   const [actualizandoId, setActualizandoId] = useState<number | null>(null);
+
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [filters, setFilters] = useState<RequestFilters>(
+    EMPTY_REQUEST_FILTERS
+  );
 
   const router = useRouter();
 
@@ -69,10 +79,15 @@ export default function RequestsAssigned() {
 
       const solicitudesAsignadas = (data ?? []).filter((item) => {
         const status = Number(
-          getValue(item, "numStatus", "numstatus", "num_status")
+          getValue(
+            item,
+            "numStatus",
+            "numstatus",
+            "num_status"
+          )
         );
 
-        return status === 2 || status === 3;
+        return status === 2;
       });
 
       setRequests(solicitudesAsignadas);
@@ -81,6 +96,111 @@ export default function RequestsAssigned() {
       setRequests([]);
     }
   };
+
+  const normalizeText = (text: string) => {
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  };
+
+  const getTipoText = (tipo: number) => {
+    switch (Number(tipo)) {
+      case 1:
+        return "servicio";
+      case 2:
+        return "mantenimiento";
+      default:
+        return "";
+    }
+  };
+
+  const getTipoMantenimientoText = (
+    tipoMantenimiento?: number | null
+  ) => {
+    switch (Number(tipoMantenimiento)) {
+      case 1:
+        return "preventivo";
+      case 2:
+        return "correctivo";
+      case 3:
+        return "reactivo";
+      default:
+        return "";
+    }
+  };
+
+  const formatDate = (date?: string | null) => {
+    if (!date) return "Sin fecha";
+
+    const cleanDate = String(date).split("T")[0];
+    const parts = cleanDate.split("-");
+
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return `${day}/${month}/${year}`;
+    }
+
+    return String(date);
+  };
+
+  const filteredRequests = requests.filter((item) => {
+    const tipo = getTipoText(
+      getValue(item, "numTipo", "numtipo", "num_tipo")
+    );
+
+    const tipoMantenimiento = getTipoMantenimientoText(
+      getValue(
+        item,
+        "numTipoMantenimiento",
+        "numtipomantenimiento",
+        "num_tipo_mantenimiento"
+      )
+    );
+
+    const prioridad = normalizeText(
+      String(getValue(item, "prioridad") ?? "")
+    );
+
+    const fechaOriginal = String(
+      getValue(
+        item,
+        "fecha",
+        "fechaSolicitud",
+        "fechasolicitud"
+      ) ?? ""
+    );
+
+    const fechaFormateada = formatDate(fechaOriginal);
+
+    const matchesTipo =
+      filters.tipo === "" || tipo.includes(filters.tipo);
+
+    const matchesTipoMantenimiento =
+      filters.tipoMantenimiento === "" ||
+      tipoMantenimiento.includes(filters.tipoMantenimiento);
+
+    const matchesPrioridad =
+      filters.prioridad === "" ||
+      prioridad.includes(filters.prioridad);
+
+    const matchesFecha =
+      filters.fecha === "" ||
+      fechaOriginal.includes(filters.fecha) ||
+      fechaFormateada.includes(filters.fecha);
+
+    return (
+      matchesTipo &&
+      matchesTipoMantenimiento &&
+      matchesPrioridad &&
+      matchesFecha
+    );
+  });
+
+  const activeFiltersCount = Object.values(filters).filter(
+    (value) => value.trim() !== ""
+  ).length;
 
   const viewRequest = (request: any) => {
     router.push({
@@ -127,7 +247,12 @@ export default function RequestsAssigned() {
 
   const confirmarMarcarEnProceso = (request: any) => {
     const numSolicitud = Number(
-      getValue(request, "numSolicitud", "numsolicitud", "num_solicitud")
+      getValue(
+        request,
+        "numSolicitud",
+        "numsolicitud",
+        "num_solicitud"
+      )
     );
 
     if (!numSolicitud) {
@@ -158,26 +283,27 @@ export default function RequestsAssigned() {
       await actualizarEstadoSolicitud(numSolicitud, 3);
 
       setRequests((prevRequests) =>
-        prevRequests.map((item) => {
+        prevRequests.filter((item) => {
           const id = Number(
-            getValue(item, "numSolicitud", "numsolicitud", "num_solicitud")
+            getValue(
+              item,
+              "numSolicitud",
+              "numsolicitud",
+              "num_solicitud"
+            )
           );
 
-          if (id === numSolicitud) {
-            return {
-              ...item,
-              numStatus: 3,
-              numstatus: 3,
-            };
-          }
-
-          return item;
+          return id !== numSolicitud;
         })
       );
 
-      Alert.alert("Listo", "La solicitud se marcó como en proceso.");
+      Alert.alert(
+        "Listo",
+        "La solicitud se marcó como en proceso."
+      );
     } catch (error) {
       console.log("ERROR marcando solicitud en proceso:", error);
+
       Alert.alert(
         "Error",
         "No se pudo marcar la solicitud como en proceso."
@@ -191,8 +317,6 @@ export default function RequestsAssigned() {
     switch (Number(status)) {
       case 2:
         return "#FEF3C7";
-      case 3:
-        return "#DBEAFE";
       default:
         return "#E5E7EB";
     }
@@ -202,8 +326,6 @@ export default function RequestsAssigned() {
     switch (Number(status)) {
       case 2:
         return "#92400E";
-      case 3:
-        return "#1E40AF";
       default:
         return "#374151";
     }
@@ -213,8 +335,6 @@ export default function RequestsAssigned() {
     switch (Number(status)) {
       case 2:
         return "Asignada";
-      case 3:
-        return "En proceso";
       default:
         return "Desconocido";
     }
@@ -231,37 +351,55 @@ export default function RequestsAssigned() {
     }
   };
 
-  const formatDate = (date?: string | null) => {
-    if (!date) return "Sin fecha";
-
-    const cleanDate = String(date).split("T")[0];
-    const parts = cleanDate.split("-");
-
-    if (parts.length === 3) {
-      const [year, month, day] = parts;
-      return `${day}/${month}/${year}`;
-    }
-
-    return String(date);
-  };
-
   return (
     <View style={styles.container}>
+      <View style={styles.headerFilters}>
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => setFilterModalOpen(true)}
+        >
+          <MaterialCommunityIcons
+            name="filter-variant"
+            size={24}
+            color="#148248"
+          />
+
+          {activeFiltersCount > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>
+                {activeFiltersCount}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+
       <FlatList
-        data={requests}
+        data={filteredRequests}
         keyExtractor={(item) =>
           String(item.numSolicitud ?? item.numsolicitud)
         }
         renderItem={({ item }) => {
           const numSolicitud = Number(
-            getValue(item, "numSolicitud", "numsolicitud", "num_solicitud")
+            getValue(
+              item,
+              "numSolicitud",
+              "numsolicitud",
+              "num_solicitud"
+            )
           );
 
           const numStatus = Number(
-            getValue(item, "numStatus", "numstatus", "num_status")
+            getValue(
+              item,
+              "numStatus",
+              "numstatus",
+              "num_status"
+            )
           );
 
-          const estaActualizando = actualizandoId === numSolicitud;
+          const estaActualizando =
+            actualizandoId === numSolicitud;
 
           return (
             <TouchableOpacity
@@ -296,40 +434,42 @@ export default function RequestsAssigned() {
               <View
                 style={[
                   styles.statusBadge,
-                  { backgroundColor: renderStatusColor(numStatus) }
+                  {
+                    backgroundColor: renderStatusColor(numStatus),
+                  },
                 ]}
               >
                 <Text
                   style={[
                     styles.statusText,
-                    { color: renderStatusTextColor(numStatus) }
+                    {
+                      color: renderStatusTextColor(numStatus),
+                    },
                   ]}
                 >
                   {renderStatusName(numStatus)}
                 </Text>
               </View>
 
-              {numStatus === 2 && (
-                <TouchableOpacity
-                  style={[
-                    styles.processButton,
-                    estaActualizando && styles.processButtonDisabled,
-                  ]}
-                  disabled={estaActualizando}
-                  onPress={(event) => {
-                    event.stopPropagation();
-                    confirmarMarcarEnProceso(item);
-                  }}
-                >
-                  {estaActualizando ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.processButtonText}>
-                      Marcar en proceso
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                style={[
+                  styles.processButton,
+                  estaActualizando && styles.processButtonDisabled,
+                ]}
+                disabled={estaActualizando}
+                onPress={(event) => {
+                  event.stopPropagation();
+                  confirmarMarcarEnProceso(item);
+                }}
+              >
+                {estaActualizando ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.processButtonText}>
+                    Marcar en proceso
+                  </Text>
+                )}
+              </TouchableOpacity>
             </TouchableOpacity>
           );
         }}
@@ -340,6 +480,13 @@ export default function RequestsAssigned() {
         }
         contentContainerStyle={{ paddingBottom: 100 }}
       />
+
+      <RequestFilterModal
+        visible={filterModalOpen}
+        filters={filters}
+        setFilters={setFilters}
+        onClose={() => setFilterModalOpen(false)}
+      />
     </View>
   );
 }
@@ -349,6 +496,42 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F5F5F5",
     padding: 10,
+  },
+
+  headerFilters: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+
+  filterButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#EAF7EF",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+
+  filterBadge: {
+    position: "absolute",
+    top: -3,
+    right: -3,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "#EF4444",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+
+  filterBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "bold",
   },
 
   card: {

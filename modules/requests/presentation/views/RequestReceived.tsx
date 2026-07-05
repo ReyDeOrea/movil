@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
@@ -8,13 +9,15 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 import { CancelRequestUseCase } from "../../application/cancelRequest";
 import { GetAllRequests } from "../../application/getRequestRecived";
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
+import RequestFilterModal, { EMPTY_REQUEST_FILTERS, RequestFilters } from "../components/ModalFilters";
+
 
 const repository = new SupabaseRequestsRepository();
 const getRequests = new GetAllRequests(repository);
@@ -26,6 +29,11 @@ export default function RequestsReceived() {
   const [motivoCancelacion, setMotivoCancelacion] = useState("");
   const [solicitudSeleccionada, setSolicitudSeleccionada] =
     useState<RequestsForm | null>(null);
+
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [filters, setFilters] = useState<RequestFilters>(
+    EMPTY_REQUEST_FILTERS
+  );
 
   const router = useRouter();
 
@@ -43,6 +51,110 @@ export default function RequestsReceived() {
       console.log("ERROR loading requests:", error);
     }
   };
+
+  const normalizeText = (text: string) => {
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  };
+
+  const getTipoText = (tipo: number) => {
+    switch (Number(tipo)) {
+      case 1:
+        return "servicio";
+      case 2:
+        return "mantenimiento";
+      default:
+        return "";
+    }
+  };
+
+  const getTipoMantenimientoText = (
+    tipoMantenimiento?: number | null
+  ) => {
+    switch (Number(tipoMantenimiento)) {
+      case 1:
+        return "correctivo";
+      case 2:
+        return "preventivo";
+      case 3:
+        return "reactivo";
+      default:
+        return "";
+    }
+  };
+
+  const formatDate = (date?: string | null) => {
+    if (!date) return "Sin fecha";
+
+    const cleanDate = String(date).split("T")[0];
+    const parts = cleanDate.split("-");
+
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return `${day}/${month}/${year}`;
+    }
+
+    return String(date);
+  };
+
+  const filteredRequests = requests.filter((request) => {
+    const item = request as any;
+
+    const tipo = getTipoText(
+      item.numTipo ??
+        item.numtipo ??
+        item.num_tipo
+    );
+
+    const tipoMantenimiento = getTipoMantenimientoText(
+      item.numTipoMantenimiento ??
+        item.numtipomantenimiento ??
+        item.num_tipo_mantenimiento
+    );
+
+    const prioridad = normalizeText(
+      String(item.prioridad ?? "")
+    );
+
+    const fechaOriginal = String(
+      item.fecha ??
+        item.fechaSolicitud ??
+        item.fechasolicitud ??
+        ""
+    );
+
+    const fechaFormateada = formatDate(fechaOriginal);
+
+    const matchesTipo =
+      filters.tipo === "" || tipo.includes(filters.tipo);
+
+    const matchesTipoMantenimiento =
+      filters.tipoMantenimiento === "" ||
+      tipoMantenimiento.includes(filters.tipoMantenimiento);
+
+    const matchesPrioridad =
+      filters.prioridad === "" ||
+      prioridad.includes(filters.prioridad);
+
+    const matchesFecha =
+      filters.fecha === "" ||
+      fechaOriginal.includes(filters.fecha) ||
+      fechaFormateada.includes(filters.fecha);
+
+    return (
+      matchesTipo &&
+      matchesTipoMantenimiento &&
+      matchesPrioridad &&
+      matchesFecha
+    );
+  });
+
+  const activeFiltersCount = Object.values(filters).filter(
+    (value) => value.trim() !== ""
+  ).length;
 
   const abrirModalRechazo = (request: RequestsForm) => {
     setSolicitudSeleccionada(request);
@@ -72,7 +184,6 @@ export default function RequestsReceived() {
 
       cerrarModalRechazo();
       await loadRequests();
-
     } catch (error: any) {
       Alert.alert(
         "Error",
@@ -100,7 +211,7 @@ export default function RequestsReceived() {
   };
 
   const getTipo = (tipo: number) => {
-    switch (tipo) {
+    switch (Number(tipo)) {
       case 1:
         return "Servicio";
       case 2:
@@ -126,7 +237,7 @@ export default function RequestsReceived() {
   };
 
   const getStatusName = (estado: number) => {
-    switch (estado) {
+    switch (Number(estado)) {
       case 1:
         return "Generada";
       case 2:
@@ -156,8 +267,30 @@ export default function RequestsReceived() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.headerFilters}>
+
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => setFilterModalOpen(true)}
+        >
+          <MaterialCommunityIcons
+            name="filter-variant"
+            size={24}
+            color="#148248"
+          />
+
+          {activeFiltersCount > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>
+                {activeFiltersCount}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+
       <FlatList
-        data={requests}
+        data={filteredRequests}
         keyExtractor={(item) => item.numSolicitud.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
@@ -169,7 +302,8 @@ export default function RequestsReceived() {
             </Text>
 
             <Text style={styles.text}>
-              <Text style={styles.label}>Fecha:</Text> {item.fecha}
+              <Text style={styles.label}>Fecha:</Text>{" "}
+              {formatDate(item.fecha)}
             </Text>
 
             <Text style={styles.text}>
@@ -181,6 +315,13 @@ export default function RequestsReceived() {
               <Text style={styles.label}>Descripción:</Text>{" "}
               {item.descripcion}
             </Text>
+
+            {(item as any).prioridad && (
+              <Text style={styles.text}>
+                <Text style={styles.label}>Prioridad:</Text>{" "}
+                {(item as any).prioridad}
+              </Text>
+            )}
 
             {item.numStatus >= 2 && (
               <Text style={styles.text}>
@@ -194,14 +335,17 @@ export default function RequestsReceived() {
                 style={[
                   styles.statusBadge,
                   {
-                    backgroundColor: getStatusStyle(item.numStatus).background,
+                    backgroundColor:
+                      getStatusStyle(item.numStatus).background,
                   },
                 ]}
               >
                 <Text
                   style={[
                     styles.statusText,
-                    { color: getStatusStyle(item.numStatus).text },
+                    {
+                      color: getStatusStyle(item.numStatus).text,
+                    },
                   ]}
                 >
                   {getStatusName(item.numStatus)}
@@ -237,6 +381,13 @@ export default function RequestsReceived() {
           paddingBottom: 10,
           flexGrow: 1,
         }}
+      />
+
+      <RequestFilterModal
+        visible={filterModalOpen}
+        filters={filters}
+        setFilters={setFilters}
+        onClose={() => setFilterModalOpen(false)}
       />
 
       <Modal
@@ -285,7 +436,6 @@ export default function RequestsReceived() {
           </View>
         </View>
       </Modal>
-
     </View>
   );
 }
@@ -295,6 +445,48 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F5F5F5",
     padding: 10,
+  },
+
+  headerFilters: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+
+  screenTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#111827",
+  },
+
+  filterButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#EAF7EF",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+
+  filterBadge: {
+    position: "absolute",
+    top: -3,
+    right: -3,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "#EF4444",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+
+  filterBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "bold",
   },
 
   card: {

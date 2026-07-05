@@ -95,6 +95,7 @@ export default function ViewRequest() {
   const [request, setRequest] = useState<RequestsForm | any | null>(null);
   const [loading, setLoading] = useState(true);
   const [esAdmin, setEsAdmin] = useState(false);
+  const [materialesSolicitud, setMaterialesSolicitud] = useState<any[]>([]);
 
   const detectarSiEsAdmin = (data: any) => {
     if (!data || typeof data !== "object") return false;
@@ -226,6 +227,107 @@ export default function ViewRequest() {
     }
   };
 
+  const normalizarMaterialesSolicitud = (list: any[] = []) => {
+    return list.map((item, index) => {
+      const material = getValue<any>(
+        item,
+        "material",
+        "materialData",
+        "material_data",
+        "materiales"
+      );
+
+      return {
+        id:
+          getValue(item, "id", "idMaterialSolicitud", "id_material_solicitud") ??
+          getValue(item, "numMaterial", "nummaterial", "num_material") ??
+          getValue(material, "numMaterial", "nummaterial", "num_material") ??
+          index,
+
+        numMaterial:
+          getValue(item, "numMaterial", "nummaterial", "num_material") ??
+          getValue(material, "numMaterial", "nummaterial", "num_material") ??
+          "N/A",
+
+        nombre:
+          getValue(
+            item,
+            "nombre",
+            "nombreMaterial",
+            "nombre_material",
+            "material"
+          ) ??
+          getValue(material, "nombre", "nombreMaterial", "nombre_material") ??
+          "Material sin nombre",
+
+        descripcion:
+          getValue(item, "descripcion") ??
+          getValue(material, "descripcion") ??
+          "",
+
+        unidad:
+          getValue(item, "unidad") ??
+          getValue(material, "unidad") ??
+          "",
+
+        cantidad: Number(getValue(item, "cantidad") ?? 0),
+      };
+    });
+  };
+
+  const cargarMaterialesSolicitud = async (
+    numSolicitud: number,
+    solicitudData?: any
+  ) => {
+    try {
+      const materialesDesdeSolicitud =
+        getValue<any[]>(
+          solicitudData,
+          "materiales",
+          "materialesSolicitud",
+          "materiales_solicitud",
+          "materialessolicitud",
+          "materialesUsados",
+          "materiales_usados"
+        ) ?? [];
+
+      if (
+        Array.isArray(materialesDesdeSolicitud) &&
+        materialesDesdeSolicitud.length > 0
+      ) {
+        setMaterialesSolicitud(
+          normalizarMaterialesSolicitud(materialesDesdeSolicitud)
+        );
+        return;
+      }
+
+      const repo: any = repository;
+
+      if (typeof repo.getRequestMaterials === "function") {
+        const data = await repo.getRequestMaterials(numSolicitud);
+        setMaterialesSolicitud(normalizarMaterialesSolicitud(data ?? []));
+        return;
+      }
+
+      if (typeof repo.getMaterialsByRequest === "function") {
+        const data = await repo.getMaterialsByRequest(numSolicitud);
+        setMaterialesSolicitud(normalizarMaterialesSolicitud(data ?? []));
+        return;
+      }
+
+      if (typeof repo.getSolicitudMateriales === "function") {
+        const data = await repo.getSolicitudMateriales(numSolicitud);
+        setMaterialesSolicitud(normalizarMaterialesSolicitud(data ?? []));
+        return;
+      }
+
+      setMaterialesSolicitud([]);
+    } catch (error) {
+      console.log("ERROR cargando materiales de la solicitud:", error);
+      setMaterialesSolicitud([]);
+    }
+  };
+
   const cargarSolicitud = async () => {
     const parsed = parseRequestParam(params.request);
 
@@ -236,6 +338,7 @@ export default function ViewRequest() {
 
     try {
       setLoading(true);
+      setMaterialesSolicitud([]);
 
       const numSolicitud = Number(
         getValue(parsed, "numSolicitud", "numsolicitud", "num_solicitud")
@@ -246,8 +349,11 @@ export default function ViewRequest() {
 
         if (data) {
           setRequest(data);
+          await cargarMaterialesSolicitud(numSolicitud, data);
           return;
         }
+
+        await cargarMaterialesSolicitud(numSolicitud, parsed);
       }
 
       setRequest(parsed);
@@ -604,7 +710,68 @@ export default function ViewRequest() {
     fechaProgFin ||
     prioridad;
 
+  const mostrarDatosTecnico =
+    fechaInicioReal || fechaFinReal || materialesSolicitud.length > 0;
+
   const crearHtmlSolicitud = () => {
+    const datosTecnicoHtml = mostrarDatosTecnico
+      ? `
+        <div class="section">
+          <div class="title">Datos Técnico</div>
+
+          <div class="subtitle-section">Fechas reales</div>
+
+          <div class="label">Inicio real:</div>
+          <div class="value">${limpiarTextoHtml(
+            formatDate(fechaInicioReal)
+          )}</div>
+
+          <div class="label">Fin real:</div>
+          <div class="value">${limpiarTextoHtml(formatDate(fechaFinReal))}</div>
+
+          ${
+            materialesSolicitud.length > 0
+              ? `
+                <div class="subtitle-section">Materiales utilizados</div>
+
+                ${materialesSolicitud
+                  .map(
+                    (material) => `
+                      <div class="material-item">
+                        <div class="label">${limpiarTextoHtml(
+                          material.nombre
+                        )}</div>
+
+                        <div class="value">
+                          Cantidad: ${limpiarTextoHtml(material.cantidad)}
+                          ${
+                            material.unidad
+                              ? limpiarTextoHtml(material.unidad)
+                              : ""
+                          }
+                        </div>
+
+                        ${
+                          material.descripcion
+                            ? `<div class="value">Descripción: ${limpiarTextoHtml(
+                                material.descripcion
+                              )}</div>`
+                            : ""
+                        }
+                      </div>
+                    `
+                  )
+                  .join("")}
+              `
+              : `
+                <div class="subtitle-section">Materiales utilizados</div>
+                <div class="value">Sin materiales registrados</div>
+              `
+          }
+        </div>
+      `
+      : "";
+
     return `
       <html>
         <head>
@@ -642,6 +809,14 @@ export default function ViewRequest() {
               color: #148248;
             }
 
+            .subtitle-section {
+              font-size: 15px;
+              font-weight: bold;
+              margin-top: 12px;
+              margin-bottom: 6px;
+              color: #111827;
+            }
+
             .label {
               font-weight: bold;
               margin-top: 8px;
@@ -650,6 +825,12 @@ export default function ViewRequest() {
             .value {
               margin-bottom: 6px;
               color: #374151;
+            }
+
+            .material-item {
+              border-bottom: 1px solid #E5E7EB;
+              padding-bottom: 8px;
+              margin-bottom: 8px;
             }
 
             .badge {
@@ -757,13 +938,7 @@ export default function ViewRequest() {
             </div>
           </div>
 
-          <div class="section">
-            <div class="title">Fechas reales</div>
-
-            <div class="label">Inicio real:</div>
-
-            <div class="label">Fin real:</div>
-          </div>
+          ${datosTecnicoHtml}
 
           <div class="section comments-section">
             <div class="title">Comentarios</div>
@@ -857,6 +1032,24 @@ export default function ViewRequest() {
             </Text>
           </View>
 
+          {evidenciasSolicitante.length > 0 && (
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>
+                Evidencias del solicitante
+              </Text>
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {evidenciasSolicitante.map((e) => (
+                  <Image
+                    key={String(e.id)}
+                    source={{ uri: e.ruta }}
+                    style={styles.image}
+                  />
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
           {mostrarAsignacion && (
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Datos de asignación</Text>
@@ -893,33 +1086,44 @@ export default function ViewRequest() {
             </View>
           )}
 
-          {(fechaInicioReal || fechaFinReal) && (
+          {mostrarDatosTecnico && (
             <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Fechas reales</Text>
+              <Text style={styles.sectionTitle}>Datos Técnico</Text>
+
+              <Text style={styles.subSectionTitle}>Fechas reales</Text>
 
               <Text style={styles.label}>Inicio real:</Text>
               <Text style={styles.value}>{formatDate(fechaInicioReal)}</Text>
 
               <Text style={styles.label}>Fin real:</Text>
               <Text style={styles.value}>{formatDate(fechaFinReal)}</Text>
-            </View>
-          )}
 
-          {evidenciasSolicitante.length > 0 && (
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>
-                Evidencias del solicitante
-              </Text>
+              <Text style={styles.subSectionTitle}>Materiales utilizados</Text>
 
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {evidenciasSolicitante.map((e) => (
-                  <Image
-                    key={String(e.id)}
-                    source={{ uri: e.ruta }}
-                    style={styles.image}
-                  />
-                ))}
-              </ScrollView>
+              {materialesSolicitud.length > 0 ? (
+                materialesSolicitud.map((material) => (
+                  <View key={String(material.id)} style={styles.materialItem}>
+                    <Text style={styles.materialName}>
+                      {material.nombre}
+                    </Text>
+
+                    <Text style={styles.value}>
+                      <Text style={styles.label}>Cantidad:</Text>{" "}
+                      {material.cantidad}
+                      {material.unidad ? ` ${material.unidad}` : ""}
+                    </Text>
+
+                    {material.descripcion ? (
+                      <Text style={styles.value}>
+                        <Text style={styles.label}>Descripción:</Text>{" "}
+                        {material.descripcion}
+                      </Text>
+                    ) : null}
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.value}>Sin materiales registrados</Text>
+              )}
             </View>
           )}
 
@@ -1042,6 +1246,14 @@ const styles = StyleSheet.create({
     color: "#111827",
   },
 
+  subSectionTitle: {
+    fontSize: 15,
+    fontWeight: "bold",
+    marginTop: 10,
+    marginBottom: 6,
+    color: "#111827",
+  },
+
   label: {
     fontWeight: "bold",
     marginTop: 8,
@@ -1059,6 +1271,20 @@ const styles = StyleSheet.create({
     height: 220,
     borderRadius: 15,
     marginRight: 10,
+  },
+
+  materialItem: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+    paddingBottom: 10,
+    marginBottom: 10,
+  },
+
+  materialName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#111827",
+    marginBottom: 4,
   },
 
   downloadButton: {
