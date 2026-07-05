@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const API_URL =
-  process.env.EXPO_PUBLIC_API_URL || "http://192.168.68.61:8000";
+  process.env.EXPO_PUBLIC_API_URL || "https://subsystem-uniquely-impulsive.ngrok-free.dev";
 
 console.log("API_URL usada:", API_URL);
 
