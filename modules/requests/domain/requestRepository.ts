@@ -1,6 +1,8 @@
 import {
   CreateRequest,
+  DetalleMaterial,
   Evidence,
+  ImageInput,
   Prioridad,
   RequestsForm,
   TipoEvidencia,
@@ -14,6 +16,7 @@ export interface RequestsRepository {
 
   createRequest(request: CreateRequest): Promise<number>;
   updateRequest(id: number, request: Partial<RequestsForm>): Promise<boolean>;
+  updateRequestStatus(id: number, numStatus: number): Promise<boolean>;
   deleteRequest(id: number): Promise<boolean>;
 
   getRequestsByTecnicoInterno(numTecnico: number): Promise<RequestsForm[]>;
@@ -21,7 +24,7 @@ export interface RequestsRepository {
 
   uploadRequestImages(
     numSolicitud: number,
-    uris: string[],
+    imagenes: ImageInput[],
     tipoEvidencia: TipoEvidencia
   ): Promise<Evidence[]>;
 
@@ -29,6 +32,11 @@ export interface RequestsRepository {
     numSolicitud: number,
     tipoEvidencia?: TipoEvidencia
   ): Promise<Evidence[]>;
+
+  saveRequestMaterials(
+    numSolicitud: number,
+    materiales: DetalleMaterial[]
+  ): Promise<boolean>;
 
   assignInternalTechnician(
     numSolicitud: number,

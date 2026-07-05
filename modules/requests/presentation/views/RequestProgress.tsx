@@ -173,6 +173,11 @@ export default function RequestsInProgress() {
             </Text>
 
             <Text style={styles.text}>
+              <Text style={styles.label}>Solicitante:</Text>{" "}
+              {item.nombreSolicitante ?? "Sin nombre"}
+            </Text>
+
+            <Text style={styles.text}>
               <Text style={styles.label}>Prioridad:</Text>{" "}
               {item.prioridad ?? "Sin prioridad"}
             </Text>

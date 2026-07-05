@@ -1,6 +1,5 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -11,77 +10,74 @@ import {
   TouchableOpacity,
   View
 } from "react-native";
+
 import { CancelRequestUseCase } from "../../application/cancelRequest";
 import { GetAllRequests } from "../../application/getRequestRecived";
-import { UpdateRequestStatus } from "../../application/statusRequest";
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
 
 const repository = new SupabaseRequestsRepository();
 const getRequests = new GetAllRequests(repository);
-const updateRequest = new UpdateRequestStatus(repository);
 const cancelRequest = new CancelRequestUseCase(repository);
 
 export default function RequestsReceived() {
-
   const [requests, setRequests] = useState<RequestsForm[]>([]);
-  const router = useRouter();
-
   const [modalRechazoVisible, setModalRechazoVisible] = useState(false);
   const [motivoCancelacion, setMotivoCancelacion] = useState("");
-  const [solicitudSeleccionada, setSolicitudSeleccionada] = useState<RequestsForm | null>(null);
+  const [solicitudSeleccionada, setSolicitudSeleccionada] =
+    useState<RequestsForm | null>(null);
 
-  const abrirModalRechazo = (request: RequestsForm) => {
-  setSolicitudSeleccionada(request);
-  setMotivoCancelacion("");
-  setModalRechazoVisible(true);
-};
+  const router = useRouter();
 
-const cerrarModalRechazo = () => {
-  setModalRechazoVisible(false);
-  setSolicitudSeleccionada(null);
-  setMotivoCancelacion("");
-};
-
-const confirmarRechazo = async () => {
-  try {
-    if (!solicitudSeleccionada) {
-      Alert.alert("Error", "No se encontró la solicitud seleccionada");
-      return;
-    }
-
-    await cancelRequest.execute(
-      solicitudSeleccionada.numSolicitud,
-      motivoCancelacion
-    );
-
-    Alert.alert("Solicitud rechazada correctamente");
-
-    cerrarModalRechazo();
-
-    await loadRequests();
-
-  } catch (error: any) {
-    Alert.alert(
-      "Error",
-      error.message || "No se pudo rechazar la solicitud"
-    );
-  }
-};
-
-  useEffect(() => {
-    loadRequests();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadRequests();
+    }, [])
+  );
 
   const loadRequests = async () => {
     try {
-      await AsyncStorage.getItem("user");
-
       const data = await getRequests.execute();
       setRequests(data ?? []);
-
     } catch (error) {
       console.log("ERROR loading requests:", error);
+    }
+  };
+
+  const abrirModalRechazo = (request: RequestsForm) => {
+    setSolicitudSeleccionada(request);
+    setMotivoCancelacion("");
+    setModalRechazoVisible(true);
+  };
+
+  const cerrarModalRechazo = () => {
+    setModalRechazoVisible(false);
+    setSolicitudSeleccionada(null);
+    setMotivoCancelacion("");
+  };
+
+  const confirmarRechazo = async () => {
+    try {
+      if (!solicitudSeleccionada) {
+        Alert.alert("Error", "No se encontró la solicitud seleccionada");
+        return;
+      }
+
+      await cancelRequest.execute(
+        solicitudSeleccionada.numSolicitud,
+        motivoCancelacion
+      );
+
+      Alert.alert("Solicitud rechazada correctamente");
+
+      cerrarModalRechazo();
+      await loadRequests();
+
+    } catch (error: any) {
+      Alert.alert(
+        "Error",
+        error.message || "No se pudo rechazar la solicitud"
+      );
     }
   };
 
@@ -94,22 +90,6 @@ const confirmarRechazo = async () => {
     });
   };
 
-
-  const rechazar = async (request: RequestsForm) => {
-    try {
-      await updateRequest.execute(request.numSolicitud, {
-        numStatus: 5,
-        motivoCancelacion: "Solicitud rechazada"
-      });
-
-      Alert.alert("Solicitud rechazada");
-      loadRequests();
-
-    } catch (error) {
-      console.log("ERROR rejecting request:", error);
-    }
-  };
-
   const viewRequest = (request: RequestsForm) => {
     router.push({
       pathname: "/viewRequestForm",
@@ -118,7 +98,6 @@ const confirmarRechazo = async () => {
       },
     });
   };
-
 
   const getTipo = (tipo: number) => {
     switch (tipo) {
@@ -145,6 +124,7 @@ const confirmarRechazo = async () => {
   const canTakeAction = (status: number) => {
     return status === 1;
   };
+
   const getStatusName = (estado: number) => {
     switch (estado) {
       case 1:
@@ -162,31 +142,52 @@ const confirmarRechazo = async () => {
     }
   };
 
+  const getTecnicoAsignado = (item: RequestsForm) => {
+    if (item.tecnicoAsignado) {
+      return item.tecnicoAsignado;
+    }
+
+    if (item.tecnicos && item.tecnicos.length > 0) {
+      return item.tecnicos.map((tecnico) => tecnico.nombre).join(", ");
+    }
+
+    return "No asignado";
+  };
+
   return (
     <View style={styles.container}>
       <FlatList
         data={requests}
         keyExtractor={(item) => item.numSolicitud.toString()}
-
         renderItem={({ item }) => (
           <TouchableOpacity
             onPress={() => viewRequest(item)}
             style={styles.card}
           >
-
             <Text style={styles.title}>
               {getTipo(item.numTipo)}
             </Text>
-
 
             <Text style={styles.text}>
               <Text style={styles.label}>Fecha:</Text> {item.fecha}
             </Text>
 
             <Text style={styles.text}>
+              <Text style={styles.label}>Solicitante:</Text>{" "}
+              {item.nombreSolicitante ?? "Sin nombre"}
+            </Text>
+
+            <Text style={styles.text}>
               <Text style={styles.label}>Descripción:</Text>{" "}
               {item.descripcion}
             </Text>
+
+            {item.numStatus >= 2 && (
+              <Text style={styles.text}>
+                <Text style={styles.label}>Técnico asignado:</Text>{" "}
+                {getTecnicoAsignado(item)}
+              </Text>
+            )}
 
             <View style={styles.rowBetween}>
               <View
@@ -207,9 +208,9 @@ const confirmarRechazo = async () => {
                 </Text>
               </View>
             </View>
+
             {canTakeAction(item.numStatus) && (
               <View style={styles.buttonsContainer}>
-
                 <TouchableOpacity
                   onPress={() => aceptar(item)}
                   style={[styles.button, styles.accept]}
@@ -223,19 +224,15 @@ const confirmarRechazo = async () => {
                 >
                   <Text style={styles.buttonText}>Rechazar</Text>
                 </TouchableOpacity>
-
               </View>
             )}
-
           </TouchableOpacity>
         )}
-
         ListEmptyComponent={
           <Text style={styles.emptyText}>
             No hay solicitudes
           </Text>
         }
-
         contentContainerStyle={{
           paddingBottom: 10,
           flexGrow: 1,
@@ -243,51 +240,51 @@ const confirmarRechazo = async () => {
       />
 
       <Modal
-  visible={modalRechazoVisible}
-  transparent
-  animationType="fade"
-  onRequestClose={cerrarModalRechazo}
->
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContent}>
-      <Text style={styles.modalTitle}>
-        Rechazar solicitud
-      </Text>
+        visible={modalRechazoVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={cerrarModalRechazo}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              Rechazar solicitud
+            </Text>
 
-      <Text style={styles.modalText}>
-        Escribe el motivo por el cual se va a rechazar esta solicitud.
-      </Text>
+            <Text style={styles.modalText}>
+              Escribe el motivo por el cual se va a rechazar esta solicitud.
+            </Text>
 
-      <TextInput
-        style={styles.modalTextArea}
-        placeholder="Motivo de cancelación"
-        multiline
-        value={motivoCancelacion}
-        onChangeText={setMotivoCancelacion}
-      />
+            <TextInput
+              style={styles.modalTextArea}
+              placeholder="Motivo de cancelación"
+              multiline
+              value={motivoCancelacion}
+              onChangeText={setMotivoCancelacion}
+            />
 
-      <View style={styles.modalButtons}>
-        <TouchableOpacity
-          style={styles.modalCancelButton}
-          onPress={cerrarModalRechazo}
-        >
-          <Text style={styles.modalButtonText}>
-            Cerrar
-          </Text>
-        </TouchableOpacity>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={cerrarModalRechazo}
+              >
+                <Text style={styles.modalButtonText}>
+                  Cerrar
+                </Text>
+              </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.modalRejectButton}
-          onPress={confirmarRechazo}
-        >
-          <Text style={styles.modalButtonText}>
-            Rechazar
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </View>
-</Modal>
+              <TouchableOpacity
+                style={styles.modalRejectButton}
+                onPress={confirmarRechazo}
+              >
+                <Text style={styles.modalButtonText}>
+                  Rechazar
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
     </View>
   );
@@ -299,6 +296,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
     padding: 10,
   },
+
   card: {
     backgroundColor: "#fff",
     padding: 16,
@@ -317,21 +315,18 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  call: {
-    backgroundColor: "#BFDBFE",
-    marginTop: 10,
-  },
-
   buttonsContainer: {
     flexDirection: "row",
     marginTop: 12,
   },
+
   title: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
     color: "#111827",
   },
+
   button: {
     padding: 12,
     borderRadius: 8,
@@ -352,21 +347,25 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
+
   statusText: {
     fontWeight: "bold",
     fontSize: 13,
   },
+
   emptyText: {
     textAlign: "center",
     marginTop: 20,
     fontSize: 16,
     color: "#6B7280",
   },
+
   rowBetween: {
     flexDirection: "row",
     justifyContent: "flex-start",
     marginTop: 10,
   },
+
   statusBadge: {
     paddingVertical: 8,
     paddingHorizontal: 14,
@@ -375,72 +374,72 @@ const styles = StyleSheet.create({
   },
 
   modalOverlay: {
-  flex: 1,
-  backgroundColor: "rgba(0,0,0,0.45)",
-  justifyContent: "center",
-  alignItems: "center",
-  padding: 20,
-},
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
 
-modalContent: {
-  width: "100%",
-  backgroundColor: "#fff",
-  borderRadius: 16,
-  padding: 20,
-  elevation: 8,
-},
+  modalContent: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    elevation: 8,
+  },
 
-modalTitle: {
-  fontSize: 20,
-  fontWeight: "bold",
-  color: "#111827",
-  marginBottom: 10,
-  textAlign: "center",
-},
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#111827",
+    marginBottom: 10,
+    textAlign: "center",
+  },
 
-modalText: {
-  fontSize: 14,
-  color: "#4B5563",
-  marginBottom: 12,
-  textAlign: "center",
-},
+  modalText: {
+    fontSize: 14,
+    color: "#4B5563",
+    marginBottom: 12,
+    textAlign: "center",
+  },
 
-modalTextArea: {
-  borderWidth: 1,
-  borderColor: "#D1D5DB",
-  backgroundColor: "#F9FAFB",
-  borderRadius: 10,
-  padding: 12,
-  height: 120,
-  textAlignVertical: "top",
-  color: "#111827",
-  marginBottom: 15,
-},
+  modalTextArea: {
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 10,
+    padding: 12,
+    height: 120,
+    textAlignVertical: "top",
+    color: "#111827",
+    marginBottom: 15,
+  },
 
-modalButtons: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  gap: 10,
-},
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+  },
 
-modalCancelButton: {
-  flex: 1,
-  backgroundColor: "#232323",
-  padding: 13,
-  borderRadius: 10,
-  alignItems: "center",
-},
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: "#232323",
+    padding: 13,
+    borderRadius: 10,
+    alignItems: "center",
+  },
 
-modalRejectButton: {
-  flex: 1,
-  backgroundColor: "#991B1B",
-  padding: 13,
-  borderRadius: 10,
-  alignItems: "center",
-},
+  modalRejectButton: {
+    flex: 1,
+    backgroundColor: "#991B1B",
+    padding: 13,
+    borderRadius: 10,
+    alignItems: "center",
+  },
 
-modalButtonText: {
-  color: "#fff",
-  fontWeight: "bold",
-},
+  modalButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
 });
