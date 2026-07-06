@@ -48,6 +48,11 @@ const parseRequestParam = (value: string | string[] | undefined) => {
   }
 };
 
+const getIdFromPickerValue = (value: string) => {
+  const id = value.split("-")[1];
+  return Number(id);
+};
+
 export default function FormAdmin() {
   const router = useRouter();
   const { request } = useLocalSearchParams();
@@ -58,7 +63,8 @@ export default function FormAdmin() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [tipoTecnico, setTipoTecnico] = useState<TipoTecnico>("interno");
-  const [personaAsignada, setPersonaAsignada] = useState("");
+  const [tecnicoInternoAsignado, setTecnicoInternoAsignado] = useState("");
+  const [tecnicoExternoAsignado, setTecnicoExternoAsignado] = useState("");
   const [fechaAsignada] = useState(new Date().toLocaleDateString("en-CA"));
   const [fechaInicio, setFechaInicio] = useState(new Date());
   const [fechaFin, setFechaFin] = useState(new Date());
@@ -77,7 +83,8 @@ export default function FormAdmin() {
   }, []);
 
   useEffect(() => {
-    setPersonaAsignada("");
+    setTecnicoInternoAsignado("");
+    setTecnicoExternoAsignado("");
   }, [tipoTecnico]);
 
   const cargarTecnicos = async () => {
@@ -114,16 +121,6 @@ export default function FormAdmin() {
       );
     }
   };
-
-  const tecnicosDisponibles = useMemo(() => {
-    if (tipoTecnico === "interno") return tecnicosInternos;
-    if (tipoTecnico === "externo") return tecnicosExternos;
-
-    return [
-      ...tecnicosInternos,
-      ...tecnicosExternos,
-    ];
-  }, [tipoTecnico, tecnicosInternos, tecnicosExternos]);
 
   const getTipo = (tipo: number) =>
     tipo === 1 ? "Servicio" : tipo === 2 ? "Mantenimiento" : "Desconocido";
@@ -168,14 +165,13 @@ export default function FormAdmin() {
       }
 
       validateAdminAssignment({
-        personaAsignada,
+        tipoTecnico,
+        tecnicoInternoAsignado,
+        tecnicoExternoAsignado,
         fechaInicio,
         fechaFin,
         prioridad,
       });
-
-      const [tipo, id] = personaAsignada.split("-");
-      const tecnicoId = Number(id);
 
       await repository.updateRequest(solicitud.numSolicitud, {
         fechaAsignacion: fechaAsignada,
@@ -185,17 +181,17 @@ export default function FormAdmin() {
         numStatus: 2,
       });
 
-      if (tipo === "interno") {
+      if (tipoTecnico === "interno" || tipoTecnico === "ambos") {
         await repository.assignInternalTechnician(
           solicitud.numSolicitud,
-          tecnicoId
+          getIdFromPickerValue(tecnicoInternoAsignado)
         );
       }
 
-      if (tipo === "externo") {
+      if (tipoTecnico === "externo" || tipoTecnico === "ambos") {
         await repository.assignExternalTechnician(
           solicitud.numSolicitud,
-          tecnicoId
+          getIdFromPickerValue(tecnicoExternoAsignado)
         );
       }
 
@@ -286,43 +282,75 @@ export default function FormAdmin() {
           <Text style={styles.label}>Tipo técnico</Text>
 
           <View style={styles.row}>
-            {["externo", "interno", "ambos"].map((t) => (
+            {(["externo", "interno", "ambos"] as TipoTecnico[]).map((t) => (
               <TouchableOpacity
                 key={t}
                 style={[
                   styles.option,
                   tipoTecnico === t && styles.optionSelected,
                 ]}
-                onPress={() => setTipoTecnico(t as TipoTecnico)}
+                onPress={() => setTipoTecnico(t)}
               >
                 <Text>{t}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={styles.label}>Persona asignada</Text>
+          {(tipoTecnico === "interno" || tipoTecnico === "ambos") && (
+            <>
+              <Text style={styles.label}>Técnico interno</Text>
 
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={personaAsignada}
-              onValueChange={(itemValue) => setPersonaAsignada(itemValue)}
-            >
-              <Picker.Item
-                label="Seleccionar técnico..."
-                value=""
-                enabled={false}
-                color="#999"
-              />
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={tecnicoInternoAsignado}
+                  onValueChange={(itemValue) => setTecnicoInternoAsignado(itemValue)}
+                >
+                  <Picker.Item
+                    label="Seleccionar técnico interno..."
+                    value=""
+                    enabled={false}
+                    color="#999"
+                  />
 
-              {tecnicosDisponibles.map((tecnico) => (
-                <Picker.Item
-                  key={tecnico.value}
-                  label={tecnico.label}
-                  value={tecnico.value}
-                />
-              ))}
-            </Picker>
-          </View>
+                  {tecnicosInternos.map((tecnico) => (
+                    <Picker.Item
+                      key={tecnico.value}
+                      label={tecnico.label}
+                      value={tecnico.value}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            </>
+          )}
+
+          {(tipoTecnico === "externo" || tipoTecnico === "ambos") && (
+            <>
+              <Text style={styles.label}>Técnico externo</Text>
+
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={tecnicoExternoAsignado}
+                  onValueChange={(itemValue) => setTecnicoExternoAsignado(itemValue)}
+                >
+                  <Picker.Item
+                    label="Seleccionar técnico externo..."
+                    value=""
+                    enabled={false}
+                    color="#999"
+                  />
+
+                  {tecnicosExternos.map((tecnico) => (
+                    <Picker.Item
+                      key={tecnico.value}
+                      label={tecnico.label}
+                      value={tecnico.value}
+                    />
+                  ))}
+                </Picker>
+              </View>
+            </>
+          )}
 
           <Text style={styles.label}>Fecha inicio</Text>
 
@@ -367,7 +395,7 @@ export default function FormAdmin() {
           <Text style={styles.label}>Prioridad</Text>
 
           <View style={styles.row}>
-            {["baja", "media", "alta"].map((p) => {
+            {(["baja", "media", "alta"] as Prioridad[]).map((p) => {
               const selected = prioridad === p;
 
               return (
@@ -379,7 +407,7 @@ export default function FormAdmin() {
                     selected && p === "media" && styles.optionSelectedM,
                     selected && p === "alta" && styles.optionSelectedA,
                   ]}
-                  onPress={() => setPrioridad(p as Prioridad)}
+                  onPress={() => setPrioridad(p)}
                 >
                   <Text style={selected && styles.prioritySelectedText}>
                     {p}
@@ -484,16 +512,20 @@ const styles = StyleSheet.create({
   optionSelectedB: {
     backgroundColor: "#FECACA",
   },
+
   optionSelectedM: {
     backgroundColor: "#FEF3C7",
   },
+
   optionSelectedA: {
     backgroundColor: "#b8e6b4",
   },
+
   prioritySelectedText: {
     fontWeight: "bold",
     color: "#111827",
   },
+
   editBtn: {
     marginTop: 10,
     backgroundColor: "#232323",
@@ -566,6 +598,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
+
   cancelButton: {
     backgroundColor: "#870c0c",
     padding: 15,
@@ -573,6 +606,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 20,
   },
+
   buttonText: {
     color: "#FFF",
     fontWeight: "bold",

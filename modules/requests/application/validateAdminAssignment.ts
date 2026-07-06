@@ -1,13 +1,42 @@
 import { Prioridad } from "../domain/request";
 
+type TipoTecnico = "externo" | "interno" | "ambos";
+
 export const validateAdminAssignment = (data: {
-  personaAsignada: string;
+  tipoTecnico?: TipoTecnico;
+  personaAsignada?: string;
+  tecnicoInternoAsignado?: string;
+  tecnicoExternoAsignado?: string;
   fechaInicio: Date;
   fechaFin: Date;
   prioridad: Prioridad;
 }) => {
-  if (!data.personaAsignada || !data.personaAsignada.trim()) {
-    throw new Error("Selecciona una persona asignada");
+  const tipoTecnico = data.tipoTecnico ?? "interno";
+
+  if (tipoTecnico === "interno") {
+    const tecnicoInterno = data.tecnicoInternoAsignado ?? data.personaAsignada ?? "";
+
+    if (!tecnicoInterno.trim()) {
+      throw new Error("Selecciona un técnico interno");
+    }
+  }
+
+  if (tipoTecnico === "externo") {
+    const tecnicoExterno = data.tecnicoExternoAsignado ?? data.personaAsignada ?? "";
+
+    if (!tecnicoExterno.trim()) {
+      throw new Error("Selecciona un técnico externo");
+    }
+  }
+
+  if (tipoTecnico === "ambos") {
+    if (!data.tecnicoInternoAsignado?.trim()) {
+      throw new Error("Selecciona un técnico interno");
+    }
+
+    if (!data.tecnicoExternoAsignado?.trim()) {
+      throw new Error("Selecciona un técnico externo");
+    }
   }
 
   if (!(data.fechaInicio instanceof Date) || isNaN(data.fechaInicio.getTime())) {
