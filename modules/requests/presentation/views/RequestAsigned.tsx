@@ -135,7 +135,7 @@ export default function RequestsAssigned() {
   const formatDate = (date?: string | null) => {
     if (!date) return "Sin fecha";
 
-    const cleanDate = String(date).split("T")[0];
+    const cleanDate = String(date).split(/[T ]/)[0];
     const parts = cleanDate.split("-");
 
     if (parts.length === 3) {
@@ -144,6 +144,38 @@ export default function RequestsAssigned() {
     }
 
     return String(date);
+  };
+
+  const normalizarFechaFiltro = (date?: string | null) => {
+    if (!date) return "";
+
+    return String(date).split(/[T ]/)[0];
+  };
+
+  const fechaEstaEnRango = (
+    fechaItem: string | null | undefined,
+    fechaInicio: string,
+    fechaFin: string
+  ) => {
+    if (!fechaInicio && !fechaFin) {
+      return true;
+    }
+
+    const fecha = normalizarFechaFiltro(fechaItem);
+
+    if (!fecha) {
+      return false;
+    }
+
+    if (fechaInicio && fecha < fechaInicio) {
+      return false;
+    }
+
+    if (fechaFin && fecha > fechaFin) {
+      return false;
+    }
+
+    return true;
   };
 
   const filteredRequests = requests.filter((item) => {
@@ -164,16 +196,27 @@ export default function RequestsAssigned() {
       String(getValue(item, "prioridad") ?? "")
     );
 
-    const fechaOriginal = String(
+    const fechaSolicitud = String(
       getValue(
         item,
         "fecha",
         "fechaSolicitud",
-        "fechasolicitud"
+        "fechasolicitud",
+        "fecha_solicitud"
       ) ?? ""
     );
 
-    const fechaFormateada = formatDate(fechaOriginal);
+    const fechaCompletada = String(
+      getValue(
+        item,
+        "fechafinreal",
+        "fechaFinReal",
+        "fecha_fin_real",
+        "fechaCompletada",
+        "fechacompletada",
+        "fecha_completada"
+      ) ?? ""
+    );
 
     const matchesTipo =
       filters.tipo === "" || tipo.includes(filters.tipo);
@@ -186,16 +229,24 @@ export default function RequestsAssigned() {
       filters.prioridad === "" ||
       prioridad.includes(filters.prioridad);
 
-    const matchesFecha =
-      filters.fecha === "" ||
-      fechaOriginal.includes(filters.fecha) ||
-      fechaFormateada.includes(filters.fecha);
+    const matchesFechaSolicitud = fechaEstaEnRango(
+      fechaSolicitud,
+      filters.fechaInicio,
+      filters.fechaFin
+    );
+
+    const matchesFechaCompletada = fechaEstaEnRango(
+      fechaCompletada,
+      filters.fechaCompletadaInicio,
+      filters.fechaCompletadaFin
+    );
 
     return (
       matchesTipo &&
       matchesTipoMantenimiento &&
       matchesPrioridad &&
-      matchesFecha
+      matchesFechaSolicitud &&
+      matchesFechaCompletada
     );
   });
 
@@ -426,17 +477,32 @@ export default function RequestsAssigned() {
               activeOpacity={0.85}
             >
               <Text style={styles.title}>
-                {renderTipo(item.numTipo ?? item.numtipo)}
+                {renderTipo(
+                  getValue(item, "numTipo", "numtipo", "num_tipo")
+                )}
               </Text>
 
               <Text style={styles.text}>
                 <Text style={styles.label}>Fecha:</Text>{" "}
-                {formatDate(item.fecha)}
+                {formatDate(
+                  getValue(
+                    item,
+                    "fecha",
+                    "fechaSolicitud",
+                    "fechasolicitud",
+                    "fecha_solicitud"
+                  )
+                )}
               </Text>
 
               <Text style={styles.text}>
                 <Text style={styles.label}>Solicitante:</Text>{" "}
-                {item.nombreSolicitante ?? "Sin nombre"}
+                {getValue(
+                  item,
+                  "nombreSolicitante",
+                  "nombresolicitante",
+                  "nombre_solicitante"
+                ) ?? "Sin nombre"}
               </Text>
 
               <Text style={styles.text}>

@@ -1,32 +1,48 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import DateTimePicker, {
-    DateTimePickerEvent,
+  DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { Dispatch, SetStateAction, useState } from "react";
 import {
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export type RequestFilters = {
   tipo: string;
   tipoMantenimiento: string;
   prioridad: string;
-  fecha: string;
+
+  fechaInicio: string;
+  fechaFin: string;
+
+  fechaCompletadaInicio: string;
+  fechaCompletadaFin: string;
 };
 
 export const EMPTY_REQUEST_FILTERS: RequestFilters = {
   tipo: "",
   tipoMantenimiento: "",
   prioridad: "",
-  fecha: "",
+
+  fechaInicio: "",
+  fechaFin: "",
+
+  fechaCompletadaInicio: "",
+  fechaCompletadaFin: "",
 };
+
+type DateFilterKey =
+  | "fechaInicio"
+  | "fechaFin"
+  | "fechaCompletadaInicio"
+  | "fechaCompletadaFin";
 
 type Props = {
   visible: boolean;
@@ -41,7 +57,8 @@ export default function RequestFilterModal({
   setFilters,
   onClose,
 }: Props) {
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [activeDateFilter, setActiveDateFilter] =
+    useState<DateFilterKey | null>(null);
 
   const updateFilter = (key: keyof RequestFilters, value: string) => {
     setFilters((prev) => ({
@@ -52,23 +69,21 @@ export default function RequestFilterModal({
 
   const clearFilters = () => {
     setFilters(EMPTY_REQUEST_FILTERS);
-  };
-
-  const clearDate = () => {
-    updateFilter("fecha", "");
-    setShowDatePicker(false);
+    setActiveDateFilter(null);
   };
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("en-CA");
   };
 
-  const getDateValue = () => {
-    if (!filters.fecha) {
+  const getDateValue = (key: DateFilterKey) => {
+    const value = filters[key];
+
+    if (!value) {
       return new Date();
     }
 
-    return new Date(`${filters.fecha}T00:00:00`);
+    return new Date(`${value}T00:00:00`);
   };
 
   const onChangeDate = (
@@ -76,16 +91,28 @@ export default function RequestFilterModal({
     selectedDate?: Date
   ) => {
     if (Platform.OS === "android") {
-      setShowDatePicker(false);
+      setActiveDateFilter(null);
     }
 
     if (event.type === "dismissed") {
       return;
     }
 
-    if (selectedDate) {
-      updateFilter("fecha", formatDate(selectedDate));
+    if (selectedDate && activeDateFilter) {
+      updateFilter(activeDateFilter, formatDate(selectedDate));
     }
+  };
+
+  const clearSolicitudDates = () => {
+    updateFilter("fechaInicio", "");
+    updateFilter("fechaFin", "");
+    setActiveDateFilter(null);
+  };
+
+  const clearCompletadaDates = () => {
+    updateFilter("fechaCompletadaInicio", "");
+    updateFilter("fechaCompletadaFin", "");
+    setActiveDateFilter(null);
   };
 
   const renderFilterOption = (
@@ -113,6 +140,43 @@ export default function RequestFilterModal({
           {label}
         </Text>
       </TouchableOpacity>
+    );
+  };
+
+  const renderDateInput = (
+    label: string,
+    value: string,
+    placeholder: string,
+    keyName: DateFilterKey
+  ) => {
+    return (
+      <View style={styles.dateColumn}>
+        <Text style={styles.dateSmallLabel}>
+          {label}
+        </Text>
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => setActiveDateFilter(keyName)}
+        >
+          <View pointerEvents="none">
+            <TextInput
+              style={styles.dateInput}
+              editable={false}
+              value={value}
+              placeholder={placeholder}
+              placeholderTextColor="#9CA3AF"
+            />
+          </View>
+
+          <MaterialCommunityIcons
+            name="calendar-month"
+            size={22}
+            color="#148248"
+            style={styles.calendarIcon}
+          />
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -239,43 +303,28 @@ export default function RequestFilterModal({
             </View>
 
             <Text style={styles.filterLabel}>
-              Fecha
+              Fecha de solicitud
             </Text>
 
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <View pointerEvents="none">
-                <TextInput
-                  style={styles.dateInput}
-                  editable={false}
-                  value={filters.fecha}
-                  placeholder="Selecciona una fecha"
-                  placeholderTextColor="#9CA3AF"
-                />
-              </View>
+            <View style={styles.dateRow}>
+              {renderDateInput(
+                "Desde",
+                filters.fechaInicio,
+                "Fecha inicial",
+                "fechaInicio"
+              )}
 
-              <MaterialCommunityIcons
-                name="calendar-month"
-                size={24}
-                color="#148248"
-                style={styles.calendarIcon}
-              />
-            </TouchableOpacity>
-
-            {showDatePicker && (
-              <DateTimePicker
-                value={getDateValue()}
-                mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={onChangeDate}
-              />
-            )}
+              {renderDateInput(
+                "Hasta",
+                filters.fechaFin,
+                "Fecha final",
+                "fechaFin"
+              )}
+            </View>
 
             <TouchableOpacity
               style={styles.clearDateButton}
-              onPress={clearDate}
+              onPress={clearSolicitudDates}
             >
               <MaterialCommunityIcons
                 name="calendar-remove"
@@ -284,14 +333,58 @@ export default function RequestFilterModal({
               />
 
               <Text style={styles.clearDateButtonText}>
-                Quitar fecha
+                Quitar fechas de solicitud
               </Text>
             </TouchableOpacity>
 
-            {Platform.OS === "ios" && showDatePicker && (
+            <Text style={styles.filterLabel}>
+              Fecha de solicitud completada
+            </Text>
+
+            <View style={styles.dateRow}>
+              {renderDateInput(
+                "Desde",
+                filters.fechaCompletadaInicio,
+                "Fecha inicial",
+                "fechaCompletadaInicio"
+              )}
+
+              {renderDateInput(
+                "Hasta",
+                filters.fechaCompletadaFin,
+                "Fecha final",
+                "fechaCompletadaFin"
+              )}
+            </View>
+
+            <TouchableOpacity
+              style={styles.clearDateButton}
+              onPress={clearCompletadaDates}
+            >
+              <MaterialCommunityIcons
+                name="calendar-remove"
+                size={20}
+                color="#374151"
+              />
+
+              <Text style={styles.clearDateButtonText}>
+                Quitar fechas completadas
+              </Text>
+            </TouchableOpacity>
+
+            {activeDateFilter && (
+              <DateTimePicker
+                value={getDateValue(activeDateFilter)}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={onChangeDate}
+              />
+            )}
+
+            {Platform.OS === "ios" && activeDateFilter && (
               <TouchableOpacity
                 style={styles.closeDateButton}
-                onPress={() => setShowDatePicker(false)}
+                onPress={() => setActiveDateFilter(null)}
               >
                 <Text style={styles.closeDateButtonText}>
                   Listo
@@ -398,6 +491,22 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
 
+  dateRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+
+  dateColumn: {
+    flex: 1,
+  },
+
+  dateSmallLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#6B7280",
+    marginBottom: 5,
+  },
+
   dateInput: {
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
@@ -405,14 +514,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 12,
     paddingLeft: 12,
-    paddingRight: 45,
+    paddingRight: 38,
     color: "#111827",
     marginBottom: 10,
   },
 
   calendarIcon: {
     position: "absolute",
-    right: 12,
+    right: 10,
     top: 11,
   },
 

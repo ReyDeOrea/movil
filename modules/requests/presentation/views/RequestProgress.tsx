@@ -14,7 +14,10 @@ import { usePaginatedCards } from "@/hooks/usePaginatedCards";
 import { GetRequestsInProgress } from "../../application/getRequestProgress";
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
-import RequestFilterModal, { EMPTY_REQUEST_FILTERS, RequestFilters } from "../components/ModalFilters";
+import RequestFilterModal, {
+  EMPTY_REQUEST_FILTERS,
+  RequestFilters,
+} from "../components/ModalFilters";
 
 const repository = new SupabaseRequestsRepository();
 const getRequests = new GetRequestsInProgress(repository);
@@ -48,14 +51,14 @@ export default function RequestsInProgress() {
 
       const numUsuario = Number(
         user.numUsuario ??
-        user.numusuario ??
-        user.num_usuario
+          user.numusuario ??
+          user.num_usuario
       );
 
       const numRol = Number(
         user.numRol ??
-        user.numrol ??
-        user.num_rol
+          user.numrol ??
+          user.num_rol
       );
 
       setUserRole(numRol);
@@ -75,8 +78,8 @@ export default function RequestsInProgress() {
       const solicitudesEnProceso = (data ?? []).filter((item) => {
         const status = Number(
           item.numStatus ??
-          (item as any).numstatus ??
-          (item as any).num_status
+            (item as any).numstatus ??
+            (item as any).num_status
         );
 
         return status === 3;
@@ -112,9 +115,9 @@ export default function RequestsInProgress() {
   ) => {
     switch (Number(tipoMantenimiento)) {
       case 1:
-        return "correctivo";
-      case 2:
         return "preventivo";
+      case 2:
+        return "correctivo";
       case 3:
         return "reactivo";
       default:
@@ -122,28 +125,71 @@ export default function RequestsInProgress() {
     }
   };
 
+  const normalizarFechaFiltro = (date?: string | null) => {
+    if (!date) return "";
+
+    return String(date).split(/[T ]/)[0];
+  };
+
+  const fechaEstaEnRango = (
+    fechaItem: string | null | undefined,
+    fechaInicio: string,
+    fechaFin: string
+  ) => {
+    if (!fechaInicio && !fechaFin) {
+      return true;
+    }
+
+    const fecha = normalizarFechaFiltro(fechaItem);
+
+    if (!fecha) {
+      return false;
+    }
+
+    if (fechaInicio && fecha < fechaInicio) {
+      return false;
+    }
+
+    if (fechaFin && fecha > fechaFin) {
+      return false;
+    }
+
+    return true;
+  };
+
   const filteredRequests = requests.filter((request: any) => {
     const tipo = getTipoText(
       request.numTipo ??
-      request.numtipo ??
-      request.num_tipo
+        request.numtipo ??
+        request.num_tipo
     );
 
     const tipoMantenimiento = getTipoMantenimientoText(
       request.numTipoMantenimiento ??
-      request.numtipomantenimiento ??
-      request.num_tipo_mantenimiento
+        request.numtipomantenimiento ??
+        request.num_tipo_mantenimiento
     );
 
     const prioridad = normalizeText(
       String(request.prioridad ?? "")
     );
 
-    const fecha = String(
+    const fechaSolicitud = String(
       request.fecha ??
-      request.fechaSolicitud ??
-      request.fechasolicitud ??
-      ""
+        request.fechaSolicitud ??
+        request.fechasolicitud ??
+        request.fecha_solicitud ??
+        ""
+    );
+
+    const fechaCompletada = String(
+      request.fechafinreal ??
+        request.fechaFinReal ??
+        request.fecha_fin_real ??
+        request.fechaCompletada ??
+        request.fechacompletada ??
+        request.fecha_completada ??
+        ""
     );
 
     const matchesTipo =
@@ -157,15 +203,24 @@ export default function RequestsInProgress() {
       filters.prioridad === "" ||
       prioridad.includes(filters.prioridad);
 
-    const matchesFecha =
-      filters.fecha === "" ||
-      fecha.includes(filters.fecha);
+    const matchesFechaSolicitud = fechaEstaEnRango(
+      fechaSolicitud,
+      filters.fechaInicio,
+      filters.fechaFin
+    );
+
+    const matchesFechaCompletada = fechaEstaEnRango(
+      fechaCompletada,
+      filters.fechaCompletadaInicio,
+      filters.fechaCompletadaFin
+    );
 
     return (
       matchesTipo &&
       matchesTipoMantenimiento &&
       matchesPrioridad &&
-      matchesFecha
+      matchesFechaSolicitud &&
+      matchesFechaCompletada
     );
   });
 
@@ -255,7 +310,6 @@ export default function RequestsInProgress() {
   return (
     <View style={styles.container}>
       <View style={styles.headerFilters}>
-
         <TouchableOpacity
           style={styles.filterButton}
           onPress={() => setFilterModalOpen(true)}

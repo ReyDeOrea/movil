@@ -15,8 +15,10 @@ import { usePaginatedCards } from "@/hooks/usePaginatedCards";
 import { GetRequestsBySolicitante } from "../../application/getRequestSent";
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
-import RequestFilterModal, { EMPTY_REQUEST_FILTERS, RequestFilters } from "../components/ModalFilters";
-
+import RequestFilterModal, {
+  EMPTY_REQUEST_FILTERS,
+  RequestFilters,
+} from "../components/ModalFilters";
 
 const repository = new SupabaseRequestsRepository();
 const getRequests = new GetRequestsBySolicitante(repository);
@@ -76,9 +78,9 @@ export default function RequestsSent() {
   ) => {
     switch (Number(tipoMantenimiento)) {
       case 1:
-        return "correctivo";
-      case 2:
         return "preventivo";
+      case 2:
+        return "correctivo";
       case 3:
         return "reactivo";
       default:
@@ -100,33 +102,74 @@ export default function RequestsSent() {
     return String(date);
   };
 
+  const normalizarFechaFiltro = (date?: string | null) => {
+    if (!date) return "";
+
+    return String(date).split(/[T ]/)[0];
+  };
+
+  const fechaEstaEnRango = (
+    fechaItem: string | null | undefined,
+    fechaInicio: string,
+    fechaFin: string
+  ) => {
+    if (!fechaInicio && !fechaFin) {
+      return true;
+    }
+
+    const fecha = normalizarFechaFiltro(fechaItem);
+
+    if (!fecha) {
+      return false;
+    }
+
+    if (fechaInicio && fecha < fechaInicio) {
+      return false;
+    }
+
+    if (fechaFin && fecha > fechaFin) {
+      return false;
+    }
+
+    return true;
+  };
+
   const filteredRequests = requests.filter((request) => {
     const item = request as any;
 
     const tipo = getTipoText(
       item.numTipo ??
-      item.numtipo ??
-      item.num_tipo
+        item.numtipo ??
+        item.num_tipo
     );
 
     const tipoMantenimiento = getTipoMantenimientoText(
       item.numTipoMantenimiento ??
-      item.numtipomantenimiento ??
-      item.num_tipo_mantenimiento
+        item.numtipomantenimiento ??
+        item.num_tipo_mantenimiento
     );
 
     const prioridad = normalizeText(
       String(item.prioridad ?? "")
     );
 
-    const fechaOriginal = String(
+    const fechaSolicitud = String(
       item.fecha ??
-      item.fechaSolicitud ??
-      item.fechasolicitud ??
-      ""
+        item.fechaSolicitud ??
+        item.fechasolicitud ??
+        item.fecha_solicitud ??
+        ""
     );
 
-    const fechaFormateada = formatDate(fechaOriginal);
+    const fechaCompletada = String(
+      item.fechaFinReal ??
+        item.fechafinreal ??
+        item.fecha_fin_real ??
+        item.fechaCompletada ??
+        item.fechacompletada ??
+        item.fecha_completada ??
+        ""
+    );
 
     const matchesTipo =
       filters.tipo === "" || tipo.includes(filters.tipo);
@@ -139,16 +182,24 @@ export default function RequestsSent() {
       filters.prioridad === "" ||
       prioridad.includes(filters.prioridad);
 
-    const matchesFecha =
-      filters.fecha === "" ||
-      fechaOriginal.includes(filters.fecha) ||
-      fechaFormateada.includes(filters.fecha);
+    const matchesFechaSolicitud = fechaEstaEnRango(
+      fechaSolicitud,
+      filters.fechaInicio,
+      filters.fechaFin
+    );
+
+    const matchesFechaCompletada = fechaEstaEnRango(
+      fechaCompletada,
+      filters.fechaCompletadaInicio,
+      filters.fechaCompletadaFin
+    );
 
     return (
       matchesTipo &&
       matchesTipoMantenimiento &&
       matchesPrioridad &&
-      matchesFecha
+      matchesFechaSolicitud &&
+      matchesFechaCompletada
     );
   });
 
@@ -272,8 +323,6 @@ export default function RequestsSent() {
   return (
     <View style={styles.container}>
       <View style={styles.headerFilters}>
-
-
         <TouchableOpacity
           style={styles.filterButton}
           onPress={() => setFilterModalOpen(true)}

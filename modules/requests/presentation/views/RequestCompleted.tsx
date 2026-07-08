@@ -14,8 +14,10 @@ import { usePaginatedCards } from "@/hooks/usePaginatedCards";
 import { GetRequestsCompleted } from "../../application/getRequestCompleted";
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
-import RequestFilterModal, { EMPTY_REQUEST_FILTERS, RequestFilters } from "../components/ModalFilters";
-
+import RequestFilterModal, {
+  EMPTY_REQUEST_FILTERS,
+  RequestFilters,
+} from "../components/ModalFilters";
 
 const repository = new SupabaseRequestsRepository();
 const getRequests = new GetRequestsCompleted(repository);
@@ -243,9 +245,9 @@ export default function RequestsCompleted() {
   ) => {
     switch (Number(tipoMantenimiento)) {
       case 1:
-        return "correctivo";
-      case 2:
         return "preventivo";
+      case 2:
+        return "correctivo";
       case 3:
         return "reactivo";
       default:
@@ -265,6 +267,38 @@ export default function RequestsCompleted() {
     }
 
     return String(date);
+  };
+
+  const normalizarFechaFiltro = (date?: string | null) => {
+    if (!date) return "";
+
+    return String(date).split(/[T ]/)[0];
+  };
+
+  const fechaEstaEnRango = (
+    fechaItem: string | null | undefined,
+    fechaInicio: string,
+    fechaFin: string
+  ) => {
+    if (!fechaInicio && !fechaFin) {
+      return true;
+    }
+
+    const fecha = normalizarFechaFiltro(fechaItem);
+
+    if (!fecha) {
+      return false;
+    }
+
+    if (fechaInicio && fecha < fechaInicio) {
+      return false;
+    }
+
+    if (fechaFin && fecha > fechaFin) {
+      return false;
+    }
+
+    return true;
   };
 
   const filteredRequests = requests.filter((request) => {
@@ -292,16 +326,27 @@ export default function RequestsCompleted() {
       String(getValue(item, "prioridad") ?? "")
     );
 
-    const fechaOriginal = String(
+    const fechaSolicitud = String(
       getValue(
         item,
         "fecha",
         "fechaSolicitud",
-        "fechasolicitud"
+        "fechasolicitud",
+        "fecha_solicitud"
       ) ?? ""
     );
 
-    const fechaFormateada = formatDate(fechaOriginal);
+    const fechaCompletada = String(
+      getValue(
+        item,
+        "fechaFinReal",
+        "fechafinreal",
+        "fecha_fin_real",
+        "fechaCompletada",
+        "fechacompletada",
+        "fecha_completada"
+      ) ?? ""
+    );
 
     const matchesTipo =
       filters.tipo === "" || tipo.includes(filters.tipo);
@@ -314,16 +359,24 @@ export default function RequestsCompleted() {
       filters.prioridad === "" ||
       prioridad.includes(filters.prioridad);
 
-    const matchesFecha =
-      filters.fecha === "" ||
-      fechaOriginal.includes(filters.fecha) ||
-      fechaFormateada.includes(filters.fecha);
+    const matchesFechaSolicitud = fechaEstaEnRango(
+      fechaSolicitud,
+      filters.fechaInicio,
+      filters.fechaFin
+    );
+
+    const matchesFechaCompletada = fechaEstaEnRango(
+      fechaCompletada,
+      filters.fechaCompletadaInicio,
+      filters.fechaCompletadaFin
+    );
 
     return (
       matchesTipo &&
       matchesTipoMantenimiento &&
       matchesPrioridad &&
-      matchesFecha
+      matchesFechaSolicitud &&
+      matchesFechaCompletada
     );
   });
 
@@ -392,7 +445,6 @@ export default function RequestsCompleted() {
   return (
     <View style={styles.container}>
       <View style={styles.headerFilters}>
-
         <TouchableOpacity
           style={styles.filterButton}
           onPress={() => setFilterModalOpen(true)}
@@ -424,7 +476,7 @@ export default function RequestsCompleted() {
         keyExtractor={(item) =>
           String(
             (item as any).numSolicitud ??
-            (item as any).numsolicitud
+              (item as any).numsolicitud
           )
         }
         renderItem={({ item }) => (
@@ -436,7 +488,7 @@ export default function RequestsCompleted() {
             <Text style={styles.title}>
               {renderTipo(
                 (item as any).numTipo ??
-                (item as any).numtipo
+                  (item as any).numtipo
               )}
             </Text>
 
@@ -461,7 +513,7 @@ export default function RequestsCompleted() {
               <Text style={styles.label}>Finalizó:</Text>{" "}
               {formatDate(
                 (item as any).fechaFinReal ??
-                (item as any).fechafinreal
+                  (item as any).fechafinreal
               )}
             </Text>
 
@@ -471,7 +523,7 @@ export default function RequestsCompleted() {
                 {
                   backgroundColor: renderStatusColor(
                     (item as any).numStatus ??
-                    (item as any).numstatus
+                      (item as any).numstatus
                   ),
                 },
               ]}
@@ -482,14 +534,14 @@ export default function RequestsCompleted() {
                   {
                     color: renderStatusTextColor(
                       (item as any).numStatus ??
-                      (item as any).numstatus
+                        (item as any).numstatus
                     ),
                   },
                 ]}
               >
                 {renderStatusText(
                   (item as any).numStatus ??
-                  (item as any).numstatus
+                    (item as any).numstatus
                 )}
               </Text>
             </View>
