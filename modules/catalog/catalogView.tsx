@@ -20,9 +20,9 @@ export default function CatalogosView() {
       ruta: "/materials",
     },
     {
-      titulo: "Servicios",
-      icono: "briefcase-cog",
-      ruta: "/services",
+      titulo: "Entradas",
+      icono: "inbox-arrow-down",
+      ruta: "/entradas",
     },
     {
       titulo: "Proveedores",
@@ -34,11 +34,11 @@ export default function CatalogosView() {
       icono: "account-group",
       ruta: "/user",
     },
-    {
-      titulo: "Mantenimiento",
-      icono: "cog",
-      ruta: "/maintenance",
-    },
+    //{
+    // titulo: "Mantenimiento",
+    // icono: "cog",
+    //  ruta: "/maintenance",
+    // },
   ];
 
   return (
@@ -51,7 +51,7 @@ export default function CatalogosView() {
       <ScrollView contentContainerStyle={styles.container}>
 
         <View style={styles.header}>
-            <TouchableOpacity
+          <TouchableOpacity
             style={styles.backBtn}
             onPress={() =>
               router.back()
@@ -74,7 +74,7 @@ export default function CatalogosView() {
             />
           </View>
         </View>
-  <Text style={styles.title}>Catálogos</Text>
+        <Text style={styles.title}>Catálogos</Text>
         <View style={styles.grid}>
 
           {catalogos.map((item) => (
@@ -110,14 +110,14 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: 40,
   },
-   title: {
+  title: {
     fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 8,
     color: "#111827",
   },
- backBtn: {
+  backBtn: {
     position: "absolute",
     left: 15,
     top: 45,
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-      marginHorizontal: 20,
+    marginHorizontal: 20,
     justifyContent: "space-between",
   },
   header: {

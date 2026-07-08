@@ -154,10 +154,7 @@ export default function CompleteRequestForm() {
         )
     );
 
-    const [fechaFinReal, setFechaFinReal] = useState<Date>(new Date());
-
     const [showInicioReal, setShowInicioReal] = useState(false);
-    const [showFinReal, setShowFinReal] = useState(false);
 
     const [comentarios, setComentarios] = useState("");
     const [loading, setLoading] = useState(false);
@@ -464,12 +461,9 @@ export default function CompleteRequestForm() {
             return false;
         }
 
-        if (!(fechaFinReal instanceof Date) || isNaN(fechaFinReal.getTime())) {
-            Alert.alert("Campo obligatorio", "Ingresa la fecha real de fin.");
-            return false;
-        }
+        const fechaFinRealAutomatica = new Date();
 
-        if (dateToApi(fechaFinReal) < dateToApi(fechaInicioReal)) {
+        if (dateToApi(fechaFinRealAutomatica) < dateToApi(fechaInicioReal)) {
             Alert.alert(
                 "Fecha incorrecta",
                 "La fecha real de fin no puede ser menor que la fecha real de inicio."
@@ -527,7 +521,7 @@ export default function CompleteRequestForm() {
             const user = userData ? JSON.parse(userData) : null;
 
             const fechaInicioRealApi = dateToApi(fechaInicioReal);
-            const fechaFinRealApi = dateToApi(fechaFinReal);
+            const fechaFinRealApi = dateToApi(new Date());
 
             const materialesPayload = materialesSeleccionados.map((item) => ({
                 numMaterial: item.numMaterial,
@@ -695,26 +689,13 @@ export default function CompleteRequestForm() {
 
                         <Text style={styles.label}>Fecha real de fin:</Text>
 
-                        <TouchableOpacity
-                            onPress={() => setShowFinReal(true)}
-                            style={styles.input}
-                        >
-                            <Text>{fechaFinReal.toLocaleDateString()}</Text>
-                        </TouchableOpacity>
+                        <View style={[styles.input, styles.readOnlyInput]}>
+                            <Text>{formatDate(dateToApi(new Date()))}</Text>
+                        </View>
 
-                        {showFinReal && (
-                            <DateTimePicker
-                                value={fechaFinReal}
-                                mode="date"
-                                onChange={(_, date) => {
-                                    setShowFinReal(false);
-
-                                    if (date) {
-                                        setFechaFinReal(date);
-                                    }
-                                }}
-                            />
-                        )}
+                        <Text style={styles.helperText}>
+                            La fecha de fin se asigna automáticamente al guardar.
+                        </Text>
 
                         <Text style={styles.label}>Materiales utilizados:</Text>
 
@@ -1011,6 +992,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 10,
         color: "#111827",
+    },
+
+    readOnlyInput: {
+        backgroundColor: "#E5E7EB",
     },
 
     textArea: {

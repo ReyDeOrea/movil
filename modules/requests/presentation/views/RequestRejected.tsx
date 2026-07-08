@@ -14,7 +14,10 @@ import { usePaginatedCards } from "@/hooks/usePaginatedCards";
 import { GetRequestsRejected } from "../../application/getRequestsRejected";
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
-import RequestFilterModal, { EMPTY_REQUEST_FILTERS, RequestFilters } from "../components/ModalFilters";
+import RequestFilterModal, {
+  EMPTY_REQUEST_FILTERS,
+  RequestFilters,
+} from "../components/ModalFilters";
 
 const repository = new SupabaseRequestsRepository();
 const getRequests = new GetRequestsRejected(repository);
@@ -73,14 +76,46 @@ export default function RequestsRejected() {
   const getTipoMantenimientoText = (tipoMantenimiento?: number | null) => {
     switch (tipoMantenimiento) {
       case 1:
-        return "correctivo";
-      case 2:
         return "preventivo";
+      case 2:
+        return "correctivo";
       case 3:
         return "reactivo";
       default:
         return "";
     }
+  };
+
+  const normalizarFechaFiltro = (date?: string | null) => {
+    if (!date) return "";
+
+    return String(date).split(/[T ]/)[0];
+  };
+
+  const fechaEstaEnRango = (
+    fechaItem: string | null | undefined,
+    fechaInicio: string,
+    fechaFin: string
+  ) => {
+    if (!fechaInicio && !fechaFin) {
+      return true;
+    }
+
+    const fecha = normalizarFechaFiltro(fechaItem);
+
+    if (!fecha) {
+      return false;
+    }
+
+    if (fechaInicio && fecha < fechaInicio) {
+      return false;
+    }
+
+    if (fechaFin && fecha > fechaFin) {
+      return false;
+    }
+
+    return true;
   };
 
   const filteredRequests = requests.filter((request: any) => {
@@ -94,7 +129,23 @@ export default function RequestsRejected() {
       String(request.prioridad ?? "")
     );
 
-    const fecha = String(request.fecha ?? "");
+    const fechaSolicitud = String(
+      request.fecha ??
+        request.fechaSolicitud ??
+        request.fechasolicitud ??
+        request.fecha_solicitud ??
+        ""
+    );
+
+    const fechaCompletada = String(
+      request.fechafinreal ??
+        request.fechaFinReal ??
+        request.fecha_fin_real ??
+        request.fechaCompletada ??
+        request.fechacompletada ??
+        request.fecha_completada ??
+        ""
+    );
 
     const matchesTipo =
       filters.tipo === "" || tipo.includes(filters.tipo);
@@ -107,15 +158,24 @@ export default function RequestsRejected() {
       filters.prioridad === "" ||
       prioridad.includes(filters.prioridad);
 
-    const matchesFecha =
-      filters.fecha === "" ||
-      fecha.includes(filters.fecha);
+    const matchesFechaSolicitud = fechaEstaEnRango(
+      fechaSolicitud,
+      filters.fechaInicio,
+      filters.fechaFin
+    );
+
+    const matchesFechaCompletada = fechaEstaEnRango(
+      fechaCompletada,
+      filters.fechaCompletadaInicio,
+      filters.fechaCompletadaFin
+    );
 
     return (
       matchesTipo &&
       matchesTipoMantenimiento &&
       matchesPrioridad &&
-      matchesFecha
+      matchesFechaSolicitud &&
+      matchesFechaCompletada
     );
   });
 
@@ -162,7 +222,6 @@ export default function RequestsRejected() {
   return (
     <View style={styles.container}>
       <View style={styles.headerFilters}>
-
         <TouchableOpacity
           style={styles.filterButton}
           onPress={() => setFilterModalOpen(true)}
