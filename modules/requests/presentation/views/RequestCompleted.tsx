@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 
+import { usePaginatedCards } from "@/hooks/usePaginatedCards";
 import { GetRequestsCompleted } from "../../application/getRequestCompleted";
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
@@ -326,6 +327,17 @@ export default function RequestsCompleted() {
     );
   });
 
+  const paginationResetKey = JSON.stringify(filters);
+
+  const {
+    visibleData: visibleRequests,
+    loadMore: loadMoreRequests,
+  } = usePaginatedCards(
+    filteredRequests,
+    15,
+    paginationResetKey
+  );
+
   const activeFiltersCount = Object.values(filters).filter(
     (value) => value.trim() !== ""
   ).length;
@@ -402,11 +414,17 @@ export default function RequestsCompleted() {
       </View>
 
       <FlatList
-        data={filteredRequests}
+        data={visibleRequests}
+        onEndReached={loadMoreRequests}
+        onEndReachedThreshold={0.3}
+        initialNumToRender={15}
+        maxToRenderPerBatch={15}
+        windowSize={7}
+        removeClippedSubviews
         keyExtractor={(item) =>
           String(
             (item as any).numSolicitud ??
-              (item as any).numsolicitud
+            (item as any).numsolicitud
           )
         }
         renderItem={({ item }) => (
@@ -418,7 +436,7 @@ export default function RequestsCompleted() {
             <Text style={styles.title}>
               {renderTipo(
                 (item as any).numTipo ??
-                  (item as any).numtipo
+                (item as any).numtipo
               )}
             </Text>
 
@@ -443,7 +461,7 @@ export default function RequestsCompleted() {
               <Text style={styles.label}>Finalizó:</Text>{" "}
               {formatDate(
                 (item as any).fechaFinReal ??
-                  (item as any).fechafinreal
+                (item as any).fechafinreal
               )}
             </Text>
 
@@ -453,7 +471,7 @@ export default function RequestsCompleted() {
                 {
                   backgroundColor: renderStatusColor(
                     (item as any).numStatus ??
-                      (item as any).numstatus
+                    (item as any).numstatus
                   ),
                 },
               ]}
@@ -464,14 +482,14 @@ export default function RequestsCompleted() {
                   {
                     color: renderStatusTextColor(
                       (item as any).numStatus ??
-                        (item as any).numstatus
+                      (item as any).numstatus
                     ),
                   },
                 ]}
               >
                 {renderStatusText(
                   (item as any).numStatus ??
-                    (item as any).numstatus
+                  (item as any).numstatus
                 )}
               </Text>
             </View>

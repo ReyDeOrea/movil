@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 
+import { usePaginatedCards } from "@/hooks/usePaginatedCards";
 import { GetRequestsBySolicitante } from "../../application/getRequestSent";
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
@@ -104,14 +105,14 @@ export default function RequestsSent() {
 
     const tipo = getTipoText(
       item.numTipo ??
-        item.numtipo ??
-        item.num_tipo
+      item.numtipo ??
+      item.num_tipo
     );
 
     const tipoMantenimiento = getTipoMantenimientoText(
       item.numTipoMantenimiento ??
-        item.numtipomantenimiento ??
-        item.num_tipo_mantenimiento
+      item.numtipomantenimiento ??
+      item.num_tipo_mantenimiento
     );
 
     const prioridad = normalizeText(
@@ -120,9 +121,9 @@ export default function RequestsSent() {
 
     const fechaOriginal = String(
       item.fecha ??
-        item.fechaSolicitud ??
-        item.fechasolicitud ??
-        ""
+      item.fechaSolicitud ??
+      item.fechasolicitud ??
+      ""
     );
 
     const fechaFormateada = formatDate(fechaOriginal);
@@ -150,6 +151,17 @@ export default function RequestsSent() {
       matchesFecha
     );
   });
+
+  const paginationResetKey = JSON.stringify(filters);
+
+  const {
+    visibleData: visibleRequests,
+    loadMore: loadMoreRequests,
+  } = usePaginatedCards(
+    filteredRequests,
+    15,
+    paginationResetKey
+  );
 
   const activeFiltersCount = Object.values(filters).filter(
     (value) => value.trim() !== ""
@@ -283,7 +295,13 @@ export default function RequestsSent() {
       </View>
 
       <FlatList
-        data={filteredRequests}
+        data={visibleRequests}
+        onEndReached={loadMoreRequests}
+        onEndReachedThreshold={0.3}
+        initialNumToRender={15}
+        maxToRenderPerBatch={15}
+        windowSize={7}
+        removeClippedSubviews
         keyExtractor={(item) => item.numSolicitud.toString()}
         renderItem={({ item }) => {
           const statusStyle = getStatusStyle(item.numStatus);

@@ -64,6 +64,7 @@ export interface DetalleMaterial {
   nombre?: string;
   cantidad: number;
   unidad: string;
+  stock?: number;
 }
 
 export interface SolicitudTecnicoInterno {

@@ -170,6 +170,7 @@ export default function TecnicosExternosView() {
             tecnicos={filteredTecnicos}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            resetKey={`${searchText}-${filteredTecnicos.length}`}
           />
         )}
 

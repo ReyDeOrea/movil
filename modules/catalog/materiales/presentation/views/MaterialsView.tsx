@@ -198,6 +198,7 @@ export default function MaterialsView() {
             materials={filteredMaterials}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            resetKey={`${searchText}-${filteredMaterials.length}`}
           />
         )}
 

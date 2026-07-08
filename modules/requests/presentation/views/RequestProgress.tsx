@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 
+import { usePaginatedCards } from "@/hooks/usePaginatedCards";
 import { GetRequestsInProgress } from "../../application/getRequestProgress";
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
@@ -47,14 +48,14 @@ export default function RequestsInProgress() {
 
       const numUsuario = Number(
         user.numUsuario ??
-          user.numusuario ??
-          user.num_usuario
+        user.numusuario ??
+        user.num_usuario
       );
 
       const numRol = Number(
         user.numRol ??
-          user.numrol ??
-          user.num_rol
+        user.numrol ??
+        user.num_rol
       );
 
       setUserRole(numRol);
@@ -74,8 +75,8 @@ export default function RequestsInProgress() {
       const solicitudesEnProceso = (data ?? []).filter((item) => {
         const status = Number(
           item.numStatus ??
-            (item as any).numstatus ??
-            (item as any).num_status
+          (item as any).numstatus ??
+          (item as any).num_status
         );
 
         return status === 3;
@@ -124,14 +125,14 @@ export default function RequestsInProgress() {
   const filteredRequests = requests.filter((request: any) => {
     const tipo = getTipoText(
       request.numTipo ??
-        request.numtipo ??
-        request.num_tipo
+      request.numtipo ??
+      request.num_tipo
     );
 
     const tipoMantenimiento = getTipoMantenimientoText(
       request.numTipoMantenimiento ??
-        request.numtipomantenimiento ??
-        request.num_tipo_mantenimiento
+      request.numtipomantenimiento ??
+      request.num_tipo_mantenimiento
     );
 
     const prioridad = normalizeText(
@@ -140,9 +141,9 @@ export default function RequestsInProgress() {
 
     const fecha = String(
       request.fecha ??
-        request.fechaSolicitud ??
-        request.fechasolicitud ??
-        ""
+      request.fechaSolicitud ??
+      request.fechasolicitud ??
+      ""
     );
 
     const matchesTipo =
@@ -167,6 +168,17 @@ export default function RequestsInProgress() {
       matchesFecha
     );
   });
+
+  const paginationResetKey = JSON.stringify(filters);
+
+  const {
+    visibleData: visibleRequests,
+    loadMore: loadMoreRequests,
+  } = usePaginatedCards(
+    filteredRequests,
+    15,
+    paginationResetKey
+  );
 
   const viewRequest = (request: RequestsForm) => {
     router.push({
@@ -257,7 +269,13 @@ export default function RequestsInProgress() {
       </View>
 
       <FlatList
-        data={filteredRequests}
+        data={visibleRequests}
+        onEndReached={loadMoreRequests}
+        onEndReachedThreshold={0.3}
+        initialNumToRender={15}
+        maxToRenderPerBatch={15}
+        windowSize={7}
+        removeClippedSubviews
         keyExtractor={(item) => item.numSolicitud.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
