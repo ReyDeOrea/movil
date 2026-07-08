@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Service",
-    "slug": "Service",
+    "name": "movil",
+    "slug": "movil",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,7 +9,8 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.reydeorea.movil"
     },
     "android": {
       "adaptiveIcon": {
@@ -57,7 +58,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "b9d587f0-3184-43e3-93ba-6415e6af06ca"
+        "projectId": "7c44af01-d6ed-400c-908b-518a49a739f7"
       }
     }
   }
