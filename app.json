@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "movil",
-    "slug": "movil",
+    "name": "Service",
+    "slug": "Service",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -19,7 +19,11 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.reydeorea.movil"
     },
     "web": {
       "output": "static",
@@ -39,7 +43,7 @@
           }
         }
       ],
-        [
+      [
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with your friends."
@@ -49,6 +53,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b9d587f0-3184-43e3-93ba-6415e6af06ca"
+      }
     }
   }
 }
