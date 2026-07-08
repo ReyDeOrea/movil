@@ -2,14 +2,14 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import { GetUsersUseCase } from "../../application/getUsersCase";
@@ -69,30 +69,30 @@ export default function UsersView() {
   const getUserName = (user: User) => {
     return String(
       (user as any).nombre ??
-        (user as any).name ??
-        (user as any).username ??
-        ""
+      (user as any).name ??
+      (user as any).username ??
+      ""
     );
   };
 
   const getWorkerNumber = (user: User) => {
     return String(
       (user as any).numUsuario ??
-        (user as any).numusuario ??
-        (user as any).numeroTrabajador ??
-        (user as any).numero_trabajador ??
-        (user as any).id ??
-        ""
+      (user as any).numusuario ??
+      (user as any).numeroTrabajador ??
+      (user as any).numero_trabajador ??
+      (user as any).id ??
+      ""
     );
   };
 
   const getUserRole = (user: User) => {
     const roleText = String(
       (user as any).nombrerol ??
-        (user as any).nombreRol ??
-        (user as any).rol ??
-        (user as any).role ??
-        ""
+      (user as any).nombreRol ??
+      (user as any).rol ??
+      (user as any).role ??
+      ""
     );
 
     if (roleText.trim() !== "") {
@@ -101,9 +101,9 @@ export default function UsersView() {
 
     const roleId = Number(
       (user as any).numRol ??
-        (user as any).numrol ??
-        (user as any).roleId ??
-        (user as any).rolId
+      (user as any).numrol ??
+      (user as any).roleId ??
+      (user as any).rolId
     );
 
     return ROLE_BY_ID[roleId] ?? "";
@@ -290,6 +290,7 @@ export default function UsersView() {
           <UserList
             users={filteredUsers}
             onPress={handleUserPress}
+            resetKey={`${searchText}-${selectedRole}-${filteredUsers.length}`}
           />
         )}
 

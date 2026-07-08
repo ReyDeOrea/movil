@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 
+import { usePaginatedCards } from "@/hooks/usePaginatedCards";
 import { CancelRequestUseCase } from "../../application/cancelRequest";
 import { GetAllRequests } from "../../application/getRequestRecived";
 import { RequestsForm } from "../../domain/request";
@@ -105,14 +106,14 @@ export default function RequestsReceived() {
 
     const tipo = getTipoText(
       item.numTipo ??
-        item.numtipo ??
-        item.num_tipo
+      item.numtipo ??
+      item.num_tipo
     );
 
     const tipoMantenimiento = getTipoMantenimientoText(
       item.numTipoMantenimiento ??
-        item.numtipomantenimiento ??
-        item.num_tipo_mantenimiento
+      item.numtipomantenimiento ??
+      item.num_tipo_mantenimiento
     );
 
     const prioridad = normalizeText(
@@ -121,9 +122,9 @@ export default function RequestsReceived() {
 
     const fechaOriginal = String(
       item.fecha ??
-        item.fechaSolicitud ??
-        item.fechasolicitud ??
-        ""
+      item.fechaSolicitud ??
+      item.fechasolicitud ??
+      ""
     );
 
     const fechaFormateada = formatDate(fechaOriginal);
@@ -151,6 +152,17 @@ export default function RequestsReceived() {
       matchesFecha
     );
   });
+
+  const paginationResetKey = JSON.stringify(filters);
+
+  const {
+    visibleData: visibleRequests,
+    loadMore: loadMoreRequests,
+  } = usePaginatedCards(
+    filteredRequests,
+    15,
+    paginationResetKey
+  );
 
   const activeFiltersCount = Object.values(filters).filter(
     (value) => value.trim() !== ""
@@ -290,7 +302,13 @@ export default function RequestsReceived() {
       </View>
 
       <FlatList
-        data={filteredRequests}
+        data={visibleRequests}
+        onEndReached={loadMoreRequests}
+        onEndReachedThreshold={0.3}
+        initialNumToRender={15}
+        maxToRenderPerBatch={15}
+        windowSize={7}
+        removeClippedSubviews
         keyExtractor={(item) => item.numSolicitud.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity

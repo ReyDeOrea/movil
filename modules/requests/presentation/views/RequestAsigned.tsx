@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 
+import { usePaginatedCards } from "@/hooks/usePaginatedCards";
 import { GetRequestsByTecnicoInterno } from "../../application/getRequestAsignedInterno";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
 import RequestFilterModal, {
@@ -198,6 +199,17 @@ export default function RequestsAssigned() {
     );
   });
 
+  const paginationResetKey = JSON.stringify(filters);
+
+  const {
+    visibleData: visibleRequests,
+    loadMore: loadMoreRequests,
+  } = usePaginatedCards(
+    filteredRequests,
+    15,
+    paginationResetKey
+  );
+
   const activeFiltersCount = Object.values(filters).filter(
     (value) => value.trim() !== ""
   ).length;
@@ -375,7 +387,13 @@ export default function RequestsAssigned() {
       </View>
 
       <FlatList
-        data={filteredRequests}
+        data={visibleRequests}
+        onEndReached={loadMoreRequests}
+        onEndReachedThreshold={0.3}
+        initialNumToRender={15}
+        maxToRenderPerBatch={15}
+        windowSize={7}
+        removeClippedSubviews
         keyExtractor={(item) =>
           String(item.numSolicitud ?? item.numsolicitud)
         }

@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 
+import { usePaginatedCards } from "@/hooks/usePaginatedCards";
 import { GetRequestsRejected } from "../../application/getRequestsRejected";
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
@@ -118,6 +119,17 @@ export default function RequestsRejected() {
     );
   });
 
+  const paginationResetKey = JSON.stringify(filters);
+
+  const {
+    visibleData: visibleRequests,
+    loadMore: loadMoreRequests,
+  } = usePaginatedCards(
+    filteredRequests,
+    15,
+    paginationResetKey
+  );
+
   const viewRequest = (request: RequestsForm) => {
     router.push({
       pathname: "/viewRequestForm",
@@ -164,7 +176,13 @@ export default function RequestsRejected() {
       </View>
 
       <FlatList
-        data={filteredRequests}
+        data={visibleRequests}
+        onEndReached={loadMoreRequests}
+        onEndReachedThreshold={0.3}
+        initialNumToRender={15}
+        maxToRenderPerBatch={15}
+        windowSize={7}
+        removeClippedSubviews
         keyExtractor={(item) => item.numSolicitud.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity

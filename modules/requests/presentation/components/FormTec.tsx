@@ -39,6 +39,7 @@ type MaterialSeleccionado = {
     nombre: string;
     unidad: string;
     cantidad: string;
+    stock: number;
 };
 
 type ImagenSeleccionada = {
@@ -329,6 +330,16 @@ export default function CompleteRequestForm() {
     }, [busquedaMaterial, materiales]);
 
     const agregarMaterial = (material: MaterialCatalogo) => {
+        const stockDisponible = Number(material.stock ?? 0);
+
+        if (stockDisponible <= 0) {
+            Alert.alert(
+                "Sin existencia",
+                `No puedes seleccionar ${material.nombre} porque no tiene existencia disponible.`
+            );
+            return;
+        }
+
         const yaExiste = materialesSeleccionados.some(
             (item) => item.numMaterial === material.numMaterial
         );
@@ -345,6 +356,7 @@ export default function CompleteRequestForm() {
                 nombre: material.nombre,
                 unidad: material.unidad ?? "unidad",
                 cantidad: "",
+                stock: stockDisponible,
             },
         ]);
 
@@ -359,15 +371,41 @@ export default function CompleteRequestForm() {
     };
 
     const cambiarCantidadMaterial = (numMaterial: number, cantidad: string) => {
+        const cantidadLimpia = cantidad.replace(/[^0-9]/g, "");
+
         setMaterialesSeleccionados((prev) =>
-            prev.map((item) =>
-                item.numMaterial === numMaterial
-                    ? {
+            prev.map((item) => {
+                if (item.numMaterial !== numMaterial) {
+                    return item;
+                }
+
+                if (!cantidadLimpia) {
+                    return {
                         ...item,
-                        cantidad,
-                    }
-                    : item
-            )
+                        cantidad: "",
+                    };
+                }
+
+                const cantidadNumerica = Number(cantidadLimpia);
+                const stockDisponible = Number(item.stock ?? 0);
+
+                if (cantidadNumerica > stockDisponible) {
+                    Alert.alert(
+                        "Cantidad no disponible",
+                        `Solo hay ${stockDisponible} ${item.unidad} de ${item.nombre} en existencia.`
+                    );
+
+                    return {
+                        ...item,
+                        cantidad: String(stockDisponible),
+                    };
+                }
+
+                return {
+                    ...item,
+                    cantidad: cantidadLimpia,
+                };
+            })
         );
     };
 
@@ -451,6 +489,18 @@ export default function CompleteRequestForm() {
             return false;
         }
 
+        const materialSinExistencia = materialesSeleccionados.find(
+            (item) => Number(item.cantidad) > Number(item.stock ?? 0)
+        );
+
+        if (materialSinExistencia) {
+            Alert.alert(
+                "Cantidad no disponible",
+                `No puedes usar ${materialSinExistencia.cantidad} de ${materialSinExistencia.nombre}. Existencia disponible: ${materialSinExistencia.stock}.`
+            );
+            return false;
+        }
+
         if (!comentarios.trim()) {
             Alert.alert("Campo obligatorio", "Ingresa los comentarios finales.");
             return false;
@@ -525,14 +575,6 @@ export default function CompleteRequestForm() {
                 );
             }
 
-            if (typeof repo.saveRequestMaterials === "function") {
-                await repo.saveRequestMaterials(numSolicitud, materialesPayload);
-            } else if (typeof repo.saveMaterialesSolicitud === "function") {
-                await repo.saveMaterialesSolicitud(numSolicitud, materialesPayload);
-            } else if (typeof repo.addMaterialsToRequest === "function") {
-                await repo.addMaterialsToRequest(numSolicitud, materialesPayload);
-            }
-
             if (typeof repo.uploadTechnicianImages === "function") {
                 await repo.uploadTechnicianImages(numSolicitud, imagenes);
             } else if (typeof repo.uploadRequestImages === "function") {
@@ -551,11 +593,11 @@ export default function CompleteRequestForm() {
                     },
                 ]
             );
-        } catch (error) {
+        } catch (error: any) {
             console.log("ERROR terminando solicitud:", error);
             Alert.alert(
                 "Error",
-                "No se pudo guardar la finalización de la solicitud."
+                error?.message || "No se pudo guardar la finalización de la solicitud."
             );
         } finally {
             setLoading(false);
@@ -574,25 +616,22 @@ export default function CompleteRequestForm() {
         <>
             <Stack.Screen options={{ headerShown: false }} />
 
-<ScrollView
-    style={styles.container}
-    contentContainerStyle={styles.scrollContent}
->
-                    <View style={styles.header}>
-
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.scrollContent}
+            >
+                <View style={styles.header}>
                     <TouchableOpacity
                         style={styles.backBtn}
                         onPress={() =>
                             router.back()
                         }
                     >
-
                         <MaterialCommunityIcons
                             name="arrow-left"
                             size={28}
                             color="#FFFFFF"
                         />
-
                     </TouchableOpacity>
 
                     <View style={styles.rowHeader}>
@@ -713,6 +752,10 @@ export default function CompleteRequestForm() {
 
                                         <Text style={styles.materialUnit}>
                                             Unidad: {material.unidad}
+                                        </Text>
+
+                                        <Text style={styles.materialUnit}>
+                                            Existencia disponible: {material.stock}
                                         </Text>
                                     </View>
 
@@ -911,6 +954,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginBottom: 20,
     },
+
     headerTitle: {
         color: "#fff",
         fontSize: 20,
@@ -936,9 +980,11 @@ const styles = StyleSheet.create({
         color: "#111827",
         marginBottom: 12,
     },
-scrollContent: {
-    paddingBottom: 80,
-},
+
+    scrollContent: {
+        paddingBottom: 80,
+    },
+
     label: {
         fontWeight: "bold",
         color: "#374151",
@@ -950,11 +996,13 @@ scrollContent: {
         color: "#4B5563",
         marginBottom: 5,
     },
+
     backBtn: {
         position: "absolute",
         left: 15,
         top: 45,
     },
+
     input: {
         backgroundColor: "#F9FAFB",
         borderWidth: 1,
@@ -1156,6 +1204,7 @@ scrollContent: {
         marginTop: 20,
         marginBottom: 20,
     },
+
     cancelButton: {
         backgroundColor: "#870c0c",
         padding: 15,
@@ -1163,20 +1212,24 @@ scrollContent: {
         alignItems: "center",
         marginHorizontal: 20,
     },
+
     buttonText: {
         color: "#FFF",
         fontWeight: "bold",
     },
+
     rowHeader: {
         flex: 1,
         width: "100%",
         justifyContent: "center",
         alignItems: "center",
     },
+
     imageZucarmex: {
-        width: '45%',
+        width: "45%",
         height: 60,
     },
+
     center: {
         flex: 1,
         justifyContent: "center",

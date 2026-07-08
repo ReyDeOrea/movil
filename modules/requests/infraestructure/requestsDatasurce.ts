@@ -108,6 +108,7 @@ const toDomainMaterial = (item: any): DetalleMaterial => ({
   nombre: item.nombre ?? item.nombrematerial ?? "",
   cantidad: Number(item.cantidad ?? 0),
   unidad: item.unidad ?? "unidad",
+  stock: Number(item.stockActual ?? item.stock ?? item.existencia ?? 0),
 });
 
 const toDomain = (item: SolicitudApi): RequestsForm => ({
@@ -450,12 +451,33 @@ export class ApiFastRequestsRepository implements RequestsRepository {
     id: number,
     data: Partial<RequestsForm>
   ): Promise<boolean> {
-    return await this.updateRequest(id, {
-      ...data,
-      numStatus: 4,
-      fechaFinReal:
-        data.fechaFinReal ?? new Date().toISOString().split("T")[0],
+    const finalData: any = data;
+
+    const fechaInicioReal =
+      finalData.fechaInicioReal ??
+      finalData.fechainicioreal ??
+      finalData.fecha_inicio_real;
+
+    const fechaFinReal =
+      finalData.fechaFinReal ??
+      finalData.fechafinreal ??
+      finalData.fecha_fin_real ??
+      new Date().toISOString().split("T")[0];
+
+    const materiales = (finalData.materiales ?? []).map((item: any) => ({
+      nummaterial: Number(item.numMaterial ?? item.nummaterial),
+      cantidad: Number(item.cantidad),
+      unidad: item.unidad ?? "unidad",
+    }));
+
+    await api.put(`/solicitudes/${id}/terminar`, {
+      fechainicioreal: toDateOnly(fechaInicioReal),
+      fechafinreal: toDateOnly(fechaFinReal),
+      comentarios: finalData.comentarios ?? "",
+      materiales,
     });
+
+    return true;
   }
 
   async getRequestsByTecnicoInterno(
