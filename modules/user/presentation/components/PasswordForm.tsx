@@ -1,63 +1,71 @@
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { ResetPasswordUseCase } from '../../application/resetPassword';
-import { VerifyUserUseCase } from '../../application/verifyUserCase';
-import { User } from '../../domain/user';
-import { SupabaseUserRepository } from '../../infraestructure/userDataSource';
-import NewPasswordModal from './NewPasswordModal';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+import { ResetPasswordUseCase } from "../../application/resetPassword";
+import { VerifyUserUseCase } from "../../application/verifyUserCase";
+import { User } from "../../domain/user";
+import { ApiFastUserRepository } from "../../infraestructure/userDataSource";
+import NewPasswordModal from "./NewPasswordModal";
 
 export default function Password() {
-
   const router = useRouter();
 
-  const userRepo = new SupabaseUserRepository();
-  const verifyUserUseCase = new VerifyUserUseCase(userRepo);
-  const resetPasswordUseCase = new ResetPasswordUseCase(userRepo);
+  const userRepo = new ApiFastUserRepository();
+
+  const verifyUserUseCase =
+    new VerifyUserUseCase(userRepo);
+
+  const resetPasswordUseCase =
+    new ResetPasswordUseCase(userRepo);
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [profile, setProfile] = useState<User | null>(null);
+  const [profile, setProfile] =
+    useState<User | null>(null);
 
   const handleVerify = async () => {
-
     try {
-
       setLoading(true);
 
-      const user = await verifyUserUseCase.execute(username, email);
+      const user = await verifyUserUseCase.execute(
+        username,
+        email
+      );
 
       console.log("USER VERIFY:", user);
 
       setProfile(user);
       setModalOpen(true);
-
     } catch (err: any) {
-
       Alert.alert("Error", err.message);
-
     } finally {
-
       setLoading(false);
-
     }
-
   };
 
   const handlePasswordChange = async (
     newPass: string,
     confirmPass: string
   ) => {
-
     if (!profile) return;
 
     try {
-
       await resetPasswordUseCase.execute({
         user: profile,
         newPassword: newPass,
@@ -72,13 +80,9 @@ export default function Password() {
       setModalOpen(false);
 
       router.back();
-
     } catch (err: any) {
-
       Alert.alert("Error", err.message);
-
     }
-
   };
 
   return (
@@ -90,64 +94,35 @@ export default function Password() {
       />
 
       <ScrollView
-        contentContainerStyle={
-          styles.container
-        }
+        contentContainerStyle={styles.container}
       >
-
         <View style={styles.header}>
-
           <TouchableOpacity
             style={styles.backBtn}
-            onPress={() =>
-              router.back()
-            }
+            onPress={() => router.back()}
           >
-
             <MaterialCommunityIcons
               name="arrow-left"
               size={28}
               color="#fff"
             />
-
           </TouchableOpacity>
 
           <View style={styles.rowHeader}>
-
             <Image
-              source={require('../../../../assets/images/ZUCARMEX.png')}
+              source={require("../../../../assets/images/ZUCARMEX.png")}
               style={styles.imageZucarmex}
               resizeMode="contain"
             />
-
-            {/* <Text style={styles.title}>
-             ServiceApp
-            </Text>
-
-            <MaterialCommunityIcons
-              name="tools"
-              size={30}
-              color="#fff"
-            /> */}
-
           </View>
-
         </View>
 
         <View style={styles.avatarBox}>
-
-          {/* <Image
-          source={require('../../../../assets/images/cortecana.png')}
-          style={styles.imagecanero}
-          resizeMode='contain'
-          /> */}
-
           <FontAwesome6
             name="shield-halved"
             size={150}
             color="#D1D5DB"
           />
-
         </View>
 
         <Text style={styles.subtitle}>
@@ -159,9 +134,7 @@ export default function Password() {
         </Text>
 
         <View style={styles.BE}>
-
           <View style={styles.BI}>
-
             <MaterialCommunityIcons
               name="account"
               size={22}
@@ -176,11 +149,9 @@ export default function Password() {
               onChangeText={setUsername}
               autoCapitalize="none"
             />
-
           </View>
 
           <View style={styles.BI}>
-
             <MaterialIcons
               name="email"
               size={22}
@@ -196,9 +167,7 @@ export default function Password() {
               keyboardType="email-address"
               autoCapitalize="none"
             />
-
           </View>
-
         </View>
 
         <TouchableOpacity
@@ -206,23 +175,16 @@ export default function Password() {
           onPress={handleVerify}
           disabled={loading}
         >
-
-          {
-            loading ? (
-              <ActivityIndicator
-                color="#fff"
-              />
-            ) : (
-              <Text style={styles.txtBtn}>
-                Verificar
-              </Text>
-            )
-          }
-
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.txtBtn}>
+              Verificar
+            </Text>
+          )}
         </TouchableOpacity>
 
         <View style={styles.rp}>
-
           <MaterialCommunityIcons
             name="arrow-left"
             size={22}
@@ -230,38 +192,26 @@ export default function Password() {
           />
 
           <TouchableOpacity
-            onPress={() =>
-              router.back()
-            }
+            onPress={() => router.back()}
           >
-
             <Text style={styles.txtSI}>
               Volver
             </Text>
-
           </TouchableOpacity>
-
         </View>
 
         <NewPasswordModal
           visible={modalOpen}
           loading={loading}
-          onClose={() =>
-            setModalOpen(false)
-          }
-          onSubmit={
-            handlePasswordChange
-          }
+          onClose={() => setModalOpen(false)}
+          onSubmit={handlePasswordChange}
         />
-
       </ScrollView>
     </>
   );
-
 }
 
 const styles = StyleSheet.create({
-
   container: {
     flexGrow: 1,
     backgroundColor: "#F5F5F5",
@@ -325,8 +275,6 @@ const styles = StyleSheet.create({
   BI: {
     flexDirection: "row",
     alignItems: "center",
-   // borderWidth: 1,
-    //borderColor: "#d1dbd4",
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -371,12 +319,12 @@ const styles = StyleSheet.create({
   },
 
   imageZucarmex: {
-    width: '45%',
+    width: "45%",
     height: 60,
   },
+
   imagecanero: {
-    width: '45%',
+    width: "45%",
     height: 190,
   },
-
 });

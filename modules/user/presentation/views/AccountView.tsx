@@ -1,14 +1,29 @@
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { Stack, useFocusEffect, useRouter } from "expo-router";
+import {
+  Stack,
+  useFocusEffect,
+  useRouter,
+} from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, Dimensions, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
 import { checkUserExistsUpdate } from "../../application/checkUserExistsUpdate";
 import { GetUserByIdUseCase } from "../../application/getUserByid";
 import { getUserProfile } from "../../application/getUserProfile";
 import { updateUserProfile } from "../../application/updateUserProfile";
 import { validateUserProfile } from "../../application/validateUpdate";
 import { User } from "../../domain/user";
-import { SupabaseUserRepository } from "../../infraestructure/userDataSource";
+import { ApiFastUserRepository } from "../../infraestructure/userDataSource";
 import AvatarView from "../components/AvatarView";
 
 const { width } = Dimensions.get("window");
@@ -20,16 +35,23 @@ export default function Account() {
   const router = useRouter();
 
   const [avatarUrl, setAvatarUrl] = useState("");
-  const [avatarVersion, setAvatarVersion] = useState(Date.now());
-  const [user, setUser] = useState<User | null>(null);
+  const [avatarVersion, setAvatarVersion] =
+    useState(Date.now());
+
+  const [user, setUser] =
+    useState<User | null>(null);
+
   const [email, setEmail] = useState("");
   const [telefono, setTelefono] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadingProfile, setLoadingProfile] =
+    useState(true);
 
-  const repository = new SupabaseUserRepository();
-  const getUserByIdUseCase = new GetUserByIdUseCase(repository);
+  const repository = new ApiFastUserRepository();
+
+  const getUserByIdUseCase =
+    new GetUserByIdUseCase(repository);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -45,9 +67,10 @@ export default function Account() {
         return;
       }
 
-      const freshUser = await getUserByIdUseCase.execute(
-        Number(sessionUser.numUsuario)
-      );
+      const freshUser =
+        await getUserByIdUseCase.execute(
+          Number(sessionUser.numUsuario)
+        );
 
       if (!freshUser) {
         setUser(null);
@@ -70,11 +93,15 @@ export default function Account() {
 
       setAvatarVersion(Date.now());
     } catch (error: any) {
-      console.log("ERROR ACTUALIZANDO PERFIL:", error);
+      console.log(
+        "ERROR ACTUALIZANDO PERFIL:",
+        error
+      );
 
       Alert.alert(
         "Error",
-        error?.message ?? "No se pudo cargar el perfil"
+        error?.message ??
+          "No se pudo cargar el perfil"
       );
     } finally {
       setLoadingProfile(false);
@@ -95,19 +122,29 @@ export default function Account() {
     try {
       setLoading(true);
 
-      const cleanEmail = email.trim().toLowerCase();
+      const cleanEmail =
+        email.trim().toLowerCase();
+
       const cleanTelefono = telefono.trim();
 
       const currentEmail = (user.email ?? "")
         .trim()
         .toLowerCase();
 
-      const currentTelefono = (user.telefono ?? "").trim();
+      const currentTelefono = (
+        user.telefono ?? ""
+      ).trim();
 
-      validateUserProfile(cleanEmail, cleanTelefono);
+      validateUserProfile(
+        cleanEmail,
+        cleanTelefono
+      );
 
-      const changedEmail = cleanEmail !== currentEmail;
-      const changedTelefono = cleanTelefono !== currentTelefono;
+      const changedEmail =
+        cleanEmail !== currentEmail;
+
+      const changedTelefono =
+        cleanTelefono !== currentTelefono;
 
       if (changedEmail || changedTelefono) {
         await checkUserExistsUpdate(
@@ -137,7 +174,8 @@ export default function Account() {
     } catch (error: any) {
       Alert.alert(
         "Error",
-        error?.message ?? "No se pudo actualizar el perfil"
+        error?.message ??
+          "No se pudo actualizar el perfil"
       );
     } finally {
       setLoading(false);
@@ -147,10 +185,16 @@ export default function Account() {
   if (loadingProfile && !user) {
     return (
       <>
-        <Stack.Screen options={{ headerShown: false }} />
+        <Stack.Screen
+          options={{ headerShown: false }}
+        />
 
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#148248" />
+          <ActivityIndicator
+            size="large"
+            color="#148248"
+          />
+
           <Text style={styles.loadingText}>
             Cargando perfil...
           </Text>
@@ -162,7 +206,9 @@ export default function Account() {
   if (!user) {
     return (
       <>
-        <Stack.Screen options={{ headerShown: false }} />
+        <Stack.Screen
+          options={{ headerShown: false }}
+        />
 
         <View style={styles.center}>
           <Text>No hay usuario logueado</Text>
@@ -192,14 +238,17 @@ export default function Account() {
       return avatarUrl;
     }
 
-    const separator = avatarUrl.includes("?") ? "&" : "?";
+    const separator =
+      avatarUrl.includes("?") ? "&" : "?";
 
     return `${avatarUrl}${separator}v=${avatarVersion}`;
   };
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
+      <Stack.Screen
+        options={{ headerShown: false }}
+      />
 
       <View style={styles.container}>
         <View style={styles.header}>
@@ -249,7 +298,9 @@ export default function Account() {
             </Text>
           </View>
 
-          <Text style={styles.label}>Nombre</Text>
+          <Text style={styles.label}>
+            Nombre
+          </Text>
 
           <TextInput
             style={styles.inputDisabled}
@@ -257,7 +308,9 @@ export default function Account() {
             editable={false}
           />
 
-          <Text style={styles.label}>Correo</Text>
+          <Text style={styles.label}>
+            Correo
+          </Text>
 
           <TextInput
             style={styles.input}
@@ -269,7 +322,9 @@ export default function Account() {
             editable={!loading}
           />
 
-          <Text style={styles.label}>Teléfono</Text>
+          <Text style={styles.label}>
+            Teléfono
+          </Text>
 
           <TextInput
             style={styles.input}
@@ -289,7 +344,11 @@ export default function Account() {
             disabled={loading}
           >
             {loading ? (
-              <View style={styles.buttonLoadingContent}>
+              <View
+                style={
+                  styles.buttonLoadingContent
+                }
+              >
                 <ActivityIndicator
                   size="small"
                   color="#FFFFFF"
@@ -338,7 +397,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
     elevation: 3,
-
     shadowColor: "#000000",
     shadowOffset: {
       width: 0,

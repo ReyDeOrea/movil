@@ -14,10 +14,14 @@ import {
 
 import { GetUsersUseCase } from "../../application/getUsersCase";
 import { User } from "../../domain/user";
-import { SupabaseUserRepository } from "../../infraestructure/userDataSource";
+import { ApiFastUserRepository } from "../../infraestructure/userDataSource";
 import UserList from "../components/UserList";
 
-type RoleFilter = "todos" | "tecnico" | "administrador" | "solicitante";
+type RoleFilter =
+  | "todos"
+  | "tecnico"
+  | "administrador"
+  | "solicitante";
 
 const ROLE_BY_ID: Record<number, string> = {
   1: "administrador",
@@ -28,13 +32,14 @@ const ROLE_BY_ID: Record<number, string> = {
 export default function UsersView() {
   const router = useRouter();
 
-  const repository = new SupabaseUserRepository();
+  const repository = new ApiFastUserRepository();
   const getUsers = new GetUsersUseCase(repository);
 
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
-  const [selectedRole, setSelectedRole] = useState<RoleFilter>("todos");
+  const [selectedRole, setSelectedRole] =
+    useState<RoleFilter>("todos");
 
   useFocusEffect(
     useCallback(() => {
@@ -52,7 +57,8 @@ export default function UsersView() {
     } catch (error: any) {
       Alert.alert(
         "Error",
-        error.message || "No se pudieron cargar los usuarios"
+        error.message ||
+          "No se pudieron cargar los usuarios"
       );
     } finally {
       setLoading(false);
@@ -69,30 +75,30 @@ export default function UsersView() {
   const getUserName = (user: User) => {
     return String(
       (user as any).nombre ??
-      (user as any).name ??
-      (user as any).username ??
-      ""
+        (user as any).name ??
+        (user as any).username ??
+        ""
     );
   };
 
   const getWorkerNumber = (user: User) => {
     return String(
       (user as any).numUsuario ??
-      (user as any).numusuario ??
-      (user as any).numeroTrabajador ??
-      (user as any).numero_trabajador ??
-      (user as any).id ??
-      ""
+        (user as any).numusuario ??
+        (user as any).numeroTrabajador ??
+        (user as any).numero_trabajador ??
+        (user as any).id ??
+        ""
     );
   };
 
   const getUserRole = (user: User) => {
     const roleText = String(
       (user as any).nombrerol ??
-      (user as any).nombreRol ??
-      (user as any).rol ??
-      (user as any).role ??
-      ""
+        (user as any).nombreRol ??
+        (user as any).rol ??
+        (user as any).role ??
+        ""
     );
 
     if (roleText.trim() !== "") {
@@ -101,9 +107,9 @@ export default function UsersView() {
 
     const roleId = Number(
       (user as any).numRol ??
-      (user as any).numrol ??
-      (user as any).roleId ??
-      (user as any).rolId
+        (user as any).numrol ??
+        (user as any).roleId ??
+        (user as any).rolId
     );
 
     return ROLE_BY_ID[roleId] ?? "";
@@ -112,15 +118,23 @@ export default function UsersView() {
   const filteredUsers = users.filter((user) => {
     const search = normalizeText(searchText);
 
-    const nombre = normalizeText(getUserName(user));
-    const numeroTrabajador = normalizeText(getWorkerNumber(user));
+    const nombre = normalizeText(
+      getUserName(user)
+    );
+
+    const numeroTrabajador = normalizeText(
+      getWorkerNumber(user)
+    );
+
     const rol = getUserRole(user);
 
     const matchesSearch =
-      nombre.includes(search) || numeroTrabajador.includes(search);
+      nombre.includes(search) ||
+      numeroTrabajador.includes(search);
 
     const matchesRole =
-      selectedRole === "todos" || rol.includes(selectedRole);
+      selectedRole === "todos" ||
+      rol.includes(selectedRole);
 
     return matchesSearch && matchesRole;
   });
@@ -190,7 +204,9 @@ export default function UsersView() {
           />
 
           {searchText.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchText("")}>
+            <TouchableOpacity
+              onPress={() => setSearchText("")}
+            >
               <MaterialCommunityIcons
                 name="close-circle"
                 size={22}
@@ -204,14 +220,18 @@ export default function UsersView() {
           <TouchableOpacity
             style={[
               styles.filterButton,
-              selectedRole === "todos" && styles.filterButtonActive,
+              selectedRole === "todos" &&
+                styles.filterButtonActive,
             ]}
-            onPress={() => setSelectedRole("todos")}
+            onPress={() =>
+              setSelectedRole("todos")
+            }
           >
             <Text
               style={[
                 styles.filterText,
-                selectedRole === "todos" && styles.filterTextActive,
+                selectedRole === "todos" &&
+                  styles.filterTextActive,
               ]}
             >
               Todos
@@ -221,14 +241,18 @@ export default function UsersView() {
           <TouchableOpacity
             style={[
               styles.filterButton,
-              selectedRole === "tecnico" && styles.filterButtonActive,
+              selectedRole === "tecnico" &&
+                styles.filterButtonActive,
             ]}
-            onPress={() => setSelectedRole("tecnico")}
+            onPress={() =>
+              setSelectedRole("tecnico")
+            }
           >
             <Text
               style={[
                 styles.filterText,
-                selectedRole === "tecnico" && styles.filterTextActive,
+                selectedRole === "tecnico" &&
+                  styles.filterTextActive,
               ]}
             >
               Técnicos
@@ -238,14 +262,18 @@ export default function UsersView() {
           <TouchableOpacity
             style={[
               styles.filterButton,
-              selectedRole === "administrador" && styles.filterButtonActive,
+              selectedRole === "administrador" &&
+                styles.filterButtonActive,
             ]}
-            onPress={() => setSelectedRole("administrador")}
+            onPress={() =>
+              setSelectedRole("administrador")
+            }
           >
             <Text
               style={[
                 styles.filterText,
-                selectedRole === "administrador" && styles.filterTextActive,
+                selectedRole === "administrador" &&
+                  styles.filterTextActive,
               ]}
             >
               Admins
@@ -255,14 +283,18 @@ export default function UsersView() {
           <TouchableOpacity
             style={[
               styles.filterButton,
-              selectedRole === "solicitante" && styles.filterButtonActive,
+              selectedRole === "solicitante" &&
+                styles.filterButtonActive,
             ]}
-            onPress={() => setSelectedRole("solicitante")}
+            onPress={() =>
+              setSelectedRole("solicitante")
+            }
           >
             <Text
               style={[
                 styles.filterText,
-                selectedRole === "solicitante" && styles.filterTextActive,
+                selectedRole === "solicitante" &&
+                  styles.filterTextActive,
               ]}
             >
               Solicitantes
@@ -283,7 +315,8 @@ export default function UsersView() {
             </Text>
 
             <Text style={styles.emptyText}>
-              Intenta buscar con otro nombre, número o filtro.
+              Intenta buscar con otro nombre,
+              número o filtro.
             </Text>
           </View>
         ) : (
@@ -296,9 +329,13 @@ export default function UsersView() {
 
         <TouchableOpacity
           style={styles.createButton}
-          onPress={() => router.push("/signUp")}
+          onPress={() =>
+            router.push("/signUp")
+          }
         >
-          <Text style={styles.fabText}>+</Text>
+          <Text style={styles.fabText}>
+            +
+          </Text>
         </TouchableOpacity>
       </View>
     </>

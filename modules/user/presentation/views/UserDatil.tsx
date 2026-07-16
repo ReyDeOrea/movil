@@ -1,25 +1,29 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
-    Stack,
-    useFocusEffect,
-    useLocalSearchParams,
-    useRouter,
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
 } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+import {
+  ActivityIndicator,
+  Image,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import { GetUserByIdUseCase } from "../../application/getUserByid";
 import { User } from "../../domain/user";
-import { SupabaseUserRepository } from "../../infraestructure/userDataSource";
+import { ApiFastUserRepository } from "../../infraestructure/userDataSource";
 import AvatarView from "../components/AvatarView";
 
 import { SupabaseRequestsRepository } from "../../../requests/infraestructure/requestsDatasurce";
@@ -28,23 +32,42 @@ export default function UserDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
 
-  const repository = new SupabaseUserRepository();
-  const getUser = new GetUserByIdUseCase(repository);
+  const repository =
+    new ApiFastUserRepository();
 
-  const requestsRepository: any = new SupabaseRequestsRepository();
+  const getUser =
+    new GetUserByIdUseCase(repository);
 
-  const [user, setUser] = useState<User | null>(null);
-  const [requests, setRequests] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [requestsLoading, setRequestsLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const requestsRepository: any =
+    new SupabaseRequestsRepository();
+
+  const [user, setUser] =
+    useState<User | null>(null);
+
+  const [requests, setRequests] =
+    useState<any[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [requestsLoading, setRequestsLoading] =
+    useState(false);
+
+  const [refreshing, setRefreshing] =
+    useState(false);
 
   const getId = () => {
-    const value = Array.isArray(id) ? id[0] : id;
+    const value = Array.isArray(id)
+      ? id[0]
+      : id;
+
     return Number(value);
   };
 
-  const getValue = (obj: any, ...keys: string[]) => {
+  const getValue = (
+    obj: any,
+    ...keys: string[]
+  ) => {
     for (const key of keys) {
       if (
         obj &&
@@ -59,14 +82,19 @@ export default function UserDetail() {
     return undefined;
   };
 
-  const formatDate = (date?: string | null) => {
+  const formatDate = (
+    date?: string | null
+  ) => {
     if (!date) return "Sin fecha";
 
-    const cleanDate = String(date).split("T")[0];
+    const cleanDate =
+      String(date).split("T")[0];
+
     const parts = cleanDate.split("-");
 
     if (parts.length === 3) {
       const [year, month, day] = parts;
+
       return `${day}/${month}/${year}`;
     }
 
@@ -77,65 +105,90 @@ export default function UserDetail() {
     switch (tipo) {
       case 1:
         return "Servicio";
+
       case 2:
         return "Mantenimiento";
+
       default:
         return "Desconocido";
     }
   };
 
-  const renderStatusName = (status: number) => {
+  const renderStatusName = (
+    status: number
+  ) => {
     switch (status) {
       case 1:
         return "Generada";
+
       case 2:
         return "Asignada";
+
       case 3:
         return "En proceso";
+
       case 4:
         return "Terminada";
+
       case 5:
         return "Cancelada";
+
       default:
         return "Desconocido";
     }
   };
 
-  const renderStatusColor = (status: number) => {
+  const renderStatusColor = (
+    status: number
+  ) => {
     switch (status) {
       case 1:
         return "#E5E7EB";
+
       case 2:
         return "#FEF3C7";
+
       case 3:
         return "#DBEAFE";
+
       case 4:
         return "#D1FAE5";
+
       case 5:
         return "#FECACA";
+
       default:
         return "#E5E7EB";
     }
   };
 
-  const renderStatusTextColor = (status: number) => {
+  const renderStatusTextColor = (
+    status: number
+  ) => {
     switch (status) {
       case 1:
         return "#374151";
+
       case 2:
         return "#92400E";
+
       case 3:
         return "#1E40AF";
+
       case 4:
         return "#065F46";
+
       case 5:
         return "#991B1B";
+
       default:
         return "#374151";
     }
   };
 
-  const filtrarSolicitudesDelUsuario = (list: any[]) => {
+  const filtrarSolicitudesDelUsuario = (
+    list: any[]
+  ) => {
     const userId = getId();
 
     return list.filter((request) => {
@@ -156,16 +209,24 @@ export default function UserDetail() {
     });
   };
 
-  const loadUser = async (showLoader = true) => {
+  const loadUser = async (
+    showLoader = true
+  ) => {
     try {
       if (showLoader) {
         setLoading(true);
       }
 
-      const data = await getUser.execute(getId());
+      const data = await getUser.execute(
+        getId()
+      );
+
       setUser(data);
     } catch (error) {
-      console.log("ERROR cargando usuario:", error);
+      console.log(
+        "ERROR cargando usuario:",
+        error
+      );
     } finally {
       setLoading(false);
     }
@@ -179,36 +240,86 @@ export default function UserDetail() {
 
       let data: any[] = [];
 
-      if (typeof requestsRepository.getRequestsByUser === "function") {
-        data = await requestsRepository.getRequestsByUser(userId);
-      } else if (typeof requestsRepository.getUserRequests === "function") {
-        data = await requestsRepository.getUserRequests(userId);
-      } else if (
-        typeof requestsRepository.getRequestsBySolicitante === "function"
+      if (
+        typeof requestsRepository
+          .getRequestsByUser === "function"
       ) {
-        data = await requestsRepository.getRequestsBySolicitante(userId);
-      } else if (typeof requestsRepository.getAllRequests === "function") {
-        const allRequests = await requestsRepository.getAllRequests();
-        data = filtrarSolicitudesDelUsuario(allRequests ?? []);
-      } else if (typeof requestsRepository.getRequests === "function") {
-        const allRequests = await requestsRepository.getRequests();
-        data = filtrarSolicitudesDelUsuario(allRequests ?? []);
-      } else if (typeof requestsRepository.getAll === "function") {
-        const allRequests = await requestsRepository.getAll();
-        data = filtrarSolicitudesDelUsuario(allRequests ?? []);
+        data =
+          await requestsRepository
+            .getRequestsByUser(userId);
+      } else if (
+        typeof requestsRepository
+          .getUserRequests === "function"
+      ) {
+        data =
+          await requestsRepository
+            .getUserRequests(userId);
+      } else if (
+        typeof requestsRepository
+          .getRequestsBySolicitante ===
+        "function"
+      ) {
+        data =
+          await requestsRepository
+            .getRequestsBySolicitante(userId);
+      } else if (
+        typeof requestsRepository
+          .getAllRequests === "function"
+      ) {
+        const allRequests =
+          await requestsRepository
+            .getAllRequests();
+
+        data =
+          filtrarSolicitudesDelUsuario(
+            allRequests ?? []
+          );
+      } else if (
+        typeof requestsRepository
+          .getRequests === "function"
+      ) {
+        const allRequests =
+          await requestsRepository
+            .getRequests();
+
+        data =
+          filtrarSolicitudesDelUsuario(
+            allRequests ?? []
+          );
+      } else if (
+        typeof requestsRepository.getAll ===
+        "function"
+      ) {
+        const allRequests =
+          await requestsRepository.getAll();
+
+        data =
+          filtrarSolicitudesDelUsuario(
+            allRequests ?? []
+          );
       }
 
-      const filtradas = filtrarSolicitudesDelUsuario(data ?? []);
+      const filtradas =
+        filtrarSolicitudesDelUsuario(
+          data ?? []
+        );
+
       setRequests(filtradas);
     } catch (error) {
-      console.log("ERROR cargando solicitudes del usuario:", error);
+      console.log(
+        "ERROR cargando solicitudes del usuario:",
+        error
+      );
+
       setRequests([]);
     } finally {
       setRequestsLoading(false);
     }
   };
 
-  const loadScreenData = async (showLoader = true) => {
+  const loadScreenData = async (
+    showLoader = true
+  ) => {
     await Promise.all([
       loadUser(showLoader),
       loadUserRequests(),
@@ -217,7 +328,9 @@ export default function UserDetail() {
 
   const onRefresh = async () => {
     setRefreshing(true);
+
     await loadScreenData(false);
+
     setRefreshing(false);
   };
 
@@ -258,9 +371,14 @@ export default function UserDetail() {
 
       <ScrollView
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
         }
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={
+          styles.scrollContent
+        }
       >
         <View style={styles.container}>
           <View style={styles.header}>
@@ -290,24 +408,38 @@ export default function UserDetail() {
                 Información de cuenta
               </Text>
 
-              <View style={styles.avatarContainer}>
+              <View
+                style={
+                  styles.avatarContainer
+                }
+              >
                 <AvatarView
                   size={100}
                   url={user?.imagen ?? null}
                   editable={false}
                 />
 
-                <Text style={styles.avatarHint}>
+                <Text
+                  style={styles.avatarHint}
+                >
                   Foto de perfil
                 </Text>
               </View>
 
-              <View style={styles.disabledInput}>
+              <View
+                style={
+                  styles.disabledInput
+                }
+              >
                 <Text style={styles.label}>
                   Número de trabajador
                 </Text>
 
-                <Text style={styles.disabledText}>
+                <Text
+                  style={
+                    styles.disabledText
+                  }
+                >
                   {user?.numUsuario}
                 </Text>
               </View>
@@ -348,12 +480,15 @@ export default function UserDetail() {
                   router.push({
                     pathname: "/editUser",
                     params: {
-                      id: user?.numUsuario?.toString(),
+                      id: user?.numUsuario
+                        ?.toString(),
                     },
                   })
                 }
               >
-                <Text style={styles.textButton}>
+                <Text
+                  style={styles.textButton}
+                >
                   Editar cuenta
                 </Text>
               </TouchableOpacity>
@@ -365,11 +500,16 @@ export default function UserDetail() {
               </Text>
 
               <Text style={styles.text}>
-                Solicitudes realizadas por el usuario
+                Solicitudes realizadas por el
+                usuario
               </Text>
 
               {requestsLoading ? (
-                <View style={styles.requestsLoader}>
+                <View
+                  style={
+                    styles.requestsLoader
+                  }
+                >
                   <ActivityIndicator />
                 </View>
               ) : requests.length > 0 ? (
@@ -383,7 +523,12 @@ export default function UserDetail() {
                     ) ?? "N/A";
 
                   const numTipo = Number(
-                    getValue(request, "numTipo", "numtipo", "num_tipo") ?? 0
+                    getValue(
+                      request,
+                      "numTipo",
+                      "numtipo",
+                      "num_tipo"
+                    ) ?? 0
                   );
 
                   const numStatus = Number(
@@ -395,23 +540,42 @@ export default function UserDetail() {
                     ) ?? 1
                   );
 
-                  const fecha = getValue(request, "fecha");
+                  const fecha = getValue(
+                    request,
+                    "fecha"
+                  );
+
                   const descripcion =
-                    getValue(request, "descripcion") ?? "Sin descripción";
+                    getValue(
+                      request,
+                      "descripcion"
+                    ) ?? "Sin descripción";
 
                   return (
                     <TouchableOpacity
-                      key={String(numSolicitud)}
-                      style={styles.requestCard}
-                      onPress={() => viewRequest(request)}
+                      key={String(
+                        numSolicitud
+                      )}
+                      style={
+                        styles.requestCard
+                      }
+                      onPress={() =>
+                        viewRequest(request)
+                      }
                     >
-                      <View style={styles.requestHeader}>
-
+                      <View
+                        style={
+                          styles.requestHeader
+                        }
+                      >
                         <View
                           style={[
                             styles.statusBadge,
                             {
-                              backgroundColor: renderStatusColor(numStatus),
+                              backgroundColor:
+                                renderStatusColor(
+                                  numStatus
+                                ),
                             },
                           ]}
                         >
@@ -419,34 +583,66 @@ export default function UserDetail() {
                             style={[
                               styles.statusText,
                               {
-                                color: renderStatusTextColor(numStatus),
+                                color:
+                                  renderStatusTextColor(
+                                    numStatus
+                                  ),
                               },
                             ]}
                           >
-                            {renderStatusName(numStatus)}
+                            {renderStatusName(
+                              numStatus
+                            )}
                           </Text>
                         </View>
                       </View>
 
-                      <Text style={styles.requestText}>
-                        <Text style={styles.requestLabel}>Tipo:</Text>{" "}
+                      <Text
+                        style={
+                          styles.requestText
+                        }
+                      >
+                        <Text
+                          style={
+                            styles.requestLabel
+                          }
+                        >
+                          Tipo:
+                        </Text>{" "}
                         {renderTipo(numTipo)}
                       </Text>
 
-                      <Text style={styles.requestText}>
-                        <Text style={styles.requestLabel}>Fecha:</Text>{" "}
+                      <Text
+                        style={
+                          styles.requestText
+                        }
+                      >
+                        <Text
+                          style={
+                            styles.requestLabel
+                          }
+                        >
+                          Fecha:
+                        </Text>{" "}
                         {formatDate(fecha)}
                       </Text>
 
-                      <Text style={styles.requestDescription}>
+                      <Text
+                        style={
+                          styles.requestDescription
+                        }
+                      >
                         {descripcion}
                       </Text>
                     </TouchableOpacity>
                   );
                 })
               ) : (
-                <Text style={styles.emptyText}>
-                  Este usuario no ha realizado solicitudes
+                <Text
+                  style={styles.emptyText}
+                >
+                  Este usuario no ha realizado
+                  solicitudes
                 </Text>
               )}
             </View>
