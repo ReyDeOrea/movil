@@ -17,22 +17,27 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    if (loading) return;
+
     try {
       setLoading(true);
 
-      validateLoginData(email, password);
+      const cleanEmail = email.trim().toLowerCase();
 
-      console.log("EMAIL:", email);
-      console.log("PASSWORD:", password);
+      setEmail(cleanEmail);
 
-      const user = await loginUser(email, password);
+      validateLoginData(cleanEmail, password);
+
+      const user = await loginUser(cleanEmail, password);
 
       console.log("USER:", user);
 
       router.replace("/requests");
-
     } catch (err: any) {
-      Alert.alert("Error", err.message);
+      Alert.alert(
+        "Error",
+        err?.message ?? "No se pudo iniciar sesión"
+      );
     } finally {
       setLoading(false);
     }
