@@ -26,20 +26,20 @@ import { User } from "../../domain/user";
 import { ApiFastUserRepository } from "../../infraestructure/userDataSource";
 import AvatarView from "../components/AvatarView";
 
-import { SupabaseRequestsRepository } from "../../../requests/infraestructure/requestsDatasurce";
+import { ApiFastRequestsRepository } from "../../../requests/infraestructure/requestsDatasurce";
+
+const userRepository =
+  new ApiFastUserRepository();
+
+const getUser =
+  new GetUserByIdUseCase(userRepository);
+
+const requestsRepository: any =
+  new ApiFastRequestsRepository();
 
 export default function UserDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-
-  const repository =
-    new ApiFastUserRepository();
-
-  const getUser =
-    new GetUserByIdUseCase(repository);
-
-  const requestsRepository: any =
-    new SupabaseRequestsRepository();
 
   const [user, setUser] =
     useState<User | null>(null);
@@ -85,7 +85,9 @@ export default function UserDetail() {
   const formatDate = (
     date?: string | null
   ) => {
-    if (!date) return "Sin fecha";
+    if (!date) {
+      return "Sin fecha";
+    }
 
     const cleanDate =
       String(date).split("T")[0];
@@ -287,8 +289,8 @@ export default function UserDetail() {
             allRequests ?? []
           );
       } else if (
-        typeof requestsRepository.getAll ===
-        "function"
+        typeof requestsRepository
+          .getAll === "function"
       ) {
         const allRequests =
           await requestsRepository.getAll();
@@ -327,11 +329,13 @@ export default function UserDetail() {
   };
 
   const onRefresh = async () => {
-    setRefreshing(true);
+    try {
+      setRefreshing(true);
 
-    await loadScreenData(false);
-
-    setRefreshing(false);
+      await loadScreenData(false);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const viewRequest = (request: any) => {
@@ -355,9 +359,20 @@ export default function UserDetail() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-      </View>
+      <>
+        <Stack.Screen
+          options={{
+            headerShown: false,
+          }}
+        />
+
+        <View style={styles.center}>
+          <ActivityIndicator
+            size="large"
+            color="#148248"
+          />
+        </View>
+      </>
     );
   }
 
@@ -427,18 +442,14 @@ export default function UserDetail() {
               </View>
 
               <View
-                style={
-                  styles.disabledInput
-                }
+                style={styles.disabledInput}
               >
                 <Text style={styles.label}>
                   Número de trabajador
                 </Text>
 
                 <Text
-                  style={
-                    styles.disabledText
-                  }
+                  style={styles.disabledText}
                 >
                   {user?.numUsuario}
                 </Text>
@@ -476,15 +487,18 @@ export default function UserDetail() {
 
               <TouchableOpacity
                 style={styles.button}
-                onPress={() =>
+                onPress={() => {
+                  if (!user?.numUsuario) {
+                    return;
+                  }
+
                   router.push({
                     pathname: "/editUser",
                     params: {
-                      id: user?.numUsuario
-                        ?.toString(),
+                      id: user.numUsuario.toString(),
                     },
-                  })
-                }
+                  });
+                }}
               >
                 <Text
                   style={styles.textButton}
@@ -510,7 +524,9 @@ export default function UserDetail() {
                     styles.requestsLoader
                   }
                 >
-                  <ActivityIndicator />
+                  <ActivityIndicator
+                    color="#148248"
+                  />
                 </View>
               ) : requests.length > 0 ? (
                 requests.map((request) => {
@@ -697,14 +713,14 @@ const styles = StyleSheet.create({
 
   account: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     padding: 20,
     borderRadius: 15,
   },
 
   requests: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     padding: 20,
     borderRadius: 15,
   },
@@ -721,7 +737,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: "#ddd",
+    backgroundColor: "#DDDDDD",
     justifyContent: "center",
     alignItems: "center",
     alignSelf: "center",
@@ -748,7 +764,7 @@ const styles = StyleSheet.create({
   },
 
   textButton: {
-    color: "#fff",
+    color: "#FFFFFF",
     textAlign: "center",
     fontWeight: "bold",
   },
@@ -757,6 +773,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#F5F5F5",
   },
 
   dataBox: {
