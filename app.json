@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "movil",
+    "name": "ZucarService",
     "slug": "movil",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/iconoZS.png",
     "scheme": "movil",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
