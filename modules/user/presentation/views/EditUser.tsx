@@ -1,25 +1,45 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import {
+  Stack,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
 import { checkUserExistsUpdate } from "../../application/checkUserExistsUpdate";
 import checkUserNameExistsUpdate from "../../application/CheckUserNameExist";
 import { EditUserUseCase } from "../../application/editUser";
 import { GetUserByIdUseCase } from "../../application/getUserByid";
 import { validateUser } from "../../application/validateUpdateUser";
 import { User } from "../../domain/user";
-import { SupabaseUserRepository } from "../../infraestructure/userDataSource";
+import { ApiFastUserRepository } from "../../infraestructure/userDataSource";
 import AvatarView from "../components/AvatarView";
 
 export default function EditUserView() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
 
-  const repository = new SupabaseUserRepository();
-  const getUserUseCase = new GetUserByIdUseCase(repository);
-  const editUserUseCase = new EditUserUseCase(repository);
+  const repository =
+    new ApiFastUserRepository();
 
-  const [userData, setUserData] = useState<User | null>(null);
+  const getUserUseCase =
+    new GetUserByIdUseCase(repository);
+
+  const editUserUseCase =
+    new EditUserUseCase(repository);
+
+  const [userData, setUserData] =
+    useState<User | null>(null);
+
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -31,10 +51,16 @@ export default function EditUserView() {
 
   const loadUser = async () => {
     try {
-      const user = await getUserUseCase.execute(Number(id));
+      const user = await getUserUseCase.execute(
+        Number(id)
+      );
 
       if (!user) {
-        Alert.alert("Error", "Usuario no encontrado");
+        Alert.alert(
+          "Error",
+          "Usuario no encontrado"
+        );
+
         router.back();
         return;
       }
@@ -54,12 +80,28 @@ export default function EditUserView() {
       if (!userData) return;
 
       const cleanNombre = nombre.trim();
-      const cleanEmail = email.trim().toLowerCase();
-      const cleanTelefono = telefono.trim();
 
-      const currentNombre = (userData.nombre ?? "").trim().toLowerCase();
-      const currentEmail = (userData.email ?? "").trim().toLowerCase();
-      const currentTelefono = (userData.telefono ?? "").trim();
+      const cleanEmail =
+        email.trim().toLowerCase();
+
+      const cleanTelefono =
+        telefono.trim();
+
+      const currentNombre = (
+        userData.nombre ?? ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const currentEmail = (
+        userData.email ?? ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const currentTelefono = (
+        userData.telefono ?? ""
+      ).trim();
 
       const updatedUser: User = {
         ...userData,
@@ -75,14 +117,20 @@ export default function EditUserView() {
         updatedUser.telefono
       );
 
-      if (cleanNombre.toLowerCase() !== currentNombre) {
+      if (
+        cleanNombre.toLowerCase() !==
+        currentNombre
+      ) {
         await checkUserNameExistsUpdate(
           updatedUser.nombre,
           updatedUser.numUsuario
         );
       }
 
-      if (cleanEmail !== currentEmail || cleanTelefono !== currentTelefono) {
+      if (
+        cleanEmail !== currentEmail ||
+        cleanTelefono !== currentTelefono
+      ) {
         await checkUserExistsUpdate(
           updatedUser.email,
           updatedUser.telefono,
@@ -90,9 +138,15 @@ export default function EditUserView() {
         );
       }
 
-      await editUserUseCase.execute(updatedUser);
+      await editUserUseCase.execute(
+        updatedUser
+      );
 
-      Alert.alert("Éxito", "Usuario actualizado correctamente");
+      Alert.alert(
+        "Éxito",
+        "Usuario actualizado correctamente"
+      );
+
       router.back();
     } catch (error: any) {
       Alert.alert("Error", error.message);
@@ -106,27 +160,23 @@ export default function EditUserView() {
           headerShown: false,
         }}
       />
-      <View style={styles.container}>
 
+      <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backBtn}
-            onPress={() =>
-              router.back()
-            }
+            onPress={() => router.back()}
           >
-
             <MaterialCommunityIcons
               name="arrow-left"
               size={28}
               color="#FFFFFF"
             />
-
           </TouchableOpacity>
 
           <View style={styles.rowHeader}>
             <Image
-              source={require('../../../../assets/images/ZUCARMEX.png')}
+              source={require("../../../../assets/images/ZUCARMEX.png")}
               style={styles.imageZucarmex}
               resizeMode="contain"
             />
@@ -139,7 +189,9 @@ export default function EditUserView() {
               size={110}
               url={avatarUrl}
               editable
-              onUpload={(url) => setAvatarUrl(url)}
+              onUpload={(url) =>
+                setAvatarUrl(url)
+              }
             />
           </View>
 
@@ -171,14 +223,18 @@ export default function EditUserView() {
             style={styles.button}
             onPress={handleUpdate}
           >
-            <Text style={styles.buttonText}>Guardar cambios</Text>
+            <Text style={styles.buttonText}>
+              Guardar cambios
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.cancelButton}
             onPress={() => router.back()}
           >
-            <Text style={styles.buttonText}>Cancelar</Text>
+            <Text style={styles.buttonText}>
+              Cancelar
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -191,6 +247,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F5F5F5",
   },
+
   input: {
     borderWidth: 1,
     borderColor: "#D1D5DB",
@@ -200,29 +257,34 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     backgroundColor: "#fff",
   },
+
   button: {
     backgroundColor: "#232323",
     padding: 15,
-     marginBottom:20,
+    marginBottom: 20,
     borderRadius: 10,
     alignItems: "center",
     marginHorizontal: 20,
   },
+
   rowHeader: {
     flex: 1,
     width: "100%",
     justifyContent: "center",
     alignItems: "center",
   },
+
   backBtn: {
     position: "absolute",
     left: 15,
     top: 45,
   },
+
   imageZucarmex: {
-    width: '45%',
+    width: "45%",
     height: 60,
   },
+
   header: {
     width: "100%",
     height: 100,
@@ -232,14 +294,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
+
   buttonText: {
     color: "#FFF",
     fontWeight: "bold",
   },
+
   avatarContainer: {
     alignItems: "center",
     marginBottom: 15,
   },
+
   card: {
     margin: 15,
     padding: 20,
@@ -247,6 +312,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     elevation: 3,
   },
+
   cancelButton: {
     backgroundColor: "#870c0c",
     padding: 15,
