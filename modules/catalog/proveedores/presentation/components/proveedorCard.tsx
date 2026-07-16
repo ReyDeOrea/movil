@@ -47,7 +47,7 @@ export default function TecnicoExternoCard({
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.deleteButton}
           onPress={() =>
             onDelete(
@@ -58,7 +58,7 @@ export default function TecnicoExternoCard({
           <Text style={styles.buttonText}>
             Eliminar
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
       </View>
 
