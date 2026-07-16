@@ -1,5 +1,5 @@
-import EntradaFormView from "@/modules/catalog/entradas/presentation/views/EntradaFormView";
+import CreateEntradaView from "../modules/catalog/entradas/presentation/views/CreateEntradaView";
 
-export default function EntradaScreen() {
-  return <EntradaFormView />;
+export default function EntradaPage() {
+  return <CreateEntradaView />;
 }
