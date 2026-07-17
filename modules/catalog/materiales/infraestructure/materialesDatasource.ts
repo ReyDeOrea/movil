@@ -1,32 +1,47 @@
 import { api } from "@/lib/api";
-import { Material } from "../domain/material";
+import { Material, TipoMaterial } from "../domain/material";
 import { MaterialRepository } from "../domain/materialRepository";
 
 type MaterialApi = {
-  nummaterial: number;
-  nombrematerial: string;
+  nummaterial?: number;
+  numMaterial?: number;
+  nombrematerial?: string;
+  nombreMaterial?: string;
   unidad?: string | null;
   cantidad?: number | null;
+  tipomaterial?: TipoMaterial | null;
+  tipoMaterial?: TipoMaterial | null;
+};
+
+const normalizeTipoMaterial = (value: unknown): TipoMaterial => {
+  return String(value ?? "material").trim().toLowerCase() === "herramienta"
+    ? "herramienta"
+    : "material";
 };
 
 const toDomain = (item: MaterialApi): Material => ({
-  numMaterial: item.nummaterial,
-  nombreMaterial: item.nombrematerial,
+  numMaterial: Number(item.numMaterial ?? item.nummaterial ?? 0),
+  nombreMaterial: String(item.nombreMaterial ?? item.nombrematerial ?? ""),
   unidad: item.unidad ?? "",
-  cantidad: item.cantidad ?? 0,
+  cantidad: Number(item.cantidad ?? 0),
+  tipoMaterial: normalizeTipoMaterial(
+    item.tipoMaterial ?? item.tipomaterial
+  ),
 });
 
 const toApi = (material: Material) => ({
   nummaterial: material.numMaterial,
-  nombrematerial: material.nombreMaterial,
-  unidad: material.unidad ?? null,
-  cantidad: material.cantidad ?? null,
+  nombrematerial: material.nombreMaterial.trim(),
+  unidad: material.unidad?.trim() || null,
+  cantidad: material.cantidad ?? 0,
+  tipomaterial: material.tipoMaterial,
 });
 
 const toApiUpdate = (material: Material) => ({
-  nombrematerial: material.nombreMaterial,
-  unidad: material.unidad ?? null,
-  cantidad: material.cantidad ?? null,
+  nombrematerial: material.nombreMaterial.trim(),
+  unidad: material.unidad?.trim() || null,
+  cantidad: material.cantidad ?? 0,
+  tipomaterial: material.tipoMaterial,
 });
 
 export class MaterialDataSource implements MaterialRepository {

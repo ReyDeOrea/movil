@@ -1,5 +1,5 @@
-import CreateEntradaView from "../modules/catalog/entradas/presentation/views/CreateEntradaView";
+import CreateEntradaView from "@/modules/catalog/entradas/presentation/views/CreateEntradaView";
 
-export default function EntradaPage() {
+export default function EntradaCreatePage() {
   return <CreateEntradaView />;
 }

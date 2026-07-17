@@ -1,3 +1,5 @@
+import type { TipoMaterial } from "../../catalog/materiales/domain/material";
+
 export interface RequestsForm {
   numSolicitud: number;
   fecha: string;
@@ -65,6 +67,7 @@ export interface DetalleMaterial {
   cantidad: number;
   unidad: string;
   stock?: number;
+  tipoMaterial?: TipoMaterial;
 }
 
 export interface SolicitudTecnicoInterno {

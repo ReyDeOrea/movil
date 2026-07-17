@@ -1,20 +1,26 @@
-
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
 import { EditMaterialUseCase } from "../../application/editMaterial";
 import { GetMaterialByIdUseCase } from "../../application/getMaterialByIS";
-import { Material } from "../../domain/material";
+import { Material, TipoMaterial } from "../../domain/material";
 import { MaterialDataSource } from "../../infraestructure/materialesDatasource";
 
-
 export default function EditMaterial() {
-
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  console.log("ID RECIBIDO:", id);
-  console.log("TIPO:", typeof id);
+
   const repository = new MaterialDataSource();
   const getMaterialUseCase = new GetMaterialByIdUseCase(repository);
   const editMaterialUseCase = new EditMaterialUseCase(repository);
@@ -22,89 +28,98 @@ export default function EditMaterial() {
   const [nombreMaterial, setNombreMaterial] = useState("");
   const [unidad, setUnidad] = useState("");
   const [cantidad, setCantidad] = useState("");
+  const [tipoMaterial, setTipoMaterial] =
+    useState<TipoMaterial>("material");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadMaterial();
-  }, []);
+  }, [id]);
 
   const loadMaterial = async () => {
     try {
-      console.log("NUMBER ID:", Number(id));
-      const material =
-        await getMaterialUseCase.execute(Number(id));
+      setLoading(true);
+
+      const material = await getMaterialUseCase.execute(Number(id));
 
       if (!material) {
-        Alert.alert("Error", "Material no encontrado");
+        Alert.alert("Error", "Material o herramienta no encontrado");
         router.back();
         return;
       }
 
       setNombreMaterial(material.nombreMaterial);
       setUnidad(material.unidad ?? "");
-      setCantidad(
-        material.cantidad !== undefined &&
-          material.cantidad !== null
-          ? material.cantidad.toString()
-          : ""
-      );
-
+      setCantidad(String(material.cantidad ?? 0));
+      setTipoMaterial(material.tipoMaterial ?? "material");
     } catch (error: any) {
-      Alert.alert("Error", error.message);
+      Alert.alert(
+        "Error",
+        error?.response?.data?.detail ??
+          error?.message ??
+          "No se pudo cargar el registro"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleUpdate = async () => {
+    if (saving) return;
+
     try {
+      setSaving(true);
 
       const material: Material = {
         numMaterial: Number(id),
         nombreMaterial,
         unidad,
-        cantidad: Number(cantidad),
+        cantidad: Number(cantidad || 0),
+        tipoMaterial,
       };
 
       await editMaterialUseCase.execute(material);
 
       Alert.alert(
         "Éxito",
-        "Material actualizado correctamente"
+        tipoMaterial === "herramienta"
+          ? "Herramienta actualizada correctamente"
+          : "Material actualizado correctamente",
+        [{ text: "Aceptar", onPress: () => router.back() }]
       );
-
-      router.back();
-
     } catch (error: any) {
-      Alert.alert("Error", error.message);
+      Alert.alert(
+        "Error",
+        error?.response?.data?.detail ??
+          error?.message ??
+          "No se pudo actualizar el registro"
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
-      <ScrollView contentContainerStyle={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
 
+      <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backBtn}
-            onPress={() =>
-              router.back()
-            }
+            onPress={() => router.back()}
           >
-
             <MaterialCommunityIcons
               name="arrow-left"
               size={28}
               color="#FFFFFF"
             />
-
           </TouchableOpacity>
 
           <View style={styles.rowHeader}>
             <Image
-              source={require('../../../../../assets/images/ZUCARMEX.png')}
+              source={require("../../../../../assets/images/ZUCARMEX.png")}
               style={styles.imageZucarmex}
               resizeMode="contain"
             />
@@ -112,43 +127,117 @@ export default function EditMaterial() {
         </View>
 
         <View style={styles.card}>
-          <TextInput
-            style={styles.input}
-            placeholder="Nombre del material"
-            value={nombreMaterial}
-            onChangeText={setNombreMaterial}
-          />
+          {loading ? (
+            <Text style={styles.loadingText}>Cargando...</Text>
+          ) : (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Nombre del material o herramienta"
+                placeholderTextColor="#888888"
+                value={nombreMaterial}
+                onChangeText={setNombreMaterial}
+              />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Unidad"
-            value={unidad}
-            onChangeText={setUnidad}
-          />
+              <Text style={styles.label}>Tipo</Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Cantidad"
-            keyboardType="numeric"
-            value={cantidad}
-            onChangeText={setCantidad}
-          />
+              <View style={styles.typeContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.typeButton,
+                    tipoMaterial === "material" && styles.typeButtonSelected,
+                  ]}
+                  onPress={() => setTipoMaterial("material")}
+                >
+                  <MaterialCommunityIcons
+                    name="package-variant"
+                    size={22}
+                    color={
+                      tipoMaterial === "material" ? "#FFFFFF" : "#148248"
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      tipoMaterial === "material" &&
+                        styles.typeButtonTextSelected,
+                    ]}
+                  >
+                    Material
+                  </Text>
+                </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleUpdate}
-          >
-            <Text style={styles.buttonText}>
-              Guardar cambios
-            </Text>
-          </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.typeButton,
+                    tipoMaterial === "herramienta" && styles.typeButtonSelected,
+                  ]}
+                  onPress={() => setTipoMaterial("herramienta")}
+                >
+                  <MaterialCommunityIcons
+                    name="tools"
+                    size={22}
+                    color={
+                      tipoMaterial === "herramienta"
+                        ? "#FFFFFF"
+                        : "#148248"
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      tipoMaterial === "herramienta" &&
+                        styles.typeButtonTextSelected,
+                    ]}
+                  >
+                    Herramienta
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.buttonText}>Cancelar</Text>
-          </TouchableOpacity>
+              {/* <Text style={styles.helperText}>
+                Al terminar una solicitud, los materiales consumibles bajan su
+                stock. Las herramientas conservan su stock.
+              </Text> */}
+
+              <TextInput
+                style={styles.input}
+                placeholder="Unidad"
+                placeholderTextColor="#888888"
+                value={unidad}
+                onChangeText={setUnidad}
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder="Cantidad"
+                placeholderTextColor="#888888"
+                keyboardType="numeric"
+                value={cantidad}
+                onChangeText={(text) =>
+                  setCantidad(text.replace(/[^0-9]/g, ""))
+                }
+              />
+
+              <TouchableOpacity
+                style={[styles.button, saving && styles.disabledButton]}
+                onPress={handleUpdate}
+                disabled={saving}
+              >
+                <Text style={styles.buttonText}>
+                  {saving ? "Guardando..." : "Guardar cambios"}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => router.back()}
+                disabled={saving}
+              >
+                <Text style={styles.buttonText}>Cancelar</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </ScrollView>
     </>
@@ -157,9 +246,9 @@ export default function EditMaterial() {
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 40,
-    flex: 1,
-    backgroundColor: "#F5F5F5"
+    flexGrow: 1,
+    paddingBottom: 40,
+    backgroundColor: "#F5F5F5",
   },
   rowHeader: {
     flex: 1,
@@ -171,12 +260,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 15,
     top: 45,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
+    zIndex: 10,
   },
   header: {
     width: "100%",
@@ -194,9 +278,52 @@ const styles = StyleSheet.create({
     padding: 12,
     marginHorizontal: 20,
     marginBottom: 15,
+    color: "#111827",
+    backgroundColor: "#FFFFFF",
+  },
+  label: {
+    marginHorizontal: 20,
+    marginBottom: 7,
+    color: "#374151",
+    fontWeight: "bold",
+  },
+  typeContainer: {
+    flexDirection: "row",
+    marginHorizontal: 20,
+    marginBottom: 8,
+    gap: 10,
+  },
+  typeButton: {
+    flex: 1,
+    minHeight: 48,
+    borderWidth: 1,
+    borderColor: "#148248",
+    borderRadius: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    backgroundColor: "#FFFFFF",
+  },
+  typeButtonSelected: {
+    backgroundColor: "#148248",
+  },
+  typeButtonText: {
+    color: "#148248",
+    fontWeight: "bold",
+  },
+  typeButtonTextSelected: {
+    color: "#FFFFFF",
+  },
+  helperText: {
+    marginHorizontal: 20,
+    marginBottom: 15,
+    color: "#6B7280",
+    fontSize: 12,
+    lineHeight: 17,
   },
   imageZucarmex: {
-    width: '45%',
+    width: "45%",
     height: 60,
   },
   button: {
@@ -207,8 +334,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
+  disabledButton: {
+    opacity: 0.65,
+  },
   buttonText: {
-    color: "#ffffff",
+    color: "#FFFFFF",
     fontWeight: "bold",
   },
   card: {
@@ -219,11 +349,15 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   cancelButton: {
-    backgroundColor: "#870c0c",
+    backgroundColor: "#870C0C",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
     marginHorizontal: 20,
   },
+  loadingText: {
+    textAlign: "center",
+    color: "#6B7280",
+    paddingVertical: 20,
+  },
 });
-

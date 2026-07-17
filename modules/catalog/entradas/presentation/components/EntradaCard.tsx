@@ -47,6 +47,11 @@ export default function EntradaCard({
       </View>
 
       <Text style={styles.text}>
+        <Text style={styles.label}>Tipo:</Text>{" "}
+        {entrada.tipoMaterial === "herramienta" ? "Herramienta" : "Material"}
+      </Text>
+
+      <Text style={styles.text}>
         <Text style={styles.label}>Unidad:</Text> {entrada.unidad || "unidad"}
       </Text>
 

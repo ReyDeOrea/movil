@@ -109,6 +109,12 @@ const toDomainMaterial = (item: any): DetalleMaterial => ({
   cantidad: Number(item.cantidad ?? 0),
   unidad: item.unidad ?? "unidad",
   stock: Number(item.stockActual ?? item.stock ?? item.existencia ?? 0),
+  tipoMaterial:
+    String(item.tipoMaterial ?? item.tipomaterial ?? "material")
+      .trim()
+      .toLowerCase() === "herramienta"
+      ? "herramienta"
+      : "material",
 });
 
 const toDomain = (item: SolicitudApi): RequestsForm => ({
