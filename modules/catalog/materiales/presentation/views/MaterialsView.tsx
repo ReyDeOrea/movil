@@ -45,7 +45,7 @@ export default function MaterialsView() {
     } catch (error: any) {
       Alert.alert(
         "Error",
-        error.message || "No se pudieron cargar los materiales"
+        error.message || "No se pudieron cargar los materiales y herramientas"
       );
     } finally {
       setLoading(false);
@@ -60,8 +60,13 @@ export default function MaterialsView() {
   };
 
   const filteredMaterials = materials.filter((material) =>
-    normalizeText(material.nombreMaterial ?? "").includes(
-      normalizeText(searchText)
+    (
+      normalizeText(material.nombreMaterial ?? "").includes(
+        normalizeText(searchText)
+      ) ||
+      normalizeText(material.tipoMaterial ?? "material").includes(
+        normalizeText(searchText)
+      )
     )
   );
 
@@ -76,8 +81,8 @@ export default function MaterialsView() {
 
   const handleDelete = (id: number) => {
     Alert.alert(
-      "Eliminar material",
-      "¿Deseas eliminar este material?",
+      "Eliminar registro",
+      "¿Deseas eliminar este material o herramienta?",
       [
         {
           text: "Cancelar",
@@ -98,12 +103,12 @@ export default function MaterialsView() {
 
               Alert.alert(
                 "Éxito",
-                "Material eliminado correctamente"
+                "Registro eliminado correctamente"
               );
             } catch (error: any) {
               Alert.alert(
                 "Error",
-                error.message || "No se pudo eliminar el material"
+                error.message || "No se pudo eliminar el material o herramienta"
               );
             }
           },
@@ -160,7 +165,7 @@ export default function MaterialsView() {
 
           <TextInput
             style={styles.searchInput}
-            placeholder="Buscar material por nombre"
+            placeholder="Buscar por nombre o tipo"
             placeholderTextColor="#888"
             value={searchText}
             onChangeText={setSearchText}
@@ -186,7 +191,7 @@ export default function MaterialsView() {
             />
 
             <Text style={styles.emptyTitle}>
-              No se encontraron materiales
+              No se encontraron materiales ni herramientas
             </Text>
 
             <Text style={styles.emptyText}>

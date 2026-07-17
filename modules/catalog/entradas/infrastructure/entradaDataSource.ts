@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { TipoMaterial } from "../../materiales/domain/material";
 import { Entrada, EntradaInput } from "../domain/entrada";
 import { EntradaRepository } from "../domain/entradaRepository";
 
@@ -9,8 +10,12 @@ type EntradaApi = {
   numMaterial?: number;
   nummaterial?: number;
   nombreMaterial?: string | null;
+  nombrematerial?: string | null;
   unidad?: string | null;
   stockActual?: number | null;
+  stockactual?: number | null;
+  tipomaterial?: TipoMaterial | null;
+  tipoMaterial?: TipoMaterial | null;
 
   cantidad?: number | null;
   fecha?: string | null;
@@ -29,13 +34,22 @@ type EntradaApi = {
   created_at?: string | null;
 };
 
+const normalizeTipoMaterial = (value: unknown): TipoMaterial => {
+  return String(value ?? "material").trim().toLowerCase() === "herramienta"
+    ? "herramienta"
+    : "material";
+};
+
 const toDomain = (item: EntradaApi): Entrada => ({
   idEntrada: String(item.idEntrada ?? item.identrada ?? ""),
 
   numMaterial: Number(item.numMaterial ?? item.nummaterial ?? 0),
-  nombreMaterial: item.nombreMaterial ?? "",
+  nombreMaterial: item.nombreMaterial ?? item.nombrematerial ?? "",
   unidad: item.unidad ?? "",
-  stockActual: Number(item.stockActual ?? 0),
+  stockActual: Number(item.stockActual ?? item.stockactual ?? 0),
+  tipoMaterial: normalizeTipoMaterial(
+    item.tipoMaterial ?? item.tipomaterial
+  ),
 
   cantidad: Number(item.cantidad ?? 0),
   fecha: item.fecha ?? "",

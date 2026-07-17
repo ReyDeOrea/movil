@@ -1,19 +1,19 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
-    Stack,
-    useFocusEffect,
-    useRouter,
+  Stack,
+  useFocusEffect,
+  useRouter,
 } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import { DeleteEntradaUseCase } from "../../application/deleteEntrada";
@@ -58,7 +58,7 @@ export default function EntradasView() {
       Alert.alert(
         "Error",
         error?.message ??
-          "No se pudieron cargar las entradas"
+        "No se pudieron cargar las entradas"
       );
     } finally {
       setLoading(false);
@@ -72,17 +72,17 @@ export default function EntradasView() {
   );
 
   const crearEntrada = () => {
-    router.push("/entrada" as any);
+    router.push("/entradaCreate" as any);
   };
 
   const editarEntrada = (entrada: Entrada) => {
-  router.push({
-    pathname: "/editEntrada",
-    params: {
-      idEntrada: String(entrada.idEntrada),
-    },
-  });
-};
+    router.push({
+      pathname: "/editEntrada",
+      params: {
+        idEntrada: String(entrada.idEntrada),
+      },
+    });
+  };
 
   const eliminarEntrada = (
     idEntrada: string
@@ -114,7 +114,7 @@ export default function EntradasView() {
               Alert.alert(
                 "Error",
                 error?.message ??
-                  "No se pudo eliminar la entrada"
+                "No se pudo eliminar la entrada"
               );
             }
           },

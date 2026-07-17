@@ -1,3 +1,5 @@
+import { TipoMaterial } from "../../materiales/domain/material";
+
 export interface Entrada {
   idEntrada: string;
 
@@ -5,6 +7,7 @@ export interface Entrada {
   nombreMaterial?: string;
   unidad?: string;
   stockActual?: number;
+  tipoMaterial?: TipoMaterial;
 
   cantidad: number;
   fecha?: string;

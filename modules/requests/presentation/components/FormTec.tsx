@@ -22,9 +22,11 @@ import {
 } from "react-native";
 
 import { api } from "@/lib/api";
-import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
+import { ApiFastRequestsRepository } from "../../infraestructure/requestsDatasurce";
 
-const repository = new SupabaseRequestsRepository();
+const repository = new ApiFastRequestsRepository();
+
+type TipoMaterial = "material" | "herramienta";
 
 type MaterialCatalogo = {
     numMaterial: number;
@@ -32,6 +34,7 @@ type MaterialCatalogo = {
     descripcion?: string;
     unidad?: string;
     stock?: number;
+    tipoMaterial: TipoMaterial;
 };
 
 type MaterialSeleccionado = {
@@ -40,6 +43,7 @@ type MaterialSeleccionado = {
     unidad: string;
     cantidad: string;
     stock: number;
+    tipoMaterial: TipoMaterial;
 };
 
 type ImagenSeleccionada = {
@@ -110,6 +114,12 @@ const formatDate = (date?: string | null) => {
     }
 
     return String(date);
+};
+
+const normalizeTipoMaterial = (value: unknown): TipoMaterial => {
+    return String(value ?? "material").trim().toLowerCase() === "herramienta"
+        ? "herramienta"
+        : "material";
 };
 
 const getAreaName = (area: number | string | undefined | null) => {
@@ -284,12 +294,22 @@ export default function CompleteRequestForm() {
                         ) ?? 0
                     );
 
+                    const tipoMaterial = normalizeTipoMaterial(
+                        getValue(
+                            item,
+                            "tipoMaterial",
+                            "tipomaterial",
+                            "tipo_material"
+                        )
+                    );
+
                     return {
                         numMaterial,
                         nombre,
                         descripcion,
                         unidad,
                         stock,
+                        tipoMaterial,
                     };
                 })
                 .filter((material: MaterialCatalogo) => {
@@ -322,7 +342,8 @@ export default function CompleteRequestForm() {
         if (!search) return materiales;
 
         return materiales.filter((material) =>
-            material.nombre.toLowerCase().includes(search)
+            material.nombre.toLowerCase().includes(search) ||
+            material.tipoMaterial.toLowerCase().includes(search)
         );
     }, [busquedaMaterial, materiales]);
 
@@ -332,7 +353,7 @@ export default function CompleteRequestForm() {
         if (stockDisponible <= 0) {
             Alert.alert(
                 "Sin existencia",
-                `No puedes seleccionar ${material.nombre} porque no tiene existencia disponible.`
+                `No puedes seleccionar ${material.nombre} porque no tiene existencia registrada.`
             );
             return;
         }
@@ -354,6 +375,7 @@ export default function CompleteRequestForm() {
                 unidad: material.unidad ?? "unidad",
                 cantidad: "",
                 stock: stockDisponible,
+                tipoMaterial: material.tipoMaterial,
             },
         ]);
 
@@ -389,7 +411,7 @@ export default function CompleteRequestForm() {
                 if (cantidadNumerica > stockDisponible) {
                     Alert.alert(
                         "Cantidad no disponible",
-                        `Solo hay ${stockDisponible} ${item.unidad} de ${item.nombre} en existencia.`
+                        `Solo hay ${stockDisponible} ${item.unidad} de ${item.nombre} registrados en existencia.`
                     );
 
                     return {
@@ -697,7 +719,7 @@ export default function CompleteRequestForm() {
                             La fecha de fin se asigna automáticamente al guardar.
                         </Text>
 
-                        <Text style={styles.label}>Materiales utilizados:</Text>
+                        <Text style={styles.label}>Materiales y herramientas utilizados:</Text>
 
                         <TouchableOpacity
                             style={styles.selectButton}
@@ -710,13 +732,13 @@ export default function CompleteRequestForm() {
                             />
 
                             <Text style={styles.selectButtonText}>
-                                Seleccionar materiales
+                                Seleccionar materiales o herramientas
                             </Text>
                         </TouchableOpacity>
 
                         {materialesSeleccionados.length === 0 && (
                             <Text style={styles.helperText}>
-                                No has seleccionado materiales.
+                                No has seleccionado materiales ni herramientas.
                             </Text>
                         )}
 
@@ -732,12 +754,25 @@ export default function CompleteRequestForm() {
                                         </Text>
 
                                         <Text style={styles.materialUnit}>
+                                            Tipo:{" "}
+                                            {material.tipoMaterial === "herramienta"
+                                                ? "Herramienta"
+                                                : "Material"}
+                                        </Text>
+
+                                        <Text style={styles.materialUnit}>
                                             Unidad: {material.unidad}
                                         </Text>
 
                                         <Text style={styles.materialUnit}>
                                             Existencia disponible: {material.stock}
                                         </Text>
+
+                                        {material.tipoMaterial === "herramienta" && (
+                                            <Text style={styles.toolNotice}>
+                                                Su stock se mantendrá igual al terminar la solicitud.
+                                            </Text>
+                                        )}
                                     </View>
 
                                     <TouchableOpacity
@@ -854,7 +889,7 @@ export default function CompleteRequestForm() {
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>
-                                Catálogo de materiales
+                                Catálogo de materiales y herramientas
                             </Text>
 
                             <TouchableOpacity
@@ -872,7 +907,7 @@ export default function CompleteRequestForm() {
                             style={styles.searchInput}
                             value={busquedaMaterial}
                             onChangeText={setBusquedaMaterial}
-                            placeholder="Buscar material..."
+                            placeholder="Buscar por nombre o tipo..."
                         />
 
                         <ScrollView
@@ -881,14 +916,14 @@ export default function CompleteRequestForm() {
                         >
                             {loadingMateriales && (
                                 <Text style={styles.emptyMaterials}>
-                                    Cargando materiales...
+                                    Cargando materiales y herramientas...
                                 </Text>
                             )}
 
                             {!loadingMateriales &&
                                 materialesFiltrados.length === 0 && (
                                     <Text style={styles.emptyMaterials}>
-                                        No hay materiales disponibles
+                                        No hay materiales ni herramientas disponibles
                                     </Text>
                                 )}
 
@@ -901,6 +936,13 @@ export default function CompleteRequestForm() {
                                     >
                                         <Text style={styles.materialCatalogName}>
                                             {material.nombre}
+                                        </Text>
+
+                                        <Text style={styles.materialCatalogText}>
+                                            Tipo:{" "}
+                                            {material.tipoMaterial === "herramienta"
+                                                ? "Herramienta"
+                                                : "Material"}
                                         </Text>
 
                                         <Text style={styles.materialCatalogText}>
@@ -1051,6 +1093,13 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         fontSize: 15,
         color: "#111827",
+    },
+
+    toolNotice: {
+        color: "#7C3AED",
+        fontSize: 12,
+        marginTop: 5,
+        fontWeight: "600",
     },
 
     materialUnit: {

@@ -125,7 +125,7 @@ export default function EntradaFormView({
     if (!materialSeleccionado) {
       Alert.alert(
         "Campo obligatorio",
-        "Selecciona un material"
+        "Selecciona un material o herramienta"
       );
 
       return;
@@ -161,7 +161,7 @@ export default function EntradaFormView({
           Datos de la entrada
         </Text>
 
-        <Text style={styles.label}>Material</Text>
+        <Text style={styles.label}>Material o herramienta</Text>
 
         <TouchableOpacity
           style={styles.selector}
@@ -171,7 +171,7 @@ export default function EntradaFormView({
           <Text style={styles.selectorText}>
             {materialSeleccionado
               ? `${materialSeleccionado.nombreMaterial} (${materialSeleccionado.numMaterial})`
-              : "Selecciona un material"}
+              : "Selecciona un material o herramienta"}
           </Text>
 
           <MaterialCommunityIcons
@@ -182,11 +182,26 @@ export default function EntradaFormView({
         </TouchableOpacity>
 
         {materialSeleccionado && (
-          <Text style={styles.helperText}>
-            Stock actual:{" "}
-            {materialSeleccionado.cantidad ?? 0}{" "}
-            {materialSeleccionado.unidad ?? ""}
-          </Text>
+          <View>
+            <Text style={styles.helperText}>
+              Tipo:{" "}
+              {materialSeleccionado.tipoMaterial === "herramienta"
+                ? "Herramienta"
+                : "Material"}
+            </Text>
+
+            <Text style={styles.helperText}>
+              Stock actual:{" "}
+              {materialSeleccionado.cantidad ?? 0}{" "}
+              {materialSeleccionado.unidad ?? ""}
+            </Text>
+
+            {/* {materialSeleccionado.tipoMaterial === "herramienta" && (
+              <Text style={styles.toolHelperText}>
+                Esta entrada aumentará normalmente el stock de la herramienta.
+              </Text>
+            )} */}
+          </View>
         )}
 
         <Text style={styles.label}>
@@ -282,7 +297,7 @@ export default function EntradaFormView({
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                Seleccionar material
+                Seleccionar material o herramienta
               </Text>
 
               <TouchableOpacity
@@ -327,6 +342,13 @@ export default function EntradaFormView({
 
                     <Text style={styles.optionText}>
                       Código: {material.numMaterial}
+                    </Text>
+
+                    <Text style={styles.optionText}>
+                      Tipo:{" "}
+                      {material.tipoMaterial === "herramienta"
+                        ? "Herramienta"
+                        : "Material"}
                     </Text>
 
                     <Text style={styles.optionText}>
@@ -507,6 +529,13 @@ const styles = StyleSheet.create({
 
   helperText: {
     color: "#6B7280",
+    fontSize: 13,
+    marginTop: 5,
+  },
+
+
+  toolHelperText: {
+    color: "#7C3AED",
     fontSize: 13,
     marginTop: 5,
   },

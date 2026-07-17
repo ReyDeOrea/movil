@@ -271,6 +271,27 @@ export default function ViewRequest() {
           "",
 
         cantidad: Number(getValue(item, "cantidad") ?? 0),
+
+        tipoMaterial:
+          String(
+            getValue(
+              item,
+              "tipoMaterial",
+              "tipomaterial",
+              "tipo_material"
+            ) ??
+              getValue(
+                material,
+                "tipoMaterial",
+                "tipomaterial",
+                "tipo_material"
+              ) ??
+              "material"
+          )
+            .trim()
+            .toLowerCase() === "herramienta"
+            ? "herramienta"
+            : "material",
       };
     });
   };
@@ -1105,6 +1126,13 @@ export default function ViewRequest() {
                   <View key={String(material.id)} style={styles.materialItem}>
                     <Text style={styles.materialName}>
                       {material.nombre}
+                    </Text>
+
+                    <Text style={styles.value}>
+                      <Text style={styles.label}>Tipo:</Text>{" "}
+                      {material.tipoMaterial === "herramienta"
+                        ? "Herramienta"
+                        : "Material"}
                     </Text>
 
                     <Text style={styles.value}>

@@ -1,21 +1,21 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-    Stack,
-    useFocusEffect,
-    useLocalSearchParams,
-    useRouter,
+  Stack,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
 } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import { GetMaterialsUseCase } from "../../../materiales/application/getMaterials";
@@ -31,7 +31,7 @@ import { GetEntradaByIdUseCase } from "../../application/getEntradaById";
 import { EntradaDataSource } from "../../infrastructure/entradaDataSource";
 
 import EntradaFormView, {
-    EntradaFormValues,
+  EntradaFormValues,
 } from "../components/EntradaFormView";
 
 const entradaRepository = new EntradaDataSource();
@@ -138,6 +138,7 @@ export default function EditEntradaView() {
             entrada.nombreMaterial ?? "Material",
           unidad: entrada.unidad ?? "unidad",
           cantidad: entrada.stockActual ?? 0,
+          tipoMaterial: entrada.tipoMaterial ?? "material",
         } as Material);
 
       setInitialValues({
