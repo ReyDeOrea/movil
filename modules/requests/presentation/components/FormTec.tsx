@@ -768,11 +768,6 @@ export default function CompleteRequestForm() {
                                             Existencia disponible: {material.stock}
                                         </Text>
 
-                                        {material.tipoMaterial === "herramienta" && (
-                                            <Text style={styles.toolNotice}>
-                                                Su stock se mantendrá igual al terminar la solicitud.
-                                            </Text>
-                                        )}
                                     </View>
 
                                     <TouchableOpacity
