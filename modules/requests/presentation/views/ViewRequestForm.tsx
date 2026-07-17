@@ -886,10 +886,7 @@ export default function ViewRequest() {
 
           <div class="section">
             <div class="title">Información general</div>
-
-            <div class="label">Número de solicitud:</div>
-            <div class="value">${limpiarTextoHtml(numSolicitud)}</div>
-
+            
             <div class="label">Solicitante:</div>
             <div class="value">${limpiarTextoHtml(solicitante)}</div>
 
