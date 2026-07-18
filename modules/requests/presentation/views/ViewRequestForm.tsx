@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as ImagePicker from "expo-image-picker";
 import * as Print from "expo-print";
 import {
   Stack,
@@ -10,9 +11,11 @@ import {
 import * as Sharing from "expo-sharing";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Dimensions,
   Image,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -26,14 +29,15 @@ import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasu
 const screenWidth = Dimensions.get("window").width;
 const repository = new SupabaseRequestsRepository();
 
+type EvidenciaSeleccionada = {
+  uri: string;
+  name: string;
+  type: string;
+};
+
 function getValue<T = any>(obj: any, ...keys: string[]): T | undefined {
   for (const key of keys) {
-    if (
-      obj &&
-      obj[key] !== undefined &&
-      obj[key] !== null &&
-      obj[key] !== ""
-    ) {
+    if (obj && obj[key] !== undefined && obj[key] !== null && obj[key] !== "") {
       return obj[key];
     }
   }
@@ -96,6 +100,11 @@ export default function ViewRequest() {
   const [loading, setLoading] = useState(true);
   const [esAdmin, setEsAdmin] = useState(false);
   const [materialesSolicitud, setMaterialesSolicitud] = useState<any[]>([]);
+  const [modalCompletarVisible, setModalCompletarVisible] = useState(false);
+  const [evidenciasSeleccionadas, setEvidenciasSeleccionadas] = useState<
+    EvidenciaSeleccionada[]
+  >([]);
+  const [completandoSolicitud, setCompletandoSolicitud] = useState(false);
 
   const detectarSiEsAdmin = (data: any) => {
     if (!data || typeof data !== "object") return false;
@@ -110,8 +119,8 @@ export default function ViewRequest() {
         "idrol",
         "id_rol",
         "rolId",
-        "rol_id"
-      )
+        "rol_id",
+      ),
     );
 
     const rolObjeto = getValue<any>(
@@ -121,7 +130,7 @@ export default function ViewRequest() {
       "rolData",
       "rolInfo",
       "rol_data",
-      "rol_info"
+      "rol_info",
     );
 
     const nombreRol = String(
@@ -133,7 +142,7 @@ export default function ViewRequest() {
         "rolNombre",
         "rol_nombre",
         "tipoRol",
-        "tipo_rol"
+        "tipo_rol",
       ) ??
         getValue(
           rolObjeto,
@@ -141,9 +150,9 @@ export default function ViewRequest() {
           "nombrerol",
           "nombre_rol",
           "nombre",
-          "name"
+          "name",
         ) ??
-        ""
+        "",
     ).toLowerCase();
 
     return numRol === 1 || nombreRol.includes("admin");
@@ -179,7 +188,7 @@ export default function ViewRequest() {
             "usuario",
             "user",
             "currentUser",
-            "authUser"
+            "authUser",
           );
 
           if (detectarSiEsAdmin(usuarioInterno)) {
@@ -208,7 +217,7 @@ export default function ViewRequest() {
             "usuario",
             "user",
             "currentUser",
-            "authUser"
+            "authUser",
           );
 
           if (detectarSiEsAdmin(usuarioInterno)) {
@@ -234,12 +243,17 @@ export default function ViewRequest() {
         "material",
         "materialData",
         "material_data",
-        "materiales"
+        "materiales",
       );
 
       return {
         id:
-          getValue(item, "id", "idMaterialSolicitud", "id_material_solicitud") ??
+          getValue(
+            item,
+            "id",
+            "idMaterialSolicitud",
+            "id_material_solicitud",
+          ) ??
           getValue(item, "numMaterial", "nummaterial", "num_material") ??
           getValue(material, "numMaterial", "nummaterial", "num_material") ??
           index,
@@ -255,7 +269,7 @@ export default function ViewRequest() {
             "nombre",
             "nombreMaterial",
             "nombre_material",
-            "material"
+            "material",
           ) ??
           getValue(material, "nombre", "nombreMaterial", "nombre_material") ??
           "Material sin nombre",
@@ -265,28 +279,20 @@ export default function ViewRequest() {
           getValue(material, "descripcion") ??
           "",
 
-        unidad:
-          getValue(item, "unidad") ??
-          getValue(material, "unidad") ??
-          "",
+        unidad: getValue(item, "unidad") ?? getValue(material, "unidad") ?? "",
 
         cantidad: Number(getValue(item, "cantidad") ?? 0),
 
         tipoMaterial:
           String(
-            getValue(
-              item,
-              "tipoMaterial",
-              "tipomaterial",
-              "tipo_material"
-            ) ??
+            getValue(item, "tipoMaterial", "tipomaterial", "tipo_material") ??
               getValue(
                 material,
                 "tipoMaterial",
                 "tipomaterial",
-                "tipo_material"
+                "tipo_material",
               ) ??
-              "material"
+              "material",
           )
             .trim()
             .toLowerCase() === "herramienta"
@@ -298,7 +304,7 @@ export default function ViewRequest() {
 
   const cargarMaterialesSolicitud = async (
     numSolicitud: number,
-    solicitudData?: any
+    solicitudData?: any,
   ) => {
     try {
       const materialesDesdeSolicitud =
@@ -309,7 +315,7 @@ export default function ViewRequest() {
           "materiales_solicitud",
           "materialessolicitud",
           "materialesUsados",
-          "materiales_usados"
+          "materiales_usados",
         ) ?? [];
 
       if (
@@ -317,7 +323,7 @@ export default function ViewRequest() {
         materialesDesdeSolicitud.length > 0
       ) {
         setMaterialesSolicitud(
-          normalizarMaterialesSolicitud(materialesDesdeSolicitud)
+          normalizarMaterialesSolicitud(materialesDesdeSolicitud),
         );
         return;
       }
@@ -362,7 +368,7 @@ export default function ViewRequest() {
       setMaterialesSolicitud([]);
 
       const numSolicitud = Number(
-        getValue(parsed, "numSolicitud", "numsolicitud", "num_solicitud")
+        getValue(parsed, "numSolicitud", "numsolicitud", "num_solicitud"),
       );
 
       if (numSolicitud) {
@@ -394,7 +400,7 @@ export default function ViewRequest() {
     useCallback(() => {
       cargarSolicitud();
       cargarUsuarioActual();
-    }, [params.request])
+    }, [params.request]),
   );
 
   const evidencias = useMemo(() => {
@@ -411,11 +417,10 @@ export default function ViewRequest() {
           "tipoEvidencia",
           "tipo_evidencia",
           "tipo",
-          "tipoImagen"
+          "tipoImagen",
         ) ?? "",
       ruta:
-        getValue<string>(e, "ruta", "url", "uri", "imagen", "rutaImagen") ??
-        "",
+        getValue<string>(e, "ruta", "url", "uri", "imagen", "rutaImagen") ?? "",
     }));
   }, [request]);
 
@@ -427,52 +432,141 @@ export default function ViewRequest() {
     return evidencias.filter((e) => e.tipo === "tecnico");
   }, [evidencias]);
 
-  const tieneTecnicoExterno = useMemo(() => {
-    if (!request) return false;
+  const tipoAsignacionTecnica = useMemo(() => {
+    if (!request) {
+      return {
+        tieneTecnicoExterno: false,
+        tieneTecnicoInterno: false,
+        soloTieneTecnicoExterno: false,
+      };
+    }
 
-    const buscarTecnicoExterno = (obj: any): boolean => {
-      if (!obj || typeof obj !== "object") return false;
+    const tieneValor = (value: any) =>
+      value !== null && value !== undefined && value !== "" && value !== false;
 
-      if (Array.isArray(obj)) {
-        return obj.some((item) => buscarTecnicoExterno(item));
-      }
+    const tecnicos =
+      getValue<any[]>(
+        request,
+        "tecnicos",
+        "tecnicosAsignados",
+        "tecnicos_asignados",
+        "solicitudTecnicos",
+        "solicitudtecnico",
+        "solicitud_tecnico",
+        "asignaciones",
+      ) ?? [];
 
-      return Object.entries(obj).some(([key, value]) => {
-        const keyNormalizada = key.toLowerCase();
+    let tieneTecnicoExterno =
+      getValue<boolean>(
+        request,
+        "tieneTecnicoExterno",
+        "tienetecnicoexterno",
+        "tiene_tecnico_externo",
+      ) === true;
 
-        const esCampoTecnicoExterno =
-          keyNormalizada.includes("tecnicoexterno") ||
-          keyNormalizada.includes("tecnico_externo") ||
-          keyNormalizada.includes("numtecnicoexterno") ||
-          keyNormalizada.includes("num_tecnico_externo") ||
-          keyNormalizada.includes("idtecnicoexterno") ||
-          keyNormalizada.includes("id_tecnico_externo") ||
-          keyNormalizada.includes("proveedor") ||
-          keyNormalizada.includes("externo");
+    let tieneTecnicoInterno =
+      getValue<boolean>(
+        request,
+        "tieneTecnicoInterno",
+        "tienetecnicointerno",
+        "tiene_tecnico_interno",
+      ) === true;
+
+    if (Array.isArray(tecnicos)) {
+      tecnicos.forEach((tecnico) => {
+        const tipo = String(
+          getValue(
+            tecnico,
+            "tipo",
+            "tipoTecnico",
+            "tipotecnico",
+            "tipo_tecnico",
+          ) ?? "",
+        )
+          .trim()
+          .toLowerCase();
+
+        const externo = getValue(
+          tecnico,
+          "tecnicoExterno",
+          "tecnico_externo",
+          "tecnicoexterno",
+          "proveedor",
+          "externo",
+          "numTecnicoExterno",
+          "numtecnicoexterno",
+          "num_tecnico_externo",
+          "idTecnicoExterno",
+          "idtecnicoexterno",
+          "id_tecnico_externo",
+        );
+
+        const interno = getValue(
+          tecnico,
+          "tecnicoInterno",
+          "tecnico_interno",
+          "tecnicointerno",
+          "usuario",
+          "interno",
+          "numTecnicoInterno",
+          "numtecnicointerno",
+          "num_tecnico_interno",
+          "idTecnicoInterno",
+          "idtecnicointerno",
+          "id_tecnico_interno",
+        );
 
         if (
-          esCampoTecnicoExterno &&
-          value !== null &&
-          value !== undefined &&
-          value !== ""
+          tipo.includes("extern") ||
+          tipo.includes("proveedor") ||
+          tieneValor(externo)
         ) {
-          return true;
+          tieneTecnicoExterno = true;
         }
 
-        if (typeof value === "string") {
-          return value.toLowerCase().includes("extern");
+        if (tipo.includes("intern") || tieneValor(interno)) {
+          tieneTecnicoInterno = true;
         }
-
-        if (typeof value === "object") {
-          return buscarTecnicoExterno(value);
-        }
-
-        return false;
       });
-    };
+    }
 
-    return buscarTecnicoExterno(request);
+    const tecnicoExternoDirecto = getValue(
+      request,
+      "tecnicoExterno",
+      "tecnico_externo",
+      "tecnicoexterno",
+      "numTecnicoExterno",
+      "numtecnicoexterno",
+      "num_tecnico_externo",
+      "nombreTecnicoExterno",
+      "nombre_tecnico_externo",
+      "proveedor",
+    );
+
+    const tecnicoInternoDirecto = getValue(
+      request,
+      "tecnicoInterno",
+      "tecnico_interno",
+      "tecnicointerno",
+      "numTecnicoInterno",
+      "numtecnicointerno",
+      "num_tecnico_interno",
+      "nombreTecnicoInterno",
+      "nombre_tecnico_interno",
+    );
+
+    if (tieneValor(tecnicoExternoDirecto)) tieneTecnicoExterno = true;
+    if (tieneValor(tecnicoInternoDirecto)) tieneTecnicoInterno = true;
+
+    return {
+      tieneTecnicoExterno,
+      tieneTecnicoInterno,
+      soloTieneTecnicoExterno: tieneTecnicoExterno && !tieneTecnicoInterno,
+    };
   }, [request]);
+
+  const { tieneTecnicoExterno, soloTieneTecnicoExterno } =
+    tipoAsignacionTecnica;
 
   const statusColors: Record<number, { background: string; text: string }> = {
     1: { background: "#d7d7d7", text: "#6c6c6c" },
@@ -482,11 +576,12 @@ export default function ViewRequest() {
     5: { background: "#FECACA", text: "#991B1B" },
   };
 
-  const prioridadColors: Record<string, { background: string; text: string }> = {
-    baja: { background: "#FECACA", text: "#991B1B" },
-    media: { background: "#FEF3C7", text: "#92400E" },
-    alta: { background: "#D1FAE5", text: "#065F46" },
-  };
+  const prioridadColors: Record<string, { background: string; text: string }> =
+    {
+      baja: { background: "#FECACA", text: "#991B1B" },
+      media: { background: "#FEF3C7", text: "#92400E" },
+      alta: { background: "#D1FAE5", text: "#065F46" },
+    };
 
   const getStatusStyle = (status: number) =>
     statusColors[status] ?? statusColors[1];
@@ -570,7 +665,7 @@ export default function ViewRequest() {
         "solicitudTecnicos",
         "solicitudtecnico",
         "solicitud_tecnico",
-        "asignaciones"
+        "asignaciones",
       ) ?? [];
 
     if (Array.isArray(tecnicos) && tecnicos.length > 0) {
@@ -580,7 +675,7 @@ export default function ViewRequest() {
             t,
             "usuario",
             "tecnicoInterno",
-            "tecnico_interno"
+            "tecnico_interno",
           );
 
           const externo = getValue<any>(
@@ -589,7 +684,7 @@ export default function ViewRequest() {
             "tecnico_externo",
             "tecnicoexterno",
             "proveedor",
-            "externo"
+            "externo",
           );
 
           return (
@@ -599,7 +694,7 @@ export default function ViewRequest() {
               "nombreTecnico",
               "nombre_tecnico",
               "tecnico",
-              "label"
+              "label",
             ) ??
             getValue<string>(usuario, "nombre") ??
             getValue<string>(externo, "nombre") ??
@@ -618,7 +713,7 @@ export default function ViewRequest() {
         "nombre_tecnico",
         "personaAsignada",
         "nombreTecnicoExterno",
-        "nombre_tecnico_externo"
+        "nombre_tecnico_externo",
       ) ?? "No asignado"
     );
   };
@@ -640,11 +735,11 @@ export default function ViewRequest() {
   }
 
   const numStatus = Number(
-    getValue(request, "numStatus", "numstatus", "num_status") ?? 1
+    getValue(request, "numStatus", "numstatus", "num_status") ?? 1,
   );
 
   const numTipo = Number(
-    getValue(request, "numTipo", "numtipo", "num_tipo") ?? 0
+    getValue(request, "numTipo", "numtipo", "num_tipo") ?? 0,
   );
 
   const numTipoMantenimiento = Number(
@@ -652,17 +747,16 @@ export default function ViewRequest() {
       request,
       "numTipoMantenimiento",
       "numtipomantenimiento",
-      "num_tipo_mantenimiento"
-    ) ?? 0
+      "num_tipo_mantenimiento",
+    ) ?? 0,
   );
 
   const numArea = Number(
-    getValue(request, "numArea", "numarea", "num_area") ?? 0
+    getValue(request, "numArea", "numarea", "num_area") ?? 0,
   );
 
   const numSolicitud =
-    getValue(request, "numSolicitud", "numsolicitud", "num_solicitud") ??
-    "N/A";
+    getValue(request, "numSolicitud", "numsolicitud", "num_solicitud") ?? "N/A";
 
   const fecha = getValue<string>(request, "fecha");
   const descripcion = getValue<string>(request, "descripcion");
@@ -672,28 +766,28 @@ export default function ViewRequest() {
       request,
       "solicitante",
       "nombreSolicitante",
-      "nombre_solicitante"
+      "nombre_solicitante",
     ) ?? "No disponible";
 
   const fechaAsignacion = getValue<string>(
     request,
     "fechaAsignacion",
     "fechaasignacion",
-    "fecha_asignacion"
+    "fecha_asignacion",
   );
 
   const fechaProgInicio = getValue<string>(
     request,
     "fechaProgInicio",
     "fechaproginicio",
-    "fecha_prog_inicio"
+    "fecha_prog_inicio",
   );
 
   const fechaProgFin = getValue<string>(
     request,
     "fechaProgFin",
     "fechaprogfin",
-    "fecha_prog_fin"
+    "fecha_prog_fin",
   );
 
   const prioridad = getValue<string>(request, "prioridad");
@@ -702,14 +796,14 @@ export default function ViewRequest() {
     request,
     "fechaInicioReal",
     "fechainicioreal",
-    "fecha_inicio_real"
+    "fecha_inicio_real",
   );
 
   const fechaFinReal = getValue<string>(
     request,
     "fechaFinReal",
     "fechafinreal",
-    "fecha_fin_real"
+    "fecha_fin_real",
   );
 
   const comentarios = getValue<string>(request, "comentarios");
@@ -718,7 +812,7 @@ export default function ViewRequest() {
     request,
     "motivoCancelacion",
     "motivocancelacion",
-    "motivo_cancelacion"
+    "motivo_cancelacion",
   );
 
   const statusStyle = getStatusStyle(numStatus);
@@ -734,6 +828,135 @@ export default function ViewRequest() {
   const mostrarDatosTecnico =
     fechaInicioReal || fechaFinReal || materialesSolicitud.length > 0;
 
+  const seleccionarEvidencias = async () => {
+    try {
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        Alert.alert(
+          "Permiso requerido",
+          "Necesitas permitir el acceso a tus imágenes para subir evidencias.",
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        quality: 0.8,
+      });
+
+      if (result.canceled) return;
+
+      const nuevasEvidencias: EvidenciaSeleccionada[] = result.assets.map(
+        (asset, index) => ({
+          uri: asset.uri,
+          name:
+            asset.fileName ??
+            `evidencia_proveedor_${Date.now()}_${index + 1}.jpg`,
+          type: asset.mimeType ?? "image/jpeg",
+        }),
+      );
+
+      setEvidenciasSeleccionadas((actuales) => {
+        const urisActuales = new Set(actuales.map((imagen) => imagen.uri));
+        const nuevasSinRepetir = nuevasEvidencias.filter(
+          (imagen) => !urisActuales.has(imagen.uri),
+        );
+
+        return [...actuales, ...nuevasSinRepetir];
+      });
+    } catch (error) {
+      console.log("ERROR seleccionando evidencias:", error);
+      Alert.alert("Error", "No se pudieron seleccionar las imágenes.");
+    }
+  };
+
+  const eliminarEvidenciaSeleccionada = (uri: string) => {
+    setEvidenciasSeleccionadas((actuales) =>
+      actuales.filter((imagen) => imagen.uri !== uri),
+    );
+  };
+
+  const cerrarModalCompletar = () => {
+    if (completandoSolicitud) return;
+
+    setModalCompletarVisible(false);
+    setEvidenciasSeleccionadas([]);
+  };
+
+  const marcarComoCompletada = async () => {
+    if (completandoSolicitud) return;
+
+    const solicitudId = Number(numSolicitud);
+
+    if (!Number.isFinite(solicitudId) || solicitudId <= 0) {
+      Alert.alert("Error", "No se encontró el número de la solicitud.");
+      return;
+    }
+
+    if (!soloTieneTecnicoExterno) {
+      Alert.alert(
+        "Acción no disponible",
+        "Este botón solamente se utiliza cuando la solicitud tiene únicamente técnico externo (proveedor).",
+      );
+      return;
+    }
+
+    if (evidenciasSeleccionadas.length === 0) {
+      Alert.alert(
+        "Evidencias requeridas",
+        "Agrega al menos una imagen antes de completar la solicitud.",
+      );
+      return;
+    }
+
+    try {
+      setCompletandoSolicitud(true);
+
+      const hoy = new Date().toISOString().split("T")[0];
+
+      await repository.uploadRequestImages(
+        solicitudId,
+        evidenciasSeleccionadas.map((imagen) => imagen.uri),
+        "tecnico",
+      );
+
+      await repository.completeRequest(solicitudId, {
+        fechaInicioReal: fechaInicioReal ?? hoy,
+        fechaFinReal: hoy,
+        comentarios:
+          comentarios?.trim() ||
+          "Solicitud completada por el administrador con técnico externo.",
+        materiales: [],
+      });
+
+      const solicitudActualizada = await repository.getRequestById(solicitudId);
+
+      if (solicitudActualizada) {
+        setRequest(solicitudActualizada);
+        await cargarMaterialesSolicitud(solicitudId, solicitudActualizada);
+      }
+
+      setModalCompletarVisible(false);
+      setEvidenciasSeleccionadas([]);
+
+      Alert.alert(
+        "Solicitud completada",
+        "La solicitud se marcó como terminada y las evidencias fueron guardadas.",
+      );
+    } catch (error) {
+      console.log("ERROR completando solicitud externa:", error);
+      Alert.alert(
+        "Error",
+        "No se pudo completar la solicitud. Verifica la conexión e inténtalo nuevamente.",
+      );
+    } finally {
+      setCompletandoSolicitud(false);
+    }
+  };
+
   const crearHtmlSolicitud = () => {
     const datosTecnicoHtml = mostrarDatosTecnico
       ? `
@@ -744,7 +967,7 @@ export default function ViewRequest() {
 
           <div class="label">Inicio real:</div>
           <div class="value">${limpiarTextoHtml(
-            formatDate(fechaInicioReal)
+            formatDate(fechaInicioReal),
           )}</div>
 
           <div class="label">Fin real:</div>
@@ -760,7 +983,7 @@ export default function ViewRequest() {
                     (material) => `
                       <div class="material-item">
                         <div class="label">${limpiarTextoHtml(
-                          material.nombre
+                          material.nombre,
                         )}</div>
 
                         <div class="value">
@@ -775,12 +998,12 @@ export default function ViewRequest() {
                         ${
                           material.descripcion
                             ? `<div class="value">Descripción: ${limpiarTextoHtml(
-                                material.descripcion
+                                material.descripcion,
                               )}</div>`
                             : ""
                         }
                       </div>
-                    `
+                    `,
                   )
                   .join("")}
               `
@@ -895,7 +1118,7 @@ export default function ViewRequest() {
 
             <div class="label">Tipo de mantenimiento:</div>
             <div class="value">${limpiarTextoHtml(
-              getTipoMantenimiento(numTipoMantenimiento)
+              getTipoMantenimiento(numTipoMantenimiento),
             )}</div>
 
             <div class="label">Fecha:</div>
@@ -918,7 +1141,7 @@ export default function ViewRequest() {
           <div class="section">
             <div class="title">Descripción</div>
             <div class="value">${limpiarTextoHtml(
-              descripcion || "Sin descripción"
+              descripcion || "Sin descripción",
             )}</div>
           </div>
 
@@ -926,23 +1149,21 @@ export default function ViewRequest() {
             <div class="title">Datos de asignación</div>
 
             <div class="label">Técnico asignado:</div>
-            <div class="value">${limpiarTextoHtml(
-              getTecnicosAsignados()
-            )}</div>
+            <div class="value">${limpiarTextoHtml(getTecnicosAsignados())}</div>
 
             <div class="label">Fecha de asignación:</div>
             <div class="value">${limpiarTextoHtml(
-              formatDate(fechaAsignacion)
+              formatDate(fechaAsignacion),
             )}</div>
 
             <div class="label">Fecha programada de inicio:</div>
             <div class="value">${limpiarTextoHtml(
-              formatDate(fechaProgInicio)
+              formatDate(fechaProgInicio),
             )}</div>
 
             <div class="label">Fecha programada de fin:</div>
             <div class="value">${limpiarTextoHtml(
-              formatDate(fechaProgFin)
+              formatDate(fechaProgFin),
             )}</div>
 
             <div class="label">Prioridad:</div>
@@ -1001,11 +1222,7 @@ export default function ViewRequest() {
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
-            <MaterialCommunityIcons
-              name="arrow-left"
-              size={28}
-              color="#fff"
-            />
+            <MaterialCommunityIcons name="arrow-left" size={28} color="#fff" />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
@@ -1045,9 +1262,7 @@ export default function ViewRequest() {
 
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Descripción</Text>
-            <Text style={styles.value}>
-              {descripcion || "Sin descripción"}
-            </Text>
+            <Text style={styles.value}>{descripcion || "Sin descripción"}</Text>
           </View>
 
           {evidenciasSolicitante.length > 0 && (
@@ -1121,9 +1336,7 @@ export default function ViewRequest() {
               {materialesSolicitud.length > 0 ? (
                 materialesSolicitud.map((material) => (
                   <View key={String(material.id)} style={styles.materialItem}>
-                    <Text style={styles.materialName}>
-                      {material.nombre}
-                    </Text>
+                    <Text style={styles.materialName}>{material.nombre}</Text>
 
                     <Text style={styles.value}>
                       <Text style={styles.label}>Tipo:</Text>{" "}
@@ -1182,6 +1395,26 @@ export default function ViewRequest() {
             </View>
           )}
 
+          {esAdmin &&
+            soloTieneTecnicoExterno &&
+            (numStatus === 2 || numStatus === 3) && (
+              <TouchableOpacity
+                style={styles.completeButton}
+                onPress={() => setModalCompletarVisible(true)}
+              >
+                <MaterialCommunityIcons
+                  name="check-circle-outline"
+                  size={24}
+                  color="#070707"
+                  style={styles.downloadIcon}
+                />
+
+                <Text style={styles.textComplete}>
+                  Marcar como completada
+                </Text>
+              </TouchableOpacity>
+            )}
+
           {esAdmin && tieneTecnicoExterno && (
             <TouchableOpacity
               style={styles.downloadButton}
@@ -1194,9 +1427,7 @@ export default function ViewRequest() {
                 style={styles.downloadIcon}
               />
 
-              <Text style={styles.downloadButtonText}>
-                Descargar solicitud
-              </Text>
+              <Text style={styles.downloadButtonText}>Descargar solicitud</Text>
             </TouchableOpacity>
           )}
 
@@ -1221,6 +1452,145 @@ export default function ViewRequest() {
           </View>
         </View>
       </ScrollView>
+
+      <Modal
+        visible={modalCompletarVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={cerrarModalCompletar}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <View style={styles.modalTitleContainer}>
+                <MaterialCommunityIcons
+                  name="check-decagram-outline"
+                  size={28}
+                  color="#148248"
+                />
+
+                <Text style={styles.modalTitle}>Completar solicitud</Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={cerrarModalCompletar}
+                disabled={completandoSolicitud}
+                style={styles.modalCloseButton}
+              >
+                <MaterialCommunityIcons
+                  name="close"
+                  size={26}
+                  color="#374151"
+                />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalDescription}>
+              Agrega las imágenes de evidencia y después márcala como
+              completada.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.selectImagesButton}
+              onPress={seleccionarEvidencias}
+              disabled={completandoSolicitud}
+            >
+              <MaterialCommunityIcons
+                name="image-multiple-outline"
+                size={23}
+                color="#148248"
+              />
+              <Text style={styles.selectImagesButtonText}>
+                Seleccionar evidencias
+              </Text>
+            </TouchableOpacity>
+
+            {evidenciasSeleccionadas.length === 0 ? (
+              <View style={styles.emptyEvidenceBox}>
+                <MaterialCommunityIcons
+                  name="image-off-outline"
+                  size={38}
+                  color="#9CA3AF"
+                />
+                <Text style={styles.emptyEvidenceText}>
+                  Debes agregar al menos una imagen.
+                </Text>
+              </View>
+            ) : (
+              <ScrollView
+                style={styles.selectedImagesScroll}
+                contentContainerStyle={styles.selectedImagesContainer}
+              >
+                {evidenciasSeleccionadas.map((imagen, index) => (
+                  <View
+                    key={`${imagen.uri}-${index}`}
+                    style={styles.previewItem}
+                  >
+                    <Image
+                      source={{ uri: imagen.uri }}
+                      style={styles.previewImage}
+                    />
+
+                    <TouchableOpacity
+                      style={styles.removeImageButton}
+                      onPress={() => eliminarEvidenciaSeleccionada(imagen.uri)}
+                      disabled={completandoSolicitud}
+                    >
+                      <MaterialCommunityIcons
+                        name="close"
+                        size={18}
+                        color="#fff"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+
+            <Text style={styles.selectedCountText}>
+              {evidenciasSeleccionadas.length} evidencia(s) seleccionada(s)
+            </Text>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.cancelModalButton}
+                onPress={cerrarModalCompletar}
+                disabled={completandoSolicitud}
+              >
+                <Text style={styles.cancelModalButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.confirmCompleteButton,
+                  (completandoSolicitud ||
+                    evidenciasSeleccionadas.length === 0) &&
+                    styles.disabledButton,
+                ]}
+                onPress={marcarComoCompletada}
+                disabled={
+                  completandoSolicitud || evidenciasSeleccionadas.length === 0
+                }
+              >
+                {completandoSolicitud ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons
+                      name="check"
+                      size={22}
+                      color="#fff"
+                    />
+                    <Text style={styles.confirmCompleteButtonText}>
+                      Marcar como completada
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -1312,6 +1682,22 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
 
+  completeButton: {
+    backgroundColor: "#d6ebc4",
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 3,
+  },
+textComplete:{
+ color: "#000000",
+    fontSize: 16,
+    fontWeight: "bold",
+},
   downloadButton: {
     backgroundColor: "#148248",
     borderRadius: 14,
@@ -1348,6 +1734,178 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     marginTop: 5,
     marginBottom: 5,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+
+  modalCard: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 30,
+    maxHeight: "86%",
+  },
+
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+
+  modalTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+
+  modalTitle: {
+    marginLeft: 9,
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#111827",
+  },
+
+  modalCloseButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+    backgroundColor: "#F3F4F6",
+  },
+
+  modalDescription: {
+    color: "#4B5563",
+    lineHeight: 21,
+    marginBottom: 16,
+  },
+
+  selectImagesButton: {
+    minHeight: 50,
+    borderWidth: 1.5,
+    borderColor: "#148248",
+    borderRadius: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+
+  selectImagesButtonText: {
+    color: "#148248",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginLeft: 8,
+  },
+
+  emptyEvidenceBox: {
+    minHeight: 140,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "#D1D5DB",
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F9FAFB",
+    padding: 20,
+  },
+
+  emptyEvidenceText: {
+    marginTop: 8,
+    color: "#6B7280",
+    textAlign: "center",
+  },
+
+  selectedImagesScroll: {
+    maxHeight: 300,
+  },
+
+  selectedImagesContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    paddingVertical: 2,
+  },
+
+  previewItem: {
+    width: "48%",
+    aspectRatio: 1,
+    position: "relative",
+  },
+
+  previewImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 12,
+    backgroundColor: "#E5E7EB",
+  },
+
+  removeImageButton: {
+    position: "absolute",
+    top: 7,
+    right: 7,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#DC2626",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  selectedCountText: {
+    color: "#6B7280",
+    fontSize: 13,
+    marginTop: 10,
+    marginBottom: 16,
+  },
+
+  modalActions: {
+    flexDirection: "row",
+    gap: 10,
+  },
+
+  cancelModalButton: {
+    flex: 1,
+    minHeight: 50,
+    borderRadius: 13,
+    backgroundColor: "#E5E7EB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  cancelModalButtonText: {
+    color: "#374151",
+    fontWeight: "bold",
+    fontSize: 15,
+  },
+
+  confirmCompleteButton: {
+    flex: 2,
+    minHeight: 50,
+    borderRadius: 13,
+    backgroundColor: "#148248",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+
+  confirmCompleteButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 14,
+    marginLeft: 6,
+  },
+
+  disabledButton: {
+    opacity: 0.55,
   },
 
   center: {
