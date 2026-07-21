@@ -13,20 +13,21 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Dimensions,
   Image,
   Modal,
+  Platform,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 
 import { RequestsForm } from "../../domain/request";
 import { SupabaseRequestsRepository } from "../../infraestructure/requestsDatasurce";
 
-const screenWidth = Dimensions.get("window").width;
 const repository = new SupabaseRequestsRepository();
 
 type EvidenciaSeleccionada = {
@@ -95,6 +96,29 @@ const limpiarTextoHtml = (value?: any) => {
 export default function ViewRequest() {
   const params = useLocalSearchParams();
   const router = useRouter();
+  const { width, height } = useWindowDimensions();
+
+  const isSmallScreen = width < 370 || height < 650;
+  const isTablet = width >= 700;
+  const isLandscape = width > height;
+
+  const contentWidth = Math.max(
+    280,
+    Math.min(width - (isTablet ? 64 : 24), 900),
+  );
+
+  const evidenceWidth = Math.max(
+    240,
+    Math.min(
+      width - (isTablet ? 120 : 54),
+      isTablet ? 420 : isLandscape ? 360 : width * 0.78,
+    ),
+  );
+
+  const modalWidth = Math.max(
+    280,
+    Math.min(width - (isTablet ? 120 : 20), 620),
+  );
 
   const [request, setRequest] = useState<RequestsForm | any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -576,12 +600,31 @@ export default function ViewRequest() {
     5: { background: "#FECACA", text: "#991B1B" },
   };
 
-  const prioridadColors: Record<string, { background: string; text: string }> =
-    {
-      baja: { background: "#FECACA", text: "#991B1B" },
-      media: { background: "#FEF3C7", text: "#92400E" },
-      alta: { background: "#D1FAE5", text: "#065F46" },
-    };
+  const prioridadColors: Record<
+    string,
+    { background: string; text: string; border: string }
+  > = {
+    baja: {
+      background: "#ECFDF5",
+      text: "#065F46",
+      border: "#A7F3D0",
+    },
+    media: {
+      background: "#FFFBEB",
+      text: "#92400E",
+      border: "#FDE68A",
+    },
+    alta: {
+      background: "#FFF7ED",
+      text: "#9A3412",
+      border: "#FDBA74",
+    },
+    urgente: {
+      background: "#FEF2F2",
+      text: "#991B1B",
+      border: "#FCA5A5",
+    },
+  };
 
   const getStatusStyle = (status: number) =>
     statusColors[status] ?? statusColors[1];
@@ -593,8 +636,9 @@ export default function ViewRequest() {
 
     return (
       prioridadColors[prioridadNormalizada] ?? {
-        background: "#E5E7EB",
-        text: "#374151",
+        background: "#F3F4F6",
+        text: "#4B5563",
+        border: "#D1D5DB",
       }
     );
   };
@@ -613,6 +657,53 @@ export default function ViewRequest() {
         return "Cancelada";
       default:
         return "Desconocido";
+    }
+  };
+
+  const getStatusIcon = (status: number) => {
+    switch (Number(status)) {
+      case 1:
+        return "file-document-outline";
+      case 2:
+        return "account-check-outline";
+      case 3:
+        return "clock-outline";
+      case 4:
+        return "check-circle-outline";
+      case 5:
+        return "close-circle-outline";
+      default:
+        return "help-circle-outline";
+    }
+  };
+
+  const getPrioridadIcon = (value?: string | null) => {
+    switch (
+      String(value ?? "")
+        .toLowerCase()
+        .trim()
+    ) {
+      case "baja":
+        return "arrow-down-circle-outline";
+      case "media":
+        return "flag-outline";
+      case "alta":
+        return "alert-circle-outline";
+      case "urgente":
+        return "alert-octagon-outline";
+      default:
+        return "flag-outline";
+    }
+  };
+
+  const getTipoIcon = (tipo: number) => {
+    switch (Number(tipo)) {
+      case 1:
+        return "clipboard-text-outline";
+      case 2:
+        return "tools";
+      default:
+        return "file-document-outline";
     }
   };
 
@@ -720,17 +811,44 @@ export default function ViewRequest() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <Text>Cargando solicitud...</Text>
-      </View>
+      <SafeAreaView style={styles.loadingSafeArea}>
+        <View style={styles.center}>
+          <View style={styles.loadingIconBox}>
+            <ActivityIndicator size="large" color="#148248" />
+          </View>
+          <Text style={styles.loadingTitle}>Cargando solicitud</Text>
+          <Text style={styles.loadingText}>Espera un momento...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (!request) {
     return (
-      <View style={styles.center}>
-        <Text>No se encontró la solicitud</Text>
-      </View>
+      <SafeAreaView style={styles.loadingSafeArea}>
+        <View style={styles.center}>
+          <View style={styles.loadingIconBox}>
+            <MaterialCommunityIcons
+              name="file-alert-outline"
+              size={48}
+              color="#148248"
+            />
+          </View>
+          <Text style={styles.loadingTitle}>Solicitud no encontrada</Text>
+          <TouchableOpacity
+            style={styles.returnButton}
+            onPress={() => router.back()}
+            activeOpacity={0.82}
+          >
+            <MaterialCommunityIcons
+              name="arrow-left"
+              size={20}
+              color="#FFFFFF"
+            />
+            <Text style={styles.returnButtonText}>Regresar</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -1216,13 +1334,25 @@ export default function ViewRequest() {
   console.log("TIENE TECNICO EXTERNO:", tieneTecnicoExterno);
 
   return (
-    <>
+    <SafeAreaView style={styles.safeArea}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <ScrollView style={styles.container}>
+      <View style={styles.screen}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <MaterialCommunityIcons name="arrow-left" size={28} color="#fff" />
+          <View style={styles.headerDecorationOne} />
+          <View style={styles.headerDecorationTwo} />
+
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+            activeOpacity={0.8}
+            accessibilityLabel="Regresar"
+          >
+            <MaterialCommunityIcons
+              name="arrow-left"
+              size={25}
+              color="#FFFFFF"
+            />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
@@ -1232,261 +1362,643 @@ export default function ViewRequest() {
               resizeMode="contain"
             />
           </View>
+
+          <View style={styles.headerSpacer} />
         </View>
 
-        <View style={styles.content}>
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Información general</Text>
-
-            <Text style={styles.label}>Solicitante:</Text>
-            <Text style={styles.value}>{solicitante}</Text>
-
-            <Text style={styles.label}>Tipo:</Text>
-            <Text style={styles.value}>{getTipo(numTipo)}</Text>
-
-            {numTipo === 2 && (
-              <>
-                <Text style={styles.label}>Tipo de mantenimiento:</Text>
-                <Text style={styles.value}>
-                  {getTipoMantenimiento(numTipoMantenimiento)}
-                </Text>
-              </>
-            )}
-
-            <Text style={styles.label}>Fecha:</Text>
-            <Text style={styles.value}>{formatDate(fecha)}</Text>
-
-            <Text style={styles.label}>Área:</Text>
-            <Text style={styles.value}>{getArea(numArea)}</Text>
-          </View>
-
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Descripción</Text>
-            <Text style={styles.value}>{descripcion || "Sin descripción"}</Text>
-          </View>
-
-          {evidenciasSolicitante.length > 0 && (
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={[styles.content, { width: contentWidth }]}>
             <View style={styles.card}>
-              <Text style={styles.sectionTitle}>
-                Evidencias del solicitante
-              </Text>
-
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {evidenciasSolicitante.map((e) => (
-                  <Image
-                    key={String(e.id)}
-                    source={{ uri: e.ruta }}
-                    style={styles.image}
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionIconBox}>
+                  <MaterialCommunityIcons
+                    name="information-outline"
+                    size={22}
+                    color="#148248"
                   />
-                ))}
-              </ScrollView>
+                </View>
+                <Text style={styles.sectionTitle}>Información general</Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <View style={styles.infoIconBox}>
+                  <MaterialCommunityIcons
+                    name="account-outline"
+                    size={19}
+                    color="#148248"
+                  />
+                </View>
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.label}>Solicitante</Text>
+                  <Text style={styles.value}>{solicitante}</Text>
+                </View>
+              </View>
+
+              <View style={styles.infoRow}>
+                <View style={styles.infoIconBox}>
+                  <MaterialCommunityIcons
+                    name={getTipoIcon(numTipo) as any}
+                    size={19}
+                    color="#148248"
+                  />
+                </View>
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.label}>Tipo</Text>
+                  <Text style={styles.value}>{getTipo(numTipo)}</Text>
+                </View>
+              </View>
+
+              {numTipo === 2 && (
+                <View style={styles.infoRow}>
+                  <View style={styles.infoIconBox}>
+                    <MaterialCommunityIcons
+                      name="wrench-clock-outline"
+                      size={19}
+                      color="#148248"
+                    />
+                  </View>
+                  <View style={styles.infoTextContainer}>
+                    <Text style={styles.label}>Tipo de mantenimiento</Text>
+                    <Text style={styles.value}>
+                      {getTipoMantenimiento(numTipoMantenimiento)}
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              <View style={styles.infoRow}>
+                <View style={styles.infoIconBox}>
+                  <MaterialCommunityIcons
+                    name="calendar-outline"
+                    size={19}
+                    color="#148248"
+                  />
+                </View>
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.label}>Fecha</Text>
+                  <Text style={styles.value}>{formatDate(fecha)}</Text>
+                </View>
+              </View>
+
+              <View style={[styles.infoRow, styles.infoRowLast]}>
+                <View style={styles.infoIconBox}>
+                  <MaterialCommunityIcons
+                    name="map-marker-outline"
+                    size={19}
+                    color="#148248"
+                  />
+                </View>
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.label}>Área</Text>
+                  <Text style={styles.value}>{getArea(numArea)}</Text>
+                </View>
+              </View>
             </View>
-          )}
 
-          {mostrarAsignacion && (
             <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Datos de asignación</Text>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionIconBox}>
+                  <MaterialCommunityIcons
+                    name="text-box-outline"
+                    size={22}
+                    color="#148248"
+                  />
+                </View>
+                <Text style={styles.sectionTitle}>Descripción</Text>
+              </View>
 
-              <Text style={styles.label}>Técnico asignado:</Text>
-              <Text style={styles.value}>{getTecnicosAsignados()}</Text>
-
-              <Text style={styles.label}>Fecha de asignación:</Text>
-              <Text style={styles.value}>{formatDate(fechaAsignacion)}</Text>
-
-              <Text style={styles.label}>Fecha programada de inicio:</Text>
-              <Text style={styles.value}>{formatDate(fechaProgInicio)}</Text>
-
-              <Text style={styles.label}>Fecha programada de fin:</Text>
-              <Text style={styles.value}>{formatDate(fechaProgFin)}</Text>
-
-              <Text style={styles.label}>Prioridad:</Text>
-
-              <View
-                style={[
-                  styles.priorityBadge,
-                  { backgroundColor: prioridadStyle.background },
-                ]}
-              >
-                <Text
-                  style={{
-                    color: prioridadStyle.text,
-                    fontWeight: "bold",
-                  }}
-                >
-                  {capitalize(prioridad)}
+              <View style={styles.descriptionBox}>
+                <Text style={styles.descriptionText}>
+                  {descripcion || "Sin descripción"}
                 </Text>
               </View>
             </View>
-          )}
 
-          {mostrarDatosTecnico && (
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Datos Técnico</Text>
-
-              <Text style={styles.subSectionTitle}>Fechas reales</Text>
-
-              <Text style={styles.label}>Inicio real:</Text>
-              <Text style={styles.value}>{formatDate(fechaInicioReal)}</Text>
-
-              <Text style={styles.label}>Fin real:</Text>
-              <Text style={styles.value}>{formatDate(fechaFinReal)}</Text>
-
-              <Text style={styles.subSectionTitle}>Materiales utilizados</Text>
-
-              {materialesSolicitud.length > 0 ? (
-                materialesSolicitud.map((material) => (
-                  <View key={String(material.id)} style={styles.materialItem}>
-                    <Text style={styles.materialName}>{material.nombre}</Text>
-
-                    <Text style={styles.value}>
-                      <Text style={styles.label}>Tipo:</Text>{" "}
-                      {material.tipoMaterial === "herramienta"
-                        ? "Herramienta"
-                        : "Material"}
-                    </Text>
-
-                    <Text style={styles.value}>
-                      <Text style={styles.label}>Cantidad:</Text>{" "}
-                      {material.cantidad}
-                      {material.unidad ? ` ${material.unidad}` : ""}
-                    </Text>
-
-                    {material.descripcion ? (
-                      <Text style={styles.value}>
-                        <Text style={styles.label}>Descripción:</Text>{" "}
-                        {material.descripcion}
-                      </Text>
-                    ) : null}
+            {evidenciasSolicitante.length > 0 && (
+              <View style={styles.card}>
+                <View style={styles.sectionHeader}>
+                  <View style={styles.sectionIconBox}>
+                    <MaterialCommunityIcons
+                      name="image-multiple-outline"
+                      size={22}
+                      color="#148248"
+                    />
                   </View>
-                ))
-              ) : (
-                <Text style={styles.value}>Sin materiales registrados</Text>
+                  <View style={styles.sectionTitleContainer}>
+                    <Text style={styles.sectionTitle}>
+                      Evidencias del solicitante
+                    </Text>
+                    <Text style={styles.sectionSubtitle}>
+                      {evidenciasSolicitante.length} imagen(es)
+                    </Text>
+                  </View>
+                </View>
+
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.imagesContainer}
+                >
+                  {evidenciasSolicitante.map((e) => (
+                    <Image
+                      key={String(e.id)}
+                      source={{ uri: e.ruta }}
+                      style={[
+                        styles.image,
+                        {
+                          width: evidenceWidth,
+                          height: isTablet ? 260 : 220,
+                        },
+                      ]}
+                    />
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            {mostrarAsignacion && (
+              <View style={styles.card}>
+                <View style={styles.sectionHeader}>
+                  <View style={styles.sectionIconBox}>
+                    <MaterialCommunityIcons
+                      name="account-hard-hat-outline"
+                      size={22}
+                      color="#148248"
+                    />
+                  </View>
+                  <Text style={styles.sectionTitle}>Datos de asignación</Text>
+                </View>
+
+                <View style={styles.infoRow}>
+                  <View style={styles.infoIconBox}>
+                    <MaterialCommunityIcons
+                      name="account-hard-hat-outline"
+                      size={19}
+                      color="#148248"
+                    />
+                  </View>
+                  <View style={styles.infoTextContainer}>
+                    <Text style={styles.label}>Técnico asignado</Text>
+                    <Text style={styles.value}>{getTecnicosAsignados()}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.infoRow}>
+                  <View style={styles.infoIconBox}>
+                    <MaterialCommunityIcons
+                      name="calendar-check-outline"
+                      size={19}
+                      color="#148248"
+                    />
+                  </View>
+                  <View style={styles.infoTextContainer}>
+                    <Text style={styles.label}>Fecha de asignación</Text>
+                    <Text style={styles.value}>
+                      {formatDate(fechaAsignacion)}
+                    </Text>
+                  </View>
+                </View>
+
+                <View
+                  style={[
+                    styles.scheduleRow,
+                    isSmallScreen && styles.scheduleRowSmall,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.scheduleItem,
+                      !isSmallScreen && styles.scheduleItemSpacing,
+                    ]}
+                  >
+                    <MaterialCommunityIcons
+                      name="calendar-start-outline"
+                      size={20}
+                      color="#148248"
+                    />
+                    <Text style={styles.scheduleLabel}>Inicio programado</Text>
+                    <Text style={styles.scheduleValue}>
+                      {formatDate(fechaProgInicio)}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.scheduleItem,
+                      isSmallScreen && styles.scheduleItemSmall,
+                    ]}
+                  >
+                    <MaterialCommunityIcons
+                      name="calendar-end-outline"
+                      size={20}
+                      color="#148248"
+                    />
+                    <Text style={styles.scheduleLabel}>Fin programado</Text>
+                    <Text style={styles.scheduleValue}>
+                      {formatDate(fechaProgFin)}
+                    </Text>
+                  </View>
+                </View>
+
+                <View
+                  style={[
+                    styles.priorityRow,
+                    {
+                      backgroundColor: prioridadStyle.background,
+                      borderColor: prioridadStyle.border,
+                    },
+                  ]}
+                >
+                  <View style={styles.priorityIconBox}>
+                    <MaterialCommunityIcons
+                      name={getPrioridadIcon(prioridad) as any}
+                      size={20}
+                      color={prioridadStyle.text}
+                    />
+                  </View>
+
+                  <View style={styles.infoTextContainer}>
+                    <Text
+                      style={[styles.label, { color: prioridadStyle.text }]}
+                    >
+                      Prioridad
+                    </Text>
+                    <Text
+                      style={[
+                        styles.value,
+                        styles.priorityValue,
+                        { color: prioridadStyle.text },
+                      ]}
+                    >
+                      {capitalize(prioridad)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {mostrarDatosTecnico && (
+              <View style={styles.card}>
+                <View style={styles.sectionHeader}>
+                  <View style={styles.sectionIconBox}>
+                    <MaterialCommunityIcons
+                      name="tools"
+                      size={22}
+                      color="#148248"
+                    />
+                  </View>
+                  <Text style={styles.sectionTitle}>Datos del técnico</Text>
+                </View>
+
+                <Text style={styles.subSectionTitle}>Fechas reales</Text>
+
+                <View
+                  style={[
+                    styles.scheduleRow,
+                    isSmallScreen && styles.scheduleRowSmall,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.scheduleItem,
+                      !isSmallScreen && styles.scheduleItemSpacing,
+                    ]}
+                  >
+                    <MaterialCommunityIcons
+                      name="play-circle-outline"
+                      size={20}
+                      color="#148248"
+                    />
+                    <Text style={styles.scheduleLabel}>Inicio real</Text>
+                    <Text style={styles.scheduleValue}>
+                      {formatDate(fechaInicioReal)}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.scheduleItem,
+                      isSmallScreen && styles.scheduleItemSmall,
+                    ]}
+                  >
+                    <MaterialCommunityIcons
+                      name="check-circle-outline"
+                      size={20}
+                      color="#148248"
+                    />
+                    <Text style={styles.scheduleLabel}>Fin real</Text>
+                    <Text style={styles.scheduleValue}>
+                      {formatDate(fechaFinReal)}
+                    </Text>
+                  </View>
+                </View>
+
+                <Text style={styles.subSectionTitle}>
+                  Materiales utilizados
+                </Text>
+
+                {materialesSolicitud.length > 0 ? (
+                  <View style={styles.materialsContainer}>
+                    {materialesSolicitud.map((material) => (
+                      <View
+                        key={String(material.id)}
+                        style={styles.materialItem}
+                      >
+                        <View style={styles.materialHeader}>
+                          <View style={styles.materialIconBox}>
+                            <MaterialCommunityIcons
+                              name={
+                                material.tipoMaterial === "herramienta"
+                                  ? "hammer-wrench"
+                                  : "package-variant-closed"
+                              }
+                              size={21}
+                              color="#148248"
+                            />
+                          </View>
+
+                          <View style={styles.materialTitleContainer}>
+                            <Text style={styles.materialName}>
+                              {material.nombre}
+                            </Text>
+                            <Text style={styles.materialCode}>
+                              #{material.numMaterial}
+                            </Text>
+                          </View>
+                        </View>
+
+                        <View style={styles.materialDetailsRow}>
+                          <View style={styles.materialDetailPill}>
+                            <Text style={styles.materialDetailLabel}>Tipo</Text>
+                            <Text style={styles.materialDetailValue}>
+                              {material.tipoMaterial === "herramienta"
+                                ? "Herramienta"
+                                : "Material"}
+                            </Text>
+                          </View>
+
+                          <View style={styles.materialDetailPill}>
+                            <Text style={styles.materialDetailLabel}>
+                              Cantidad
+                            </Text>
+                            <Text style={styles.materialDetailValue}>
+                              {material.cantidad}
+                              {material.unidad ? ` ${material.unidad}` : ""}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {material.descripcion ? (
+                          <Text style={styles.materialDescription}>
+                            {material.descripcion}
+                          </Text>
+                        ) : null}
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <View style={styles.emptyInlineBox}>
+                    <MaterialCommunityIcons
+                      name="package-variant"
+                      size={26}
+                      color="#7A837E"
+                    />
+                    <Text style={styles.emptyInlineText}>
+                      Sin materiales registrados
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {evidenciasTecnico.length > 0 && (
+              <View style={styles.card}>
+                <View style={styles.sectionHeader}>
+                  <View style={styles.sectionIconBox}>
+                    <MaterialCommunityIcons
+                      name="camera-outline"
+                      size={22}
+                      color="#148248"
+                    />
+                  </View>
+                  <View style={styles.sectionTitleContainer}>
+                    <Text style={styles.sectionTitle}>
+                      Evidencias del técnico
+                    </Text>
+                    <Text style={styles.sectionSubtitle}>
+                      {evidenciasTecnico.length} imagen(es)
+                    </Text>
+                  </View>
+                </View>
+
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.imagesContainer}
+                >
+                  {evidenciasTecnico.map((e) => (
+                    <Image
+                      key={String(e.id)}
+                      source={{ uri: e.ruta }}
+                      style={[
+                        styles.image,
+                        {
+                          width: evidenceWidth,
+                          height: isTablet ? 260 : 220,
+                        },
+                      ]}
+                    />
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            {comentarios && (
+              <View style={styles.card}>
+                <View style={styles.sectionHeader}>
+                  <View style={styles.sectionIconBox}>
+                    <MaterialCommunityIcons
+                      name="comment-text-outline"
+                      size={22}
+                      color="#148248"
+                    />
+                  </View>
+                  <Text style={styles.sectionTitle}>Comentarios</Text>
+                </View>
+
+                <View style={styles.descriptionBox}>
+                  <Text style={styles.descriptionText}>{comentarios}</Text>
+                </View>
+              </View>
+            )}
+
+            {motivoCancelacion && (
+              <View style={[styles.card, styles.cancelReasonCard]}>
+                <View style={styles.sectionHeader}>
+                  <View style={styles.cancelReasonIconBox}>
+                    <MaterialCommunityIcons
+                      name="close-circle-outline"
+                      size={22}
+                      color="#991B1B"
+                    />
+                  </View>
+                  <Text style={[styles.sectionTitle, styles.cancelReasonTitle]}>
+                    Motivo de cancelación
+                  </Text>
+                </View>
+
+                <View style={styles.cancelReasonBox}>
+                  <Text style={styles.cancelReasonText}>
+                    {motivoCancelacion}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {esAdmin &&
+              soloTieneTecnicoExterno &&
+              (numStatus === 2 || numStatus === 3) && (
+                <TouchableOpacity
+                  style={styles.completeButton}
+                  onPress={() => setModalCompletarVisible(true)}
+                  activeOpacity={0.84}
+                >
+                  <Text style={styles.textComplete}>
+                    Marcar como completada
+                  </Text>
+                </TouchableOpacity>
               )}
-            </View>
-          )}
 
-          {evidenciasTecnico.length > 0 && (
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Evidencias del técnico</Text>
-
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {evidenciasTecnico.map((e) => (
-                  <Image
-                    key={String(e.id)}
-                    source={{ uri: e.ruta }}
-                    style={styles.image}
-                  />
-                ))}
-              </ScrollView>
-            </View>
-          )}
-
-          {comentarios && (
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Comentarios</Text>
-              <Text style={styles.value}>{comentarios}</Text>
-            </View>
-          )}
-
-          {motivoCancelacion && (
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Motivo de cancelación</Text>
-              <Text style={styles.value}>{motivoCancelacion}</Text>
-            </View>
-          )}
-
-          {esAdmin &&
-            soloTieneTecnicoExterno &&
-            (numStatus === 2 || numStatus === 3) && (
+            {esAdmin && tieneTecnicoExterno && (
               <TouchableOpacity
-                style={styles.completeButton}
-                onPress={() => setModalCompletarVisible(true)}
+                style={styles.downloadButton}
+                onPress={descargarSolicitud}
+                activeOpacity={0.84}
               >
-                <MaterialCommunityIcons
-                  name="check-circle-outline"
-                  size={24}
-                  color="#070707"
-                  style={styles.downloadIcon}
-                />
-
-                <Text style={styles.textComplete}>
-                  Marcar como completada
+                <Text style={styles.downloadButtonText}>
+                  Descargar solicitud
                 </Text>
               </TouchableOpacity>
             )}
 
-          {esAdmin && tieneTecnicoExterno && (
-            <TouchableOpacity
-              style={styles.downloadButton}
-              onPress={descargarSolicitud}
-            >
-              <MaterialCommunityIcons
-                name="file-download-outline"
-                size={24}
-                color="#fff"
-                style={styles.downloadIcon}
-              />
+            <View style={styles.card}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionIconBox}>
+                  <MaterialCommunityIcons
+                    name="list-status"
+                    size={22}
+                    color="#148248"
+                  />
+                </View>
+                <Text style={styles.sectionTitle}>Estado de la solicitud</Text>
+              </View>
 
-              <Text style={styles.downloadButtonText}>Descargar solicitud</Text>
-            </TouchableOpacity>
-          )}
-
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Estado</Text>
-
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: statusStyle.background },
-              ]}
-            >
-              <Text
-                style={{
-                  color: statusStyle.text,
-                  fontWeight: "bold",
-                }}
+              <View
+                style={[
+                  styles.statusPanel,
+                  { backgroundColor: statusStyle.background },
+                ]}
               >
-                {getStatusName(numStatus)}
-              </Text>
+                <MaterialCommunityIcons
+                  name={getStatusIcon(numStatus) as any}
+                  size={28}
+                  color={statusStyle.text}
+                />
+                <View style={styles.statusPanelTextContainer}>
+                  <Text
+                    style={[
+                      styles.statusPanelLabel,
+                      { color: statusStyle.text },
+                    ]}
+                  >
+                    Estado actual
+                  </Text>
+                  <Text
+                    style={[
+                      styles.statusPanelValue,
+                      { color: statusStyle.text },
+                    ]}
+                  >
+                    {getStatusName(numStatus)}
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
 
       <Modal
         visible={modalCompletarVisible}
         transparent
         animationType="slide"
+        statusBarTranslucent
         onRequestClose={cerrarModalCompletar}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
+        <View
+          style={[
+            styles.modalOverlay,
+            isTablet && styles.modalOverlayTablet,
+            {
+              paddingTop: isTablet
+                ? 30
+                : Platform.OS === "ios"
+                  ? 18
+                  : 12,
+              paddingBottom: isTablet ? 30 : 12,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.modalCard,
+              {
+                width: modalWidth,
+                maxHeight: Math.max(
+                  360,
+                  height - (isTablet ? 60 : Platform.OS === "ios" ? 36 : 24),
+                ),
+                borderRadius: 24,
+              },
+            ]}
+          >
+            <View style={styles.modalHandle} />
+
             <View style={styles.modalHeader}>
               <View style={styles.modalTitleContainer}>
-                <MaterialCommunityIcons
-                  name="check-decagram-outline"
-                  size={28}
-                  color="#148248"
-                />
-
-                <Text style={styles.modalTitle}>Completar solicitud</Text>
+                <View style={styles.modalTitleIconBox}>
+                  <MaterialCommunityIcons
+                    name="check-decagram-outline"
+                    size={27}
+                    color="#148248"
+                  />
+                </View>
+                <View style={styles.modalTitleTextContainer}>
+                  <Text style={styles.modalTitle}>Completar solicitud</Text>
+                </View>
               </View>
 
               <TouchableOpacity
                 onPress={cerrarModalCompletar}
                 disabled={completandoSolicitud}
                 style={styles.modalCloseButton}
+                activeOpacity={0.8}
               >
                 <MaterialCommunityIcons
                   name="close"
-                  size={26}
+                  size={24}
                   color="#374151"
                 />
               </TouchableOpacity>
             </View>
 
             <Text style={styles.modalDescription}>
-              Agrega las imágenes de evidencia y después márcala como
+              Agrega las imágenes de evidencia y después marca la solicitud como
               completada.
             </Text>
 
@@ -1494,10 +2006,11 @@ export default function ViewRequest() {
               style={styles.selectImagesButton}
               onPress={seleccionarEvidencias}
               disabled={completandoSolicitud}
+              activeOpacity={0.82}
             >
               <MaterialCommunityIcons
                 name="image-multiple-outline"
-                size={23}
+                size={22}
                 color="#148248"
               />
               <Text style={styles.selectImagesButtonText}>
@@ -1507,11 +2020,14 @@ export default function ViewRequest() {
 
             {evidenciasSeleccionadas.length === 0 ? (
               <View style={styles.emptyEvidenceBox}>
-                <MaterialCommunityIcons
-                  name="image-off-outline"
-                  size={38}
-                  color="#9CA3AF"
-                />
+                <View style={styles.emptyEvidenceIconBox}>
+                  <MaterialCommunityIcons
+                    name="image-off-outline"
+                    size={36}
+                    color="#7A837E"
+                  />
+                </View>
+                <Text style={styles.emptyEvidenceTitle}>Sin evidencias</Text>
                 <Text style={styles.emptyEvidenceText}>
                   Debes agregar al menos una imagen.
                 </Text>
@@ -1520,11 +2036,15 @@ export default function ViewRequest() {
               <ScrollView
                 style={styles.selectedImagesScroll}
                 contentContainerStyle={styles.selectedImagesContainer}
+                showsVerticalScrollIndicator={false}
               >
                 {evidenciasSeleccionadas.map((imagen, index) => (
                   <View
                     key={`${imagen.uri}-${index}`}
-                    style={styles.previewItem}
+                    style={[
+                      styles.previewItem,
+                      { width: isTablet ? "31.5%" : "48%" },
+                    ]}
                   >
                     <Image
                       source={{ uri: imagen.uri }}
@@ -1535,11 +2055,12 @@ export default function ViewRequest() {
                       style={styles.removeImageButton}
                       onPress={() => eliminarEvidenciaSeleccionada(imagen.uri)}
                       disabled={completandoSolicitud}
+                      activeOpacity={0.82}
                     >
                       <MaterialCommunityIcons
                         name="close"
                         size={18}
-                        color="#fff"
+                        color="#FFFFFF"
                       />
                     </TouchableOpacity>
                   </View>
@@ -1547,15 +2068,31 @@ export default function ViewRequest() {
               </ScrollView>
             )}
 
-            <Text style={styles.selectedCountText}>
-              {evidenciasSeleccionadas.length} evidencia(s) seleccionada(s)
-            </Text>
+            <View style={styles.selectedCountBox}>
+              <MaterialCommunityIcons
+                name="image-multiple-outline"
+                size={17}
+                color="#68736E"
+              />
+              <Text style={styles.selectedCountText}>
+                {evidenciasSeleccionadas.length} evidencia(s) seleccionada(s)
+              </Text>
+            </View>
 
-            <View style={styles.modalActions}>
+            <View
+              style={[
+                styles.modalActions,
+                isSmallScreen && styles.modalActionsSmall,
+              ]}
+            >
               <TouchableOpacity
-                style={styles.cancelModalButton}
+                style={[
+                  styles.cancelModalButton,
+                  !isSmallScreen && styles.modalButtonSpacing,
+                ]}
                 onPress={cerrarModalCompletar}
                 disabled={completandoSolicitud}
+                activeOpacity={0.82}
               >
                 <Text style={styles.cancelModalButtonText}>Cancelar</Text>
               </TouchableOpacity>
@@ -1566,21 +2103,23 @@ export default function ViewRequest() {
                   (completandoSolicitud ||
                     evidenciasSeleccionadas.length === 0) &&
                     styles.disabledButton,
+                  isSmallScreen && styles.confirmCompleteButtonSmall,
                 ]}
                 onPress={marcarComoCompletada}
                 disabled={
                   completandoSolicitud || evidenciasSeleccionadas.length === 0
                 }
+                activeOpacity={0.82}
               >
                 {completandoSolicitud ? (
-                  <ActivityIndicator color="#fff" />
+                  <>
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                    <Text style={styles.confirmCompleteButtonText}>
+                      Completando...
+                    </Text>
+                  </>
                 ) : (
                   <>
-                    <MaterialCommunityIcons
-                      name="check"
-                      size={22}
-                      color="#fff"
-                    />
                     <Text style={styles.confirmCompleteButtonText}>
                       Marcar como completada
                     </Text>
@@ -1591,165 +2130,655 @@ export default function ViewRequest() {
           </View>
         </View>
       </Modal>
-    </>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#148248",
+  },
+
+  screen: {
+    flex: 1,
+    backgroundColor: "#F1F5F3",
+  },
+
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#F1F5F3",
+  },
+
+  scrollContent: {
+    alignItems: "center",
+    paddingTop: 14,
+    paddingBottom: 42,
   },
 
   header: {
+    minHeight: 92,
     backgroundColor: "#148248",
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 50,
-    paddingBottom: 20,
-    paddingHorizontal: 15,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
+    overflow: "hidden",
+  },
+
+  headerDecorationOne: {
+    position: "absolute",
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    top: -86,
+    right: -25,
+  },
+
+  headerDecorationTwo: {
+    position: "absolute",
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    bottom: -52,
+    left: 58,
+  },
+
+  backButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.22)",
+    zIndex: 2,
   },
 
   headerCenter: {
     flex: 1,
-    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    minWidth: 0,
+  },
+
+  headerSpacer: {
+    width: 46,
+    height: 46,
   },
 
   imageZucarmex: {
-    width: "45%",
-    height: 60,
+    width: 172,
+    maxWidth: "72%",
+    height: 55,
   },
 
   content: {
-    padding: 20,
+    alignSelf: "center",
+  },
+
+  summaryCard: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E0E7E3",
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 13,
+    ...Platform.select({
+      android: { elevation: 3 },
+      ios: {
+        shadowColor: "#000000",
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 3 },
+      },
+    }),
+  },
+
+  summaryTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  summaryTypeIcon: {
+    width: 54,
+    height: 54,
+    borderRadius: 17,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#E8F3ED",
+    borderWidth: 1,
+    borderColor: "#D6EADF",
+    marginRight: 12,
+  },
+
+  summaryTextContainer: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  summaryEyebrow: {
+    color: "#748079",
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+
+  summaryTitle: {
+    color: "#26322C",
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: "800",
+    marginTop: 3,
+  },
+
+  summaryDivider: {
+    height: 1,
+    backgroundColor: "#EDF1EF",
+    marginVertical: 14,
+  },
+
+  summaryBottomRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 9,
+  },
+
+  summaryDate: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F5F8F6",
+    borderRadius: 15,
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+  },
+
+  summaryDateText: {
+    color: "#52605A",
+    fontSize: 12,
+    fontWeight: "700",
+    marginLeft: 6,
   },
 
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 15,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E0E7E3",
+    borderRadius: 18,
     padding: 16,
-    marginBottom: 15,
-    elevation: 3,
+    marginBottom: 13,
+    ...Platform.select({
+      android: { elevation: 2 },
+      ios: {
+        shadowColor: "#000000",
+        shadowOpacity: 0.07,
+        shadowRadius: 7,
+        shadowOffset: { width: 0, height: 3 },
+      },
+    }),
   },
 
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#111827",
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 13,
   },
 
-  subSectionTitle: {
-    fontSize: 15,
-    fontWeight: "bold",
-    marginTop: 10,
-    marginBottom: 6,
-    color: "#111827",
-  },
-
-  label: {
-    fontWeight: "bold",
-    marginTop: 8,
-    color: "#374151",
-  },
-
-  value: {
-    marginBottom: 5,
-    marginLeft: 5,
-    color: "#4B5563",
-  },
-
-  image: {
-    width: screenWidth * 0.7,
-    height: 220,
-    borderRadius: 15,
+  sectionIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#E8F3ED",
+    borderWidth: 1,
+    borderColor: "#D6EADF",
     marginRight: 10,
   },
 
+  sectionTitleContainer: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  sectionTitle: {
+    flex: 1,
+    color: "#26322C",
+    fontSize: 17,
+    fontWeight: "800",
+  },
+
+  sectionSubtitle: {
+    color: "#748079",
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+
+  subSectionTitle: {
+    color: "#37413C",
+    fontSize: 13,
+    fontWeight: "800",
+    marginTop: 4,
+    marginBottom: 9,
+  },
+
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 58,
+    backgroundColor: "#F7F9F8",
+    borderWidth: 1,
+    borderColor: "#E8EDEB",
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 9,
+  },
+
+  infoRowLast: {
+    marginBottom: 0,
+  },
+
+  infoIconBox: {
+    width: 35,
+    height: 35,
+    borderRadius: 11,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#E8F3ED",
+    marginRight: 10,
+  },
+
+  infoTextContainer: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  label: {
+    color: "#7A837E",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+
+  value: {
+    color: "#37413C",
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: "700",
+    marginTop: 2,
+  },
+
+  descriptionBox: {
+    backgroundColor: "#F7F9F8",
+    borderWidth: 1,
+    borderColor: "#E8EDEB",
+    borderRadius: 14,
+    padding: 13,
+  },
+
+  descriptionText: {
+    color: "#4B5563",
+    fontSize: 13,
+    lineHeight: 20,
+  },
+
+  imagesContainer: {
+    paddingRight: 4,
+  },
+
+  image: {
+    borderRadius: 16,
+    marginRight: 11,
+    backgroundColor: "#E5E7EB",
+    borderWidth: 1,
+    borderColor: "#E0E7E3",
+  },
+
+  scheduleRow: {
+    flexDirection: "row",
+    marginBottom: 9,
+  },
+
+  scheduleRowSmall: {
+    flexDirection: "column",
+  },
+
+  scheduleItem: {
+    flex: 1,
+    minHeight: 94,
+    backgroundColor: "#F7F9F8",
+    borderWidth: 1,
+    borderColor: "#E8EDEB",
+    borderRadius: 14,
+    padding: 12,
+  },
+
+  scheduleItemSpacing: {
+    marginRight: 9,
+  },
+
+  scheduleItemSmall: {
+    marginTop: 9,
+  },
+
+  scheduleLabel: {
+    color: "#7A837E",
+    fontSize: 10,
+    fontWeight: "700",
+    marginTop: 8,
+  },
+
+  scheduleValue: {
+    color: "#27332D",
+    fontSize: 13,
+    fontWeight: "800",
+    marginTop: 3,
+  },
+
+  priorityRow: {
+    minHeight: 58,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+
+  priorityIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.58)",
+    marginRight: 10,
+  },
+
+  priorityValue: {
+    textTransform: "capitalize",
+    fontWeight: "800",
+  },
+
+  materialsContainer: {
+    marginTop: 2,
+  },
+
   materialItem: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-    paddingBottom: 10,
+    backgroundColor: "#F7F9F8",
+    borderWidth: 1,
+    borderColor: "#E8EDEB",
+    borderRadius: 15,
+    padding: 12,
     marginBottom: 10,
   },
 
+  materialHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+
+  materialIconBox: {
+    width: 39,
+    height: 39,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#E8F3ED",
+    marginRight: 10,
+  },
+
+  materialTitleContainer: {
+    flex: 1,
+    minWidth: 0,
+  },
+
   materialName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#111827",
-    marginBottom: 4,
+    color: "#26322C",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+
+  materialCode: {
+    color: "#748079",
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+
+  materialDetailsRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+
+  materialDetailPill: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E6ECE8",
+    borderRadius: 11,
+    paddingHorizontal: 9,
+    paddingVertical: 8,
+  },
+
+  materialDetailLabel: {
+    color: "#7A837E",
+    fontSize: 9,
+    fontWeight: "700",
+  },
+
+  materialDetailValue: {
+    color: "#37413C",
+    fontSize: 11,
+    fontWeight: "800",
+    marginTop: 2,
+  },
+
+  materialDescription: {
+    color: "#59645F",
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 10,
+  },
+
+  emptyInlineBox: {
+    minHeight: 90,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F7F9F8",
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "#D9E1DD",
+    borderRadius: 14,
+    padding: 14,
+  },
+
+  emptyInlineText: {
+    color: "#68736E",
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 7,
+  },
+
+  cancelReasonCard: {
+    borderColor: "#FECACA",
+  },
+
+  cancelReasonIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FEE2E2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    marginRight: 10,
+  },
+
+  cancelReasonTitle: {
+    color: "#991B1B",
+  },
+
+  cancelReasonBox: {
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    borderRadius: 14,
+    padding: 13,
+  },
+
+  cancelReasonText: {
+    color: "#7F1D1D",
+    fontSize: 13,
+    lineHeight: 20,
   },
 
   completeButton: {
-    backgroundColor: "#d6ebc4",
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: 15,
+    minHeight: 50,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    elevation: 3,
-  },
-textComplete:{
- color: "#000000",
-    fontSize: 16,
-    fontWeight: "bold",
-},
-  downloadButton: {
     backgroundColor: "#148248",
     borderRadius: 14,
-    paddingVertical: 14,
     paddingHorizontal: 16,
-    marginBottom: 15,
+    paddingVertical: 12,
+    marginBottom: 12,
+    ...Platform.select({
+      android: { elevation: 2 },
+      ios: {
+        shadowColor: "#148248",
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        shadowOffset: { width: 0, height: 2 },
+      },
+    }),
+  },
+
+  textComplete: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "800",
+    marginLeft: 8,
+  },
+
+  downloadButton: {
+    minHeight: 50,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    elevation: 3,
-  },
-
-  downloadIcon: {
-    marginRight: 8,
+    backgroundColor: "#232323",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 13,
+    ...Platform.select({
+      android: { elevation: 2 },
+      ios: {
+        shadowColor: "#000000",
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        shadowOffset: { width: 0, height: 2 },
+      },
+    }),
   },
 
   downloadButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "800",
+    marginLeft: 8,
   },
 
   statusBadge: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
+    minHeight: 34,
+    flexDirection: "row",
+    alignItems: "center",
     alignSelf: "flex-start",
+    paddingVertical: 7,
+    paddingHorizontal: 11,
+    borderRadius: 17,
   },
 
-  priorityBadge: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    alignSelf: "flex-start",
-    marginTop: 5,
-    marginBottom: 5,
+  statusText: {
+    fontSize: 12,
+    fontWeight: "800",
+    marginLeft: 5,
+  },
+
+  statusPanel: {
+    minHeight: 76,
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+  },
+
+  statusPanelTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+
+  statusPanelLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+  },
+
+  statusPanelValue: {
+    fontSize: 16,
+    fontWeight: "800",
+    marginTop: 3,
   },
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(10,20,15,0.55)",
+    paddingHorizontal: 10,
+  },
+
+  modalOverlayTablet: {
+    justifyContent: "center",
+    paddingHorizontal: 24,
   },
 
   modalCard: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 30,
-    maxHeight: "86%",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E0E7E3",
+    paddingHorizontal: 18,
+    paddingTop: 10,
+    paddingBottom: 24,
+    ...Platform.select({
+      android: { elevation: 12 },
+      ios: {
+        shadowColor: "#000000",
+        shadowOpacity: 0.22,
+        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 7 },
+      },
+    }),
+  },
+
+  modalHandle: {
+    alignSelf: "center",
+    width: 44,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#D1D8D4",
+    marginBottom: 12,
   },
 
   modalHeader: {
@@ -1760,16 +2789,39 @@ textComplete:{
   },
 
   modalTitleContainer: {
+    flex: 1,
+    minWidth: 0,
     flexDirection: "row",
     alignItems: "center",
+    marginRight: 9,
+  },
+
+  modalTitleIconBox: {
+    width: 46,
+    height: 46,
+    borderRadius: 15,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#E8F3ED",
+    marginRight: 10,
+  },
+
+  modalTitleTextContainer: {
     flex: 1,
+    minWidth: 0,
   },
 
   modalTitle: {
-    marginLeft: 9,
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#111827",
+    color: "#26322C",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+
+  modalRequestNumber: {
+    color: "#748079",
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 2,
   },
 
   modalCloseButton: {
@@ -1778,53 +2830,73 @@ textComplete:{
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 20,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: "#F1F4F2",
   },
 
   modalDescription: {
-    color: "#4B5563",
-    lineHeight: 21,
-    marginBottom: 16,
+    color: "#59645F",
+    fontSize: 13,
+    lineHeight: 20,
+    marginBottom: 15,
   },
 
   selectImagesButton: {
-    minHeight: 50,
+    minHeight: 49,
     borderWidth: 1.5,
     borderColor: "#148248",
+    backgroundColor: "#F0F8F4",
     borderRadius: 13,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 14,
     marginBottom: 14,
   },
 
   selectImagesButtonText: {
     color: "#148248",
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 14,
+    fontWeight: "800",
     marginLeft: 8,
   },
 
   emptyEvidenceBox: {
-    minHeight: 140,
+    minHeight: 145,
     borderWidth: 1,
     borderStyle: "dashed",
-    borderColor: "#D1D5DB",
-    borderRadius: 14,
+    borderColor: "#D1D9D5",
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F9FAFB",
+    backgroundColor: "#F8FAF9",
     padding: 20,
   },
 
+  emptyEvidenceIconBox: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#E8F3ED",
+  },
+
+  emptyEvidenceTitle: {
+    color: "#37413C",
+    fontSize: 14,
+    fontWeight: "800",
+    marginTop: 10,
+  },
+
   emptyEvidenceText: {
-    marginTop: 8,
-    color: "#6B7280",
+    color: "#6B756F",
+    fontSize: 12,
     textAlign: "center",
+    marginTop: 4,
   },
 
   selectedImagesScroll: {
-    maxHeight: 300,
+    maxHeight: 310,
   },
 
   selectedImagesContainer: {
@@ -1835,7 +2907,6 @@ textComplete:{
   },
 
   previewItem: {
-    width: "48%",
     aspectRatio: 1,
     position: "relative",
   },
@@ -1843,7 +2914,7 @@ textComplete:{
   previewImage: {
     width: "100%",
     height: "100%",
-    borderRadius: 12,
+    borderRadius: 13,
     backgroundColor: "#E5E7EB",
   },
 
@@ -1851,44 +2922,67 @@ textComplete:{
     position: "absolute",
     top: 7,
     right: 7,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "#DC2626",
+    width: 31,
+    height: 31,
+    borderRadius: 16,
+    backgroundColor: "#870C0C",
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+  },
+
+  selectedCountBox: {
+    minHeight: 38,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F4F7F5",
+    borderRadius: 11,
+    paddingHorizontal: 10,
+    marginTop: 10,
+    marginBottom: 15,
   },
 
   selectedCountText: {
-    color: "#6B7280",
-    fontSize: 13,
-    marginTop: 10,
-    marginBottom: 16,
+    color: "#68736E",
+    fontSize: 12,
+    fontWeight: "700",
+    marginLeft: 6,
   },
 
   modalActions: {
     flexDirection: "row",
-    gap: 10,
+  },
+
+  modalActionsSmall: {
+    flexDirection: "column",
+  },
+
+  modalButtonSpacing: {
+    marginRight: 9,
   },
 
   cancelModalButton: {
     flex: 1,
-    minHeight: 50,
+    minHeight: 49,
     borderRadius: 13,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#870c0c",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 13,
   },
 
   cancelModalButtonText: {
-    color: "#374151",
-    fontWeight: "bold",
-    fontSize: 15,
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 13,
+    marginLeft: 7,
   },
 
   confirmCompleteButton: {
     flex: 2,
-    minHeight: 50,
+    minHeight: 49,
     borderRadius: 13,
     backgroundColor: "#148248",
     flexDirection: "row",
@@ -1897,10 +2991,14 @@ textComplete:{
     paddingHorizontal: 12,
   },
 
+  confirmCompleteButtonSmall: {
+    marginTop: 9,
+  },
+
   confirmCompleteButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 14,
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 13,
     marginLeft: 6,
   },
 
@@ -1908,9 +3006,59 @@ textComplete:{
     opacity: 0.55,
   },
 
+  loadingSafeArea: {
+    flex: 1,
+    backgroundColor: "#F1F5F3",
+  },
+
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#F1F5F3",
+    paddingHorizontal: 24,
+  },
+
+  loadingIconBox: {
+    width: 92,
+    height: 92,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#E8F3ED",
+    borderWidth: 1,
+    borderColor: "#D6EADF",
+    marginBottom: 16,
+  },
+
+  loadingTitle: {
+    color: "#26322C",
+    fontSize: 18,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  loadingText: {
+    color: "#748079",
+    fontSize: 13,
+    marginTop: 5,
+  },
+
+  returnButton: {
+    minHeight: 46,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#232323",
+    borderRadius: 13,
+    paddingHorizontal: 17,
+    marginTop: 18,
+  },
+
+  returnButtonText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "800",
+    marginLeft: 7,
   },
 });
