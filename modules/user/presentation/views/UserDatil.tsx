@@ -14,10 +14,13 @@ import {
   ActivityIndicator,
   Image,
   RefreshControl,
+  SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 
@@ -41,6 +44,8 @@ export default function UserDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
 
+  const { width, height } = useWindowDimensions();
+
   const [user, setUser] =
     useState<User | null>(null);
 
@@ -55,6 +60,104 @@ export default function UserDetail() {
 
   const [refreshing, setRefreshing] =
     useState(false);
+
+  /*
+   * Medidas responsivas.
+   *
+   * La división siempre se conserva:
+   * izquierda = cuenta
+   * derecha = solicitudes
+   */
+  const isVerySmallScreen = width < 360;
+  const isSmallScreen = width < 500;
+  const isTablet = width >= 700;
+  const isLandscape = width > height;
+
+  const contentPadding = isVerySmallScreen
+    ? 6
+    : isSmallScreen
+      ? 8
+      : isTablet
+        ? 24
+        : 14;
+
+  const columnsGap = isVerySmallScreen
+    ? 6
+    : isSmallScreen
+      ? 8
+      : 14;
+
+  const cardPadding = isVerySmallScreen
+    ? 8
+    : isSmallScreen
+      ? 10
+      : isTablet
+        ? 22
+        : 16;
+
+  const headerHeight = isLandscape
+    ? 112
+    : isVerySmallScreen
+      ? 120
+      : isSmallScreen
+        ? 130
+        : isTablet
+          ? 165
+          : 142;
+
+  const logoWidth = Math.min(
+    width *
+      (isTablet
+        ? 0.42
+        : isVerySmallScreen
+          ? 0.58
+          : 0.65),
+    isTablet ? 340 : 290
+  );
+
+  const logoHeight = isLandscape
+    ? 65
+    : isVerySmallScreen
+      ? 64
+      : isSmallScreen
+        ? 72
+        : isTablet
+          ? 92
+          : 80;
+
+  const avatarSize = isVerySmallScreen
+    ? 58
+    : isSmallScreen
+      ? 70
+      : isTablet
+        ? 125
+        : 100;
+
+  const titleSize = isVerySmallScreen
+    ? 13
+    : isSmallScreen
+      ? 15
+      : isTablet
+        ? 21
+        : 18;
+
+  const labelSize = isVerySmallScreen
+    ? 9
+    : isSmallScreen
+      ? 10
+      : 12;
+
+  const valueSize = isVerySmallScreen
+    ? 11
+    : isSmallScreen
+      ? 12
+      : 15;
+
+  const requestTextSize = isVerySmallScreen
+    ? 10
+    : isSmallScreen
+      ? 11
+      : 14;
 
   const getId = () => {
     const value = Array.isArray(id)
@@ -366,12 +469,23 @@ export default function UserDetail() {
           }}
         />
 
-        <View style={styles.center}>
-          <ActivityIndicator
-            size="large"
-            color="#148248"
-          />
-        </View>
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="#F1F5F3"
+        />
+
+        <SafeAreaView style={styles.center}>
+          <View style={styles.loadingCard}>
+            <ActivityIndicator
+              size="large"
+              color="#148248"
+            />
+
+            <Text style={styles.loadingText}>
+              Cargando información...
+            </Text>
+          </View>
+        </SafeAreaView>
       </>
     );
   }
@@ -384,26 +498,71 @@ export default function UserDetail() {
         }}
       />
 
-      <ScrollView
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-          />
-        }
-        contentContainerStyle={
-          styles.scrollContent
-        }
-      >
-        <View style={styles.container}>
-          <View style={styles.header}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#148248"
+      />
+
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView
+          style={styles.screen}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#148248"]}
+              tintColor="#148248"
+            />
+          }
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              minHeight: height,
+            },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View
+            style={[
+              styles.header,
+              {
+                height: headerHeight,
+              },
+            ]}
+          >
+            <View
+              style={styles.headerDecorationOne}
+            />
+
+            <View
+              style={styles.headerDecorationTwo}
+            />
+
             <TouchableOpacity
-              style={styles.backBtn}
+              style={[
+                styles.backBtn,
+                {
+                  top: isLandscape
+                    ? 9
+                    : isTablet
+                      ? 23
+                      : 16,
+                },
+              ]}
               onPress={() => router.back()}
+              activeOpacity={0.75}
+              hitSlop={{
+                top: 10,
+                bottom: 10,
+                left: 10,
+                right: 10,
+              }}
             >
               <MaterialCommunityIcons
                 name="arrow-left"
-                size={28}
+                size={
+                  isVerySmallScreen ? 24 : 28
+                }
                 color="#FFFFFF"
               />
             </TouchableOpacity>
@@ -411,82 +570,251 @@ export default function UserDetail() {
             <View style={styles.rowHeader}>
               <Image
                 source={require("../../../../assets/images/ZUCARMEX.png")}
-                style={styles.imageZucarmex}
+                style={{
+                  width: logoWidth,
+                  height: logoHeight,
+                }}
                 resizeMode="contain"
               />
             </View>
           </View>
 
-          <View style={styles.content}>
-            <View style={styles.account}>
-              <Text style={styles.title}>
+          {/*
+           * La división original se conserva:
+           * dos columnas del mismo tamaño.
+           */}
+          <View
+            style={[
+              styles.content,
+              {
+                padding: contentPadding,
+              },
+            ]}
+          >
+            {/* COLUMNA IZQUIERDA */}
+            <View
+              style={[
+                styles.account,
+                {
+                  padding: cardPadding,
+                  marginRight: columnsGap,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.title,
+                  {
+                    fontSize: titleSize,
+                    marginBottom:
+                      isSmallScreen ? 12 : 18,
+                  },
+                ]}
+              >
                 Información de cuenta
               </Text>
 
               <View
-                style={
-                  styles.avatarContainer
-                }
+                style={[
+                  styles.avatarContainer,
+                  {
+                    marginBottom:
+                      isSmallScreen ? 12 : 18,
+                  },
+                ]}
               >
-                <AvatarView
-                  size={100}
-                  url={user?.imagen ?? null}
-                  editable={false}
-                />
+                <View style={styles.avatarBorder}>
+                  <AvatarView
+                    size={avatarSize}
+                    url={user?.imagen ?? null}
+                    editable={false}
+                  />
+                </View>
 
                 <Text
-                  style={styles.avatarHint}
+                  style={[
+                    styles.avatarHint,
+                    {
+                      fontSize:
+                        isVerySmallScreen
+                          ? 9
+                          : 11,
+                    },
+                  ]}
                 >
                   Foto de perfil
                 </Text>
               </View>
 
               <View
-                style={styles.disabledInput}
+                style={[
+                  styles.disabledInput,
+                  {
+                    padding:
+                      isVerySmallScreen
+                        ? 7
+                        : isSmallScreen
+                          ? 8
+                          : 11,
+                    marginBottom:
+                      isSmallScreen ? 8 : 11,
+                  },
+                ]}
               >
-                <Text style={styles.label}>
+                <Text
+                  style={[
+                    styles.label,
+                    {
+                      fontSize: labelSize,
+                    },
+                  ]}
+                >
                   Número de trabajador
                 </Text>
 
                 <Text
-                  style={styles.disabledText}
+                  style={[
+                    styles.disabledText,
+                    {
+                      fontSize: valueSize,
+                    },
+                  ]}
                 >
                   {user?.numUsuario}
                 </Text>
               </View>
 
-              <View style={styles.dataBox}>
-                <Text style={styles.label}>
+              <View
+                style={[
+                  styles.dataBox,
+                  {
+                    padding:
+                      isVerySmallScreen
+                        ? 7
+                        : isSmallScreen
+                          ? 8
+                          : 11,
+                    marginBottom:
+                      isSmallScreen ? 8 : 11,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.label,
+                    {
+                      fontSize: labelSize,
+                    },
+                  ]}
+                >
                   Nombre
                 </Text>
 
-                <Text style={styles.value}>
-                  {user?.nombre}
+                <Text
+                  style={[
+                    styles.value,
+                    {
+                      fontSize: valueSize,
+                    },
+                  ]}
+                >
+                  {user?.nombre ||
+                    "Sin nombre registrado"}
                 </Text>
               </View>
 
-              <View style={styles.dataBox}>
-                <Text style={styles.label}>
+              <View
+                style={[
+                  styles.dataBox,
+                  {
+                    padding:
+                      isVerySmallScreen
+                        ? 7
+                        : isSmallScreen
+                          ? 8
+                          : 11,
+                    marginBottom:
+                      isSmallScreen ? 8 : 11,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.label,
+                    {
+                      fontSize: labelSize,
+                    },
+                  ]}
+                >
                   Correo
                 </Text>
 
-                <Text style={styles.value}>
-                  {user?.email}
+                <Text
+                  style={[
+                    styles.value,
+                    {
+                      fontSize: valueSize,
+                    },
+                  ]}
+                >
+                  {user?.email ||
+                    "Sin correo registrado"}
                 </Text>
               </View>
 
-              <View style={styles.dataBox}>
-                <Text style={styles.label}>
+              <View
+                style={[
+                  styles.dataBox,
+                  {
+                    padding:
+                      isVerySmallScreen
+                        ? 7
+                        : isSmallScreen
+                          ? 8
+                          : 11,
+                    marginBottom:
+                      isSmallScreen ? 8 : 11,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.label,
+                    {
+                      fontSize: labelSize,
+                    },
+                  ]}
+                >
                   Teléfono
                 </Text>
 
-                <Text style={styles.value}>
-                  {user?.telefono}
+                <Text
+                  style={[
+                    styles.value,
+                    {
+                      fontSize: valueSize,
+                    },
+                  ]}
+                >
+                  {user?.telefono ||
+                    "Sin teléfono registrado"}
                 </Text>
               </View>
 
               <TouchableOpacity
-                style={styles.button}
+                style={[
+                  styles.button,
+                  {
+                    minHeight:
+                      isVerySmallScreen
+                        ? 38
+                        : isSmallScreen
+                          ? 42
+                          : 48,
+                    marginTop:
+                      isSmallScreen ? 9 : 17,
+                  },
+                ]}
                 onPress={() => {
                   if (!user?.numUsuario) {
                     return;
@@ -499,34 +827,134 @@ export default function UserDetail() {
                     },
                   });
                 }}
+                activeOpacity={0.85}
               >
                 <Text
-                  style={styles.textButton}
+                  style={[
+                    styles.textButton,
+                    {
+                      fontSize:
+                        isVerySmallScreen
+                          ? 10
+                          : isSmallScreen
+                            ? 12
+                            : 14,
+                    },
+                  ]}
                 >
                   Editar cuenta
                 </Text>
               </TouchableOpacity>
             </View>
 
-            <View style={styles.requests}>
-              <Text style={styles.title}>
-                Solicitudes enviadas
-              </Text>
+            {/* COLUMNA DERECHA */}
+            <View
+              style={[
+                styles.requests,
+                {
+                  padding: cardPadding,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.requestsTitleRow,
+                  {
+                    marginBottom:
+                      isSmallScreen ? 7 : 10,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.title,
+                    {
+                      flex: 1,
+                      fontSize: titleSize,
+                      marginBottom: 0,
+                    },
+                  ]}
+                >
+                  Solicitudes enviadas
+                </Text>
 
-              <Text style={styles.text}>
-                Solicitudes realizadas por el
-                usuario
+                <View
+                  style={[
+                    styles.requestsCount,
+                    {
+                      minWidth:
+                        isVerySmallScreen
+                          ? 23
+                          : 28,
+                      height:
+                        isVerySmallScreen
+                          ? 23
+                          : 27,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.requestsCountText,
+                      {
+                        fontSize:
+                          isVerySmallScreen
+                            ? 9
+                            : 11,
+                      },
+                    ]}
+                  >
+                    {requests.length}
+                  </Text>
+                </View>
+              </View>
+
+              <Text
+                style={[
+                  styles.text,
+                  {
+                    fontSize:
+                      isVerySmallScreen
+                        ? 9
+                        : isSmallScreen
+                          ? 10
+                          : 14,
+                    lineHeight:
+                      isSmallScreen ? 15 : 20,
+                    marginBottom:
+                      isSmallScreen ? 9 : 12,
+                  },
+                ]}
+              >
+                Solicitudes realizadas por el usuario
               </Text>
 
               {requestsLoading ? (
                 <View
-                  style={
-                    styles.requestsLoader
-                  }
+                  style={styles.requestsLoader}
                 >
                   <ActivityIndicator
                     color="#148248"
+                    size={
+                      isSmallScreen
+                        ? "small"
+                        : "large"
+                    }
                   />
+
+                  <Text
+                    style={[
+                      styles.requestsLoadingText,
+                      {
+                        fontSize:
+                          isVerySmallScreen
+                            ? 9
+                            : 11,
+                      },
+                    ]}
+                  >
+                    Cargando...
+                  </Text>
                 </View>
               ) : requests.length > 0 ? (
                 requests.map((request) => {
@@ -569,21 +997,39 @@ export default function UserDetail() {
 
                   return (
                     <TouchableOpacity
-                      key={String(
-                        numSolicitud
-                      )}
-                      style={
-                        styles.requestCard
-                      }
+                      key={String(numSolicitud)}
+                      style={[
+                        styles.requestCard,
+                        {
+                          padding:
+                            isVerySmallScreen
+                              ? 7
+                              : isSmallScreen
+                                ? 8
+                                : 12,
+                          marginBottom:
+                            isSmallScreen
+                              ? 8
+                              : 12,
+                        },
+                      ]}
                       onPress={() =>
                         viewRequest(request)
                       }
+                      activeOpacity={0.82}
                     >
                       <View
-                        style={
-                          styles.requestHeader
-                        }
+                        style={[
+                          styles.requestHeader,
+                          {
+                            marginBottom:
+                              isSmallScreen
+                                ? 5
+                                : 8,
+                          },
+                        ]}
                       >
+
                         <View
                           style={[
                             styles.statusBadge,
@@ -592,6 +1038,14 @@ export default function UserDetail() {
                                 renderStatusColor(
                                   numStatus
                                 ),
+                              paddingVertical:
+                                isVerySmallScreen
+                                  ? 2
+                                  : 4,
+                              paddingHorizontal:
+                                isVerySmallScreen
+                                  ? 5
+                                  : 8,
                             },
                           ]}
                         >
@@ -603,8 +1057,15 @@ export default function UserDetail() {
                                   renderStatusTextColor(
                                     numStatus
                                   ),
+                                fontSize:
+                                  isVerySmallScreen
+                                    ? 7
+                                    : isSmallScreen
+                                      ? 8
+                                      : 11,
                               },
                             ]}
+                            numberOfLines={1}
                           >
                             {renderStatusName(
                               numStatus
@@ -614,9 +1075,17 @@ export default function UserDetail() {
                       </View>
 
                       <Text
-                        style={
-                          styles.requestText
-                        }
+                        style={[
+                          styles.requestText,
+                          {
+                            fontSize:
+                              requestTextSize,
+                            lineHeight:
+                              isSmallScreen
+                                ? 15
+                                : 19,
+                          },
+                        ]}
                       >
                         <Text
                           style={
@@ -629,9 +1098,17 @@ export default function UserDetail() {
                       </Text>
 
                       <Text
-                        style={
-                          styles.requestText
-                        }
+                        style={[
+                          styles.requestText,
+                          {
+                            fontSize:
+                              requestTextSize,
+                            lineHeight:
+                              isSmallScreen
+                                ? 15
+                                : 19,
+                          },
+                        ]}
                       >
                         <Text
                           style={
@@ -644,8 +1121,23 @@ export default function UserDetail() {
                       </Text>
 
                       <Text
-                        style={
-                          styles.requestDescription
+                        style={[
+                          styles.requestDescription,
+                          {
+                            fontSize:
+                              isVerySmallScreen
+                                ? 9
+                                : isSmallScreen
+                                  ? 10
+                                  : 13,
+                            lineHeight:
+                              isSmallScreen
+                                ? 15
+                                : 19,
+                          },
+                        ]}
+                        numberOfLines={
+                          isSmallScreen ? 3 : 4
                         }
                       >
                         {descripcion}
@@ -654,35 +1146,71 @@ export default function UserDetail() {
                   );
                 })
               ) : (
-                <Text
-                  style={styles.emptyText}
+                <View
+                  style={styles.emptyContainer}
                 >
-                  Este usuario no ha realizado
-                  solicitudes
-                </Text>
+                  <MaterialCommunityIcons
+                    name="clipboard-text-outline"
+                    size={
+                      isVerySmallScreen
+                        ? 28
+                        : isSmallScreen
+                          ? 38
+                          : 52
+                    }
+                    color="#C5CBC8"
+                  />
+
+                  <Text
+                    style={[
+                      styles.emptyText,
+                      {
+                        fontSize:
+                          isVerySmallScreen
+                            ? 9
+                            : isSmallScreen
+                              ? 11
+                              : 14,
+                      },
+                    ]}
+                  >
+                    Este usuario no ha realizado
+                    solicitudes
+                  </Text>
+                </View>
               )}
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#F1F5F3",
+  },
+
+  screen: {
+    flex: 1,
+    backgroundColor: "#F1F5F3",
+  },
+
+  scrollContent: {
+    flexGrow: 1,
+    backgroundColor: "#F1F5F3",
   },
 
   header: {
     width: "100%",
-    height: 100,
-    paddingTop: 35,
     backgroundColor: "#148248",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
+    borderBottomLeftRadius: 26,
+    borderBottomRightRadius: 26,
+    overflow: "hidden",
   },
 
   rowHeader: {
@@ -690,200 +1218,312 @@ const styles = StyleSheet.create({
     width: "100%",
     justifyContent: "center",
     alignItems: "center",
-  },
-
-  imageZucarmex: {
-    width: "45%",
-    height: 60,
+    zIndex: 2,
   },
 
   backBtn: {
     position: "absolute",
-    left: 15,
-    top: 45,
+    left: 12,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor:
+      "rgba(255,255,255,0.12)",
     zIndex: 10,
   },
 
+  headerDecorationOne: {
+    position: "absolute",
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor:
+      "rgba(255,255,255,0.07)",
+    top: -55,
+    right: -30,
+  },
+
+  headerDecorationTwo: {
+    position: "absolute",
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor:
+      "rgba(255,255,255,0.05)",
+    bottom: -45,
+    left: -25,
+  },
+
+  /*
+   * Esta división se conserva siempre.
+   */
   content: {
+    width: "100%",
     flex: 1,
     flexDirection: "row",
-    padding: 15,
-    gap: 15,
+    alignItems: "flex-start",
   },
 
   account: {
     flex: 1,
+    minWidth: 0,
     backgroundColor: "#FFFFFF",
-    padding: 20,
+    borderWidth: 1,
+    borderColor: "#E2E8E5",
     borderRadius: 15,
+
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 7,
+    elevation: 3,
   },
 
   requests: {
     flex: 1,
+    minWidth: 0,
     backgroundColor: "#FFFFFF",
-    padding: 20,
+    borderWidth: 1,
+    borderColor: "#E2E8E5",
     borderRadius: 15,
-  },
 
-  userImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    alignSelf: "center",
-    marginBottom: 20,
-  },
-
-  placeholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#DDDDDD",
-    justifyContent: "center",
-    alignItems: "center",
-    alignSelf: "center",
-    marginBottom: 20,
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 7,
+    elevation: 3,
   },
 
   title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 20,
+    flexShrink: 1,
+    color: "#1F2937",
+    fontWeight: "800",
+    lineHeight: 24,
   },
 
-  text: {
-    fontSize: 15,
-    marginBottom: 12,
-    color: "#4B5563",
+  avatarContainer: {
+    alignItems: "center",
+  },
+
+  avatarBorder: {
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 4,
+    borderColor: "#E8F3ED",
+    borderRadius: 1000,
+
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+
+  avatarHint: {
+    marginTop: 6,
+    color: "#6B7280",
+    fontWeight: "600",
+    textAlign: "center",
+  },
+
+  dataBox: {
+    width: "100%",
+    minWidth: 0,
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 10,
+  },
+
+  disabledInput: {
+    width: "100%",
+    minWidth: 0,
+    backgroundColor: "#E5E7EB",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 10,
+    opacity: 0.75,
+  },
+
+  label: {
+    color: "#6B7280",
+    fontWeight: "700",
+    marginBottom: 3,
+  },
+
+  value: {
+    color: "#111827",
+    fontWeight: "600",
+    lineHeight: 17,
+    flexShrink: 1,
+  },
+
+  disabledText: {
+    color: "#6B7280",
+    fontWeight: "600",
+    lineHeight: 17,
   },
 
   button: {
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: "#232323",
-    padding: 12,
     borderRadius: 10,
-    marginTop: 20,
+    paddingHorizontal: 4,
+
+    shadowColor: "#232323",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 3,
   },
 
   textButton: {
     color: "#FFFFFF",
     textAlign: "center",
-    fontWeight: "bold",
+    fontWeight: "800",
+  },
+
+  requestsTitleRow: {
+    width: "100%",
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  requestsCount: {
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#E8F3ED",
+    borderRadius: 14,
+    paddingHorizontal: 5,
+    marginLeft: 4,
+    flexShrink: 0,
+  },
+
+  requestsCountText: {
+    color: "#148248",
+    fontWeight: "800",
+  },
+
+  text: {
+    color: "#4B5563",
+  },
+
+  requestsLoader: {
+    minHeight: 100,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  requestsLoadingText: {
+    color: "#6B7280",
+    marginTop: 7,
+  },
+
+  requestCard: {
+    width: "100%",
+    minWidth: 0,
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 11,
+  },
+
+  requestHeader: {
+    width: "100%",
+    minWidth: 0,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  statusBadge: {
+    borderRadius: 20,
+    flexShrink: 0,
+  },
+
+  statusText: {
+    fontWeight: "800",
+  },
+
+  requestText: {
+    color: "#374151",
+    marginBottom: 3,
+    flexShrink: 1,
+  },
+
+  requestLabel: {
+    fontWeight: "800",
+  },
+
+  requestDescription: {
+    color: "#6B7280",
+    marginTop: 4,
+    flexShrink: 1,
+  },
+
+  emptyContainer: {
+    minHeight: 150,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+
+  emptyText: {
+    color: "#6B7280",
+    lineHeight: 18,
+    marginTop: 8,
+    textAlign: "center",
   },
 
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#F1F5F3",
+    padding: 20,
   },
 
-  dataBox: {
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 12,
-  },
-
-  disabledInput: {
-    backgroundColor: "#E5E7EB",
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 12,
-    opacity: 0.7,
-  },
-
-  label: {
-    fontSize: 13,
-    color: "#6B7280",
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-
-  value: {
-    fontSize: 16,
-    color: "#111827",
-  },
-
-  disabledText: {
-    fontSize: 16,
-    color: "#6B7280",
-  },
-
-  avatarContainer: {
+  loadingCard: {
+    minWidth: 220,
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
-  },
-
-  avatarHint: {
-    marginTop: 8,
-    fontSize: 12,
-    color: "#6B7280",
-  },
-
-  scrollContent: {
-    flexGrow: 1,
-  },
-
-  requestsLoader: {
-    marginTop: 20,
-    alignItems: "center",
-  },
-
-  requestCard: {
-    backgroundColor: "#F9FAFB",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-  },
-
-  requestHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 8,
-  },
-
-  requestTitle: {
-    fontSize: 15,
-    fontWeight: "bold",
-    color: "#111827",
-    flex: 1,
-  },
-
-  requestText: {
-    fontSize: 14,
-    color: "#374151",
-    marginBottom: 4,
-  },
-
-  requestLabel: {
-    fontWeight: "bold",
-  },
-
-  requestDescription: {
-    fontSize: 13,
-    color: "#6B7280",
-    marginTop: 5,
-  },
-
-  statusBadge: {
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    backgroundColor: "#FFFFFF",
     borderRadius: 20,
+    paddingHorizontal: 35,
+    paddingVertical: 28,
+
+    shadowColor: "#000000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
-  statusText: {
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-
-  emptyText: {
-    textAlign: "center",
+  loadingText: {
     color: "#6B7280",
-    marginTop: 20,
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 12,
   },
 });

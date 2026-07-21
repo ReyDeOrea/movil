@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { Alert, View } from "react-native";
+import { Alert } from "react-native";
 
 import { CreateMaterialUseCase } from "../../application/createMaterials";
 import { TipoMaterial } from "../../domain/material";
@@ -45,9 +45,5 @@ export default function CreateMaterialView() {
     }
   };
 
-  return (
-    <View>
-      <MaterialForm onSubmit={handleCreate} />
-    </View>
-  );
+  return <MaterialForm onSubmit={handleCreate} />;
 }
