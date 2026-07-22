@@ -13,6 +13,10 @@ export class CreateMaterialUseCase {
       throw new Error("El nombre del material o herramienta es obligatorio");
     }
 
+    if (!material.unidad?.trim()) {
+      throw new Error("La unidad es obligatoria");
+    }
+
     if (
       material.cantidad !== undefined &&
       material.cantidad !== null &&
